@@ -4,26 +4,7 @@ class AIViewController: BaseViewController {
     private let article: Article
     private let aiService = AISummaryService()
     
-    private let loadingView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .clear
-        return view
-    }()
-    
-    private let loadingIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.hidesWhenStopped = true
-        return indicator
-    }()
-    
-    private let loadingLabel: UILabel = {
-        let label = UILabel()
-        label.text = "AI 正在分析..."
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryLabel
-        label.textAlignment = .center
-        return label
-    }()
+    private let loadingView = LoadingBirdView()
     
     private let textView: UITextView = {
         let textView = UITextView()
@@ -67,21 +48,10 @@ class AIViewController: BaseViewController {
             contentView.addSubview($0)
         }
         
-        [loadingIndicator, loadingLabel].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            loadingView.addSubview($0)
-        }
-        
         NSLayoutConstraint.activate([
             loadingView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             loadingView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             loadingView.widthAnchor.constraint(equalTo: contentView.widthAnchor),
-            
-            loadingIndicator.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor),
-            loadingIndicator.centerYAnchor.constraint(equalTo: loadingView.centerYAnchor),
-            
-            loadingLabel.topAnchor.constraint(equalTo: loadingIndicator.bottomAnchor, constant: 8),
-            loadingLabel.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor),
             
             textView.topAnchor.constraint(equalTo: contentView.topAnchor),
             textView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -91,17 +61,17 @@ class AIViewController: BaseViewController {
     }
     
     private func generateSummary() {
-        loadingIndicator.startAnimating()
+        loadingView.startLoading()
         
         Task { @MainActor in
             do {
                 let summary = try await aiService.generateSummary(for: .singleArticle(article))
-                await MainActor.run {
-                    showResult(summary)
+                loadingView.stopLoading { [weak self] in
+                    self?.showResult(summary)
                 }
             } catch {
-                await MainActor.run {
-                    showError(error)
+                loadingView.stopLoading { [weak self] in
+                    self?.showError(error)
                 }
             }
         }
@@ -116,7 +86,6 @@ class AIViewController: BaseViewController {
             self.textView.alpha = 1
         } completion: { _ in
             self.loadingView.isHidden = true
-            self.loadingIndicator.stopAnimating()
         }
     }
     

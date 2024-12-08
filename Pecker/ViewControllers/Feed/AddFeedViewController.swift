@@ -30,11 +30,7 @@ class AddFeedViewController: BaseViewController {
         return button
     }()
     
-    private let loadingIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.hidesWhenStopped = true
-        return indicator
-    }()
+    private let loadingView = LoadingBirdView()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -54,6 +50,7 @@ class AddFeedViewController: BaseViewController {
         
         view.addSubview(urlTextField)
         view.addSubview(addButton)
+        view.addSubview(loadingView)
         
         urlTextField.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
@@ -65,6 +62,11 @@ class AddFeedViewController: BaseViewController {
             make.top.equalTo(urlTextField.snp.bottom).offset(16)
             make.left.right.equalToSuperview().inset(16)
             make.height.equalTo(44)
+        }
+        
+        loadingView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(150)
         }
         
         urlTextField.delegate = self
@@ -92,38 +94,31 @@ class AddFeedViewController: BaseViewController {
             return
         }
         
-        loadingIndicator.startAnimating()
-        addButton.setTitle("", for: .disabled)
-        addButton.isEnabled = false
-        urlTextField.isEnabled = false
+        addFeed()
+    }
+    
+    private func addFeed() {
+        loadingView.startLoading()
         
         Task {
             do {
-                // 创建新的 Feed
-                let feed = Feed()
-                feed.id = UUID().uuidString
-                feed.url = url.absoluteString
-                
-                // 获取 Feed 信息并添加
-                try await rssService.updateFeedInfo(feed)
-                try await rssService.updateFeed(feed)
+                // Add Feed
+                let feed = try await rssService.fetchFeedInfo(url: urlTextField.text ?? "")
                 try await RealmManager.shared.addNewFeed(feed)
                 
+                // Add Articles
+                try await rssService.updateFeed(feed)
+                
                 await MainActor.run {
-                    let generator = UINotificationFeedbackGenerator()
-                    generator.notificationOccurred(.success)
-                    dismiss(animated: true)
+                    loadingView.stopLoading { [weak self] in
+                        self?.dismiss(animated: true)
+                    }
                 }
             } catch {
                 await MainActor.run {
-                    let generator = UINotificationFeedbackGenerator()
-                    generator.notificationOccurred(.error)
-                    
-                    showError(error)
-                    loadingIndicator.stopAnimating()
-                    addButton.setTitle("添加", for: .normal)
-                    addButton.isEnabled = true
-                    urlTextField.isEnabled = true
+                    loadingView.stopLoading { [weak self] in
+                        self?.showError(error)
+                    }
                 }
             }
         }

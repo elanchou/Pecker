@@ -8,10 +8,14 @@ class FeedListViewController: BaseViewController {
     private var feeds: Results<Feed>?
     private let rssService = RSSService()
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
+    private let loadingView = LoadingBirdView()
+    private let refreshLoadingView = LoadingBirdView()
     
     private lazy var refreshControl: UIRefreshControl = {
         let refresh = UIRefreshControl()
         refresh.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        refresh.tintColor = .clear
+        refresh.backgroundColor = .clear
         return refresh
     }()
     
@@ -89,6 +93,7 @@ class FeedListViewController: BaseViewController {
         
         view.addSubview(tableView)
         view.addSubview(emptyStateView)
+        view.addSubview(loadingView)
         
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -97,6 +102,20 @@ class FeedListViewController: BaseViewController {
         emptyStateView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.width.equalToSuperview().multipliedBy(0.8)
+        }
+        
+        loadingView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(150)
+        }
+        
+        refreshLoadingView.frame = CGRect(x: 0, y: 0, width: 60, height: 60)
+        refreshControl.addSubview(refreshLoadingView)
+        
+        refreshLoadingView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(10)
+            make.size.equalTo(30)
         }
     }
     
@@ -134,6 +153,8 @@ class FeedListViewController: BaseViewController {
     }
     
     @objc private func refreshData() {
+        refreshLoadingView.startLoading()
+        
         Task {
             do {
                 guard let feeds = feeds else { return }
@@ -141,12 +162,16 @@ class FeedListViewController: BaseViewController {
                     try await rssService.updateFeed(feed)
                 }
                 await MainActor.run {
-                    self.refreshControl.endRefreshing()
+                    refreshLoadingView.stopLoading { [weak self] in
+                        self?.refreshControl.endRefreshing()
+                    }
                 }
             } catch {
                 await MainActor.run {
-                    self.refreshControl.endRefreshing()
-                    showError(error)
+                    refreshLoadingView.stopLoading { [weak self] in
+                        self?.refreshControl.endRefreshing()
+                        self?.showError(error)
+                    }
                 }
             }
         }
@@ -181,7 +206,7 @@ class FeedListViewController: BaseViewController {
     private func showFeedActions(for feed: Feed, at point: CGPoint) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        // 标记所��已读
+        // 标记所有已读
         alert.addAction(UIAlertAction(title: "标记所有已读", style: .default) { [weak self] _ in
             self?.markAllAsRead(feed: feed)
         })
@@ -237,6 +262,21 @@ class FeedListViewController: BaseViewController {
     
     deinit {
         notificationToken?.invalidate()
+    }
+    
+    // 处理滚动时的动画
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        
+        if offsetY < 0 {
+            // 计算下拉进度
+            let progress = min(abs(offsetY) / 100, 1.0)
+            
+            // 如果还没有开始刷新，根据下拉进度调整动画
+            if !refreshControl.isRefreshing {
+                refreshLoadingView.alpha = progress
+            }
+        }
     }
 }
 

@@ -57,12 +57,52 @@ actor RSSService {
     }
     
     @MainActor
-    func updateFeedInfo(_ feed: Feed) async throws {
-        let result = try await fetchFeed(url: feed.url)
-        if let firstArticle = result.first {
-            await MainActor.run {
-                feed.title = firstArticle.feed.first?.title ?? "新订阅源"
-                feed.iconURL = firstArticle.feed.first?.iconURL
+    func fetchFeedInfo(url urlString: String) async throws -> Feed {
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+        
+        // 检查是否已存在相同 URL 的订阅
+        let realm = try await Realm()
+        if realm.objects(Feed.self).filter("url == %@", urlString).first != nil {
+            throw NSError(
+                domain: "com.elanchou.pecker",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "该订阅源已存在"]
+            )
+        }
+        
+        // 创建新的 Feed
+        let feed = Feed()
+        feed.id = UUID().uuidString
+        feed.url = urlString
+        
+        // 获取订阅源信息
+        return try await withCheckedThrowingContinuation { continuation in
+            queue.async {
+                let parser = FeedParser(URL: url)
+                let result = parser.parse()
+                
+                switch result {
+                case .success(let parsedFeed):
+                    switch parsedFeed {
+                    case .atom(let atomFeed):
+                        feed.title = atomFeed.title ?? "未命名订阅源"
+                        feed.iconURL = atomFeed.icon ?? atomFeed.logo
+                        
+                    case .rss(let rssFeed):
+                        feed.title = rssFeed.title ?? "未命名订阅源"
+                        feed.iconURL = rssFeed.image?.url
+                        
+                    case .json(let jsonFeed):
+                        feed.title = jsonFeed.title ?? "未命名订阅源"
+                        feed.iconURL = jsonFeed.icon ?? jsonFeed.favicon
+                    }
+                    continuation.resume(returning: feed)
+                    
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
             }
         }
     }
@@ -162,7 +202,7 @@ actor RSSService {
                 }
             }
             
-            // 添加到 Realm
+            // ���加到 Realm
             realm.add(article)
             feed.articles.append(article)
         }

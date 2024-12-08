@@ -31,13 +31,9 @@ class TodaySummaryViewController: UIViewController {
         return textView
     }()
     
-    private let loadingAnimation: LottieAnimationView = {
-        let animation = LottieAnimationView(name: "bird")
-        animation.loopMode = .loop
-        animation.contentMode = .scaleAspectFit
-        animation.isHidden = true
-        animation.alpha = 0
-        return animation
+    private let loadingView: LoadingBirdView = {
+        let view = LoadingBirdView()
+        return view
     }()
     
     private lazy var dismissPanGesture: UIPanGestureRecognizer = {
@@ -70,7 +66,7 @@ class TodaySummaryViewController: UIViewController {
         view.addSubview(todayLabel)
         view.addSubview(dateLabel)
         view.addSubview(summaryTextView)
-        view.addSubview(loadingAnimation)
+        view.addSubview(loadingView)
         
         todayLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
@@ -82,12 +78,12 @@ class TodaySummaryViewController: UIViewController {
         }
         
         summaryTextView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(220)
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(180)
             make.leading.trailing.equalToSuperview().inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
         
-        loadingAnimation.snp.makeConstraints { make in
+        loadingView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.size.equalTo(200)
         }
@@ -182,14 +178,7 @@ class TodaySummaryViewController: UIViewController {
     }
     
     private func generateSummary() {
-        
-        self.loadingAnimation.isHidden = false
-        self.loadingAnimation.play()
-        
-        // 显示加载动画
-        UIView.animate(withDuration: 0.3) {
-            self.loadingAnimation.alpha = 1
-        }
+        loadingView.startLoading()
         
         Task {
             do {
@@ -215,23 +204,19 @@ class TodaySummaryViewController: UIViewController {
             } catch {
                 print("Error generating summary: \(error)")
                 await MainActor.run {
-                    // 停止并隐藏动画
-                    loadingAnimation.stop()
-                    loadingAnimation.isHidden = true
+                    loadingView.stopLoading()
                 }
             }
         }
     }
     
     private func showSummary(_ summary: String) {
+        loadingView.stopLoading { [weak self] in
+            self?.summaryTextView.startTyping(summary)
+        }
         
         UIView.animate(withDuration: 0.3) {
-            self.loadingAnimation.alpha = 0
             self.summaryTextView.alpha = 1
-        } completion: { _ in
-            self.loadingAnimation.stop()
-            self.loadingAnimation.isHidden = true
-            self.summaryTextView.startTyping(summary)
         }
         
         TodaySummaryManager.shared.updateLastShowTime()
@@ -243,7 +228,7 @@ class TodaySummaryViewController: UIViewController {
     }
     
     deinit {
-        loadingAnimation.stop()
+        loadingView.stopLoading()
     }
 }
 

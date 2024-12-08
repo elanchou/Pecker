@@ -1,200 +1,171 @@
 //import CloudKit
-//import Foundation
 //import RealmSwift
 //
 //actor CloudKitService {
-//    private let container: CKContainer
-//    private let database: CKDatabase
+//    static let shared = CloudKitService()
 //    
-//    init(container: CKContainer = .default()) {
-//        self.container = container
-//        self.database = container.privateCloudDatabase
+//    private let container = CKContainer.default()
+//    private let database: CKDatabase
+//    private let zoneID = CKRecordZone.ID(zoneName: "PeckerZone")
+//    
+//    private enum RecordType {
+//        static let feed = "Feed"
+//    }
+//    
+//    private init() {
+//        database = container.privateCloudDatabase
+//    }
+//    
+//    // MARK: - Zone Management
+//    private func setupZone() async throws {
+//        let zone = CKRecordZone(zoneID: zoneID)
+//        let configuration = CKOperation.Configuration()
+//        configuration.timeoutIntervalForRequest = 10
+//        
+//        let modifyOperation = CKModifyRecordZonesOperation(
+//            recordZonesToSave: [zone],
+//            recordZoneIDsToDelete: nil
+//        )
+//        modifyOperation.configuration = configuration
+//        modifyOperation.modifyRecordZonesResultBlock = { result in
+//            switch result {
+//            case .success:
+//                print("Zone created successfully")
+//            case .failure(let error):
+//                print("Failed to create zone: \(error)")
+//            }
+//        }
+//        
+//        database.add(modifyOperation)
+//    }
+//    
+//    // MARK: - Sync Management
+//    func startSync() async throws {
+//        try await setupZone()
+//        try await syncFeeds()
 //    }
 //    
 //    // MARK: - Feed Sync
-//    
-//    func syncFeeds(_ feeds: [Feed]) async throws {
-//        let operation = CKModifyRecordsOperation()
+//    private func syncFeeds() async throws {
+//        let realm = try await Realm()
+//        let localFeeds = realm.objects(Feed.self).filter("isDeleted == false")
 //        
-//        let records = feeds.compactMap { feed -> CKRecord? in
-//            guard let cloudID = feed.cloudID else {
-//                let record = CKRecord(recordType: "Feed")
-//                record["id"] = feed.id
-//                record["title"] = feed.title
-//                record["url"] = feed.url
-//                record["iconURL"] = feed.iconURL
-//                record["category"] = feed.category
-//                record["unreadCount"] = feed.unreadCount
-//                record["lastUpdated"] = feed.lastUpdated
-//                return record
+//        // 获取云端 Feed URLs
+//        let query = CKQuery(recordType: RecordType.feed, predicate: NSPredicate(value: true))
+//        let result = try await database.records(matching: query, inZoneWith: zoneID, desiredKeys: ["url"])
+//        
+//        // 上传本地新增的 Feed URLs
+//        for feed in localFeeds {
+//            let exists = try await result.matchResults.contains { matchResult in
+//                if case .success(let record) = try matchResult.1.get() {
+//                    return record.recordID.recordName == feed.id
+//                }
+//                return false
 //            }
 //            
-//            guard let record = try? await database.record(for: CKRecord.ID(recordName: cloudID)) else {
-//                return nil
+//            if !exists {
+//                try await uploadFeed(feed)
 //            }
-//            
-//            record["title"] = feed.title
-//            record["url"] = feed.url
-//            record["iconURL"] = feed.iconURL
-//            record["category"] = feed.category
-//            record["unreadCount"] = feed.unreadCount
-//            record["lastUpdated"] = feed.lastUpdated
-//            
-//            return record
 //        }
 //        
-//        operation.recordsToSave = records
-//        operation.savePolicy = .changedKeys
-//        
-//        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-//            operation.modifyRecordsCompletionBlock = { savedRecords, deletedRecordIDs, error in
-//                if let error = error {
-//                    continuation.resume(throwing: error)
-//                    return
-//                }
-//                
-//                // 更新本地 Feed 的 cloudID
-//                if let savedRecords = savedRecords {
-//                    Task {
-//                        let realm = try await Realm()
-//                        try await MainActor.run {
-//                            try realm.write {
-//                                for record in savedRecords {
-//                                    if let feedId = record["id"] as? String,
-//                                       let feed = realm.object(ofType: Feed.self, forPrimaryKey: feedId) {
-//                                        feed.cloudID = record.recordID.recordName
-//                                    }
-//                                }
-//                            }
-//                        }
+//        // 导入云端新增的 Feed URLs
+//        for matchResult in result.matchResults {
+//            do {
+//                if case .success(let record) = try matchResult.1.get(),
+//                   let url = record["url"] as? String {
+//                    // 检查本地是否已存在该 URL
+//                    if realm.objects(Feed.self).filter("url == %@", url).first == nil {
+//                        // 使用 RSSService 导入新的 Feed
+//                        try await RSSService.shared.addNewFeed(url: url)
 //                    }
 //                }
-//                
-//                continuation.resume()
+//            } catch {
+//                print("Error processing cloud record: \(error)")
+//                continue
 //            }
-//            
-//            database.add(operation)
 //        }
 //    }
 //    
-//    // MARK: - Article Sync
-//    
-//    func syncArticles(_ articles: [Article]) async throws {
-//        let operation = CKModifyRecordsOperation()
+//    private func uploadFeed(_ feed: Feed) async throws {
+//        let record = CKRecord(recordType: RecordType.feed, recordID: CKRecord.ID(recordName: feed.id, zoneID: zoneID))
+//        record["url"] = feed.url
 //        
-//        let records = try await withThrowingTaskGroup(of: CKRecord?.self) { group in
-//            for article in articles {
-//                group.addTask {
-//                    await self.createOrUpdateArticleRecord(article)
-//                }
+//        let configuration = CKOperation.Configuration()
+//        configuration.timeoutIntervalForRequest = 10
+//        
+//        let modifyOperation = CKModifyRecordsOperation(
+//            recordsToSave: [record],
+//            recordIDsToDelete: nil
+//        )
+//        modifyOperation.configuration = configuration
+//        modifyOperation.modifyRecordsResultBlock = { result in
+//            switch result {
+//            case .success:
+//                print("Feed uploaded successfully")
+//            case .failure(let error):
+//                print("Failed to upload feed: \(error)")
 //            }
-//            
-//            var results: [CKRecord] = []
-//            for try await record in group {
-//                if let record = record {
-//                    results.append(record)
-//                }
-//            }
-//            return results
 //        }
 //        
-//        operation.recordsToSave = records
-//        operation.savePolicy = .changedKeys
-//        
-//        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-//            operation.modifyRecordsCompletionBlock = { savedRecords, deletedRecordIDs, error in
-//                if let error = error {
-//                    continuation.resume(throwing: error)
-//                    return
-//                }
-//                continuation.resume()
-//            }
-//            
-//            database.add(operation)
-//        }
+//        database.add(modifyOperation)
 //    }
 //    
-//    private func createOrUpdateArticleRecord(_ article: Article) async -> CKRecord? {
-//        guard let feed = article.feed.first,
-//              let feedCloudID = feed.cloudID else {
-//            return nil
+//    // MARK: - Subscription Management
+//    func setupSubscriptions() async throws {
+//        let subscription = CKRecordZoneSubscription(zoneID: zoneID, subscriptionID: "feed-changes")
+//        let notificationInfo = CKSubscription.NotificationInfo()
+//        notificationInfo.shouldSendContentAvailable = true
+//        subscription.notificationInfo = notificationInfo
+//        
+//        let operation = CKModifySubscriptionsOperation(
+//            subscriptionsToSave: [subscription],
+//            subscriptionIDsToDelete: nil
+//        )
+//        operation.modifySubscriptionsResultBlock = { result in
+//            switch result {
+//            case .success:
+//                print("Subscription setup successfully")
+//            case .failure(let error):
+//                print("Failed to setup subscription: \(error)")
+//            }
 //        }
 //        
-//        let record: CKRecord
-//        if let cloudID = article.cloudID,
-//           let existingRecord = try? await database.record(for: CKRecord.ID(recordName: cloudID)) {
-//            record = existingRecord
-//        } else {
-//            record = CKRecord(recordType: "Article")
-//            record["id"] = article.id
-//        }
-//        
-//        record["title"] = article.title
-//        record["content"] = article.content
-//        record["url"] = article.url
-//        record["publishDate"] = article.publishDate
-//        record["summary"] = article.summary
-//        record["aiSummary"] = article.aiSummary
-//        record["isRead"] = article.isRead
-//        record["isFavorite"] = article.isFavorite
-//        record["imageURLs"] = article.imageURLs.map { $0 }
-//        
-//        let feedReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: feedCloudID),
-//                                             action: .deleteSelf)
-//        record["feed"] = feedReference
-//        
-//        return record
+//        database.add(operation)
 //    }
 //    
-//    // MARK: - Fetch Data
-//    
-//    func fetchFeeds() async throws -> [Feed] {
-//        let query = CKQuery(recordType: "Feed", predicate: NSPredicate(value: true))
-//        query.sortDescriptors = [NSSortDescriptor(key: "lastUpdated", ascending: false)]
-//        
-//        let (matchResults, _) = try await database.records(matching: query)
-//        let records = try matchResults.compactMap { try $0.1.get() }
-//        
-//        return try await withThrowingTaskGroup(of: Feed?.self) { group in
-//            for record in records {
-//                group.addTask {
-//                    await self.createOrUpdateFeed(from: record)
-//                }
+//    // MARK: - Error Handling
+//    private func handleCloudKitError(_ error: Error) async throws {
+//        if let cloudError = error as? CKError {
+//            switch cloudError.code {
+//            case .zoneNotFound, .userDeletedZone:
+//                try await setupZone()
+//            case .quotaExceeded:
+//                throw CloudKitError.quotaExceeded
+//            case .networkFailure, .networkUnavailable:
+//                throw CloudKitError.networkError
+//            case .serverResponseLost, .serviceUnavailable:
+//                throw CloudKitError.serverError
+//            default:
+//                throw error
 //            }
-//            
-//            var feeds: [Feed] = []
-//            for try await feed in group {
-//                if let feed = feed {
-//                    feeds.append(feed)
-//                }
-//            }
-//            return feeds
 //        }
 //    }
+//}
+//
+//// MARK: - Custom Errors
+//enum CloudKitError: LocalizedError {
+//    case quotaExceeded
+//    case networkError
+//    case serverError
 //    
-//    private func createOrUpdateFeed(from record: CKRecord) async -> Feed? {
-//        guard let id = record["id"] as? String else { return nil }
-//        
-//        let realm = try? await Realm()
-//        let feed = realm?.object(ofType: Feed.self, forPrimaryKey: id) ?? Feed()
-//        
-//        await MainActor.run {
-//            try? realm?.write {
-//                feed.id = id
-//                feed.title = record["title"] as? String ?? ""
-//                feed.url = record["url"] as? String ?? ""
-//                feed.iconURL = record["iconURL"] as? String
-//                feed.category = record["category"] as? String
-//                feed.unreadCount = record["unreadCount"] as? Int ?? 0
-//                feed.lastUpdated = record["lastUpdated"] as? Date ?? Date()
-//                feed.cloudID = record.recordID.recordName
-//                
-//                if let realm = realm, realm.object(ofType: Feed.self, forPrimaryKey: id) == nil {
-//                    realm.add(feed)
-//                }
-//            }
+//    var errorDescription: String? {
+//        switch self {
+//        case .quotaExceeded:
+//            return "iCloud 存储空间已满"
+//        case .networkError:
+//            return "网络连接失败"
+//        case .serverError:
+//            return "服务器暂时不可用"
 //        }
-//        
-//        return feed
 //    }
 //}

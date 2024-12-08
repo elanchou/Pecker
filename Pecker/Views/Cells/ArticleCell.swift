@@ -44,6 +44,8 @@ class ArticleCell: UICollectionViewCell {
     private let defaultHeight: CGFloat = 130
     private let expandedHeight: CGFloat = 290 // 130 + 160 (summary height)
     
+    private let loadingView = LoadingBirdView()
+    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -62,6 +64,12 @@ class ArticleCell: UICollectionViewCell {
         setupMetaViews()
         setupSummaryView()
         setupConstraints()
+        
+        contentView.addSubview(loadingView)
+        loadingView.snp.makeConstraints { make in
+            make.center.equalTo(summaryView)
+            make.size.equalTo(120)
+        }
     }
     
     private func setupBasicAppearance() {
@@ -232,6 +240,7 @@ class ArticleCell: UICollectionViewCell {
     func showSummary(_ summary: String) {
         summaryView.isHidden = false
         summaryView.alpha = 0
+        loadingView.startLoading()
         
         // 更新约束
         contentView.snp.updateConstraints { make in
@@ -242,7 +251,9 @@ class ArticleCell: UICollectionViewCell {
             self.summaryView.alpha = 1
             self.layoutIfNeeded()
         } completion: { _ in
-            self.summaryView.startTyping(summary)
+            self.loadingView.stopLoading {
+                self.summaryView.startTyping(summary)
+            }
         }
     }
     
