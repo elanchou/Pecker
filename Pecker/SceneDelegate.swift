@@ -10,13 +10,52 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
+    
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        let window = UIWindow(windowScene: windowScene)
+        
+        // 创建启动动画视图
+        let launchScreen = UIView(frame: window.bounds)
+        launchScreen.backgroundColor = .systemBackground
+        
+        let logoImageView = UIImageView(image: UIImage(named: "AppLogo"))
+        logoImageView.contentMode = .scaleAspectFit
+        logoImageView.translatesAutoresizingMaskIntoConstraints = false
+        launchScreen.addSubview(logoImageView)
+        
+        NSLayoutConstraint.activate([
+            logoImageView.centerXAnchor.constraint(equalTo: launchScreen.centerXAnchor),
+            logoImageView.centerYAnchor.constraint(equalTo: launchScreen.centerYAnchor),
+            logoImageView.widthAnchor.constraint(equalToConstant: 100),
+            logoImageView.heightAnchor.constraint(equalToConstant: 100)
+        ])
+        
+        window.rootViewController = MainTabBarController()
+        window.makeKeyAndVisible()
+        self.window = window
+        
+        // 添加启动屏幕
+        window.addSubview(launchScreen)
+        
+        // 执行动画
+        UIView.animate(withDuration: 0.5, delay: 0.5, options: .curveEaseOut) {
+            logoImageView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        } completion: { _ in
+            UIView.animate(withDuration: 0.3) {
+                launchScreen.alpha = 0
+            } completion: { _ in
+                launchScreen.removeFromSuperview()
+            }
+        }
+        
+        // 显示今日总结
+        if TodaySummaryManager.shared.shouldShowSummary() {
+            let summaryVC = TodaySummaryViewController()
+            window.rootViewController?.present(summaryVC, animated: false)
+        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

@@ -1,0 +1,73 @@
+PODS:
+  - ActivityIndicatorView (1.1.1)
+  - Down (0.11.0)
+  - ExyteChat (2.0.6):
+    - ActivityIndicatorView
+    - ExyteMediaPicker
+    - ExytePopupView
+    - FloatingButton
+    - SwiftUIIntrospect
+  - ExyteMediaPicker (2.2.3)
+  - ExytePopupView (3.1.2):
+    - SwiftUIIntrospect
+  - FeedKit (9.1.2)
+  - FloatingButton (1.3.0)
+  - JXSegmentedView (1.4.1)
+  - Realm (10.54.1):
+    - Realm/Headers (= 10.54.1)
+  - Realm/Headers (10.54.1)
+  - RealmSwift (10.54.1):
+    - Realm (= 10.54.1)
+  - SDWebImage (5.20.0):
+    - SDWebImage/Core (= 5.20.0)
+  - SDWebImage/Core (5.20.0)
+  - SnapKit (5.7.1)
+  - SwiftSoup (2.7.6)
+  - SwiftUIIntrospect (1.3.0)
+
+DEPENDENCIES:
+  - Down
+  - ExyteChat
+  - FeedKit
+  - JXSegmentedView
+  - RealmSwift (~> 10)
+  - SDWebImage
+  - SnapKit
+  - SwiftSoup
+
+SPEC REPOS:
+  trunk:
+    - ActivityIndicatorView
+    - Down
+    - ExyteChat
+    - ExyteMediaPicker
+    - ExytePopupView
+    - FeedKit
+    - FloatingButton
+    - JXSegmentedView
+    - Realm
+    - RealmSwift
+    - SDWebImage
+    - SnapKit
+    - SwiftSoup
+    - SwiftUIIntrospect
+
+SPEC CHECKSUMS:
+  ActivityIndicatorView: f14ac8e200a344fe992577807998b0c8562bd964
+  Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
+  ExyteChat: 95057a41273b7c5fc4716cefb299a57a218410a5
+  ExyteMediaPicker: b4a63218f34e93060afb3c0a41b0f898048728cb
+  ExytePopupView: f6405d001821bdeaa0b4cb5dce9a082c53956075
+  FeedKit: 71653273ab08e618cd6fd1301ca08fc02dca6a9e
+  FloatingButton: 86f862465b950e053279b3c2ccbfee7f823688bf
+  JXSegmentedView: cd73555ce2134d1656db2cb383ba9c2f36fb5078
+  Realm: 7c70fc7ae6ebfb635b29bc05ac1a6c5eeeb3c572
+  RealmSwift: 12797d5849c90f37eafad8f44b4dadb8e558a806
+  SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
+  SnapKit: d612e99e678a2d3b95bf60b0705ed0a35c03484a
+  SwiftSoup: 9ec2526c76ebc3fe5d3157c82b40b45a27eeb82d
+  SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
+
+PODFILE CHECKSUM: 250cf5a3610278f5d7c3ebbb5577e76d682ccb2b
+
+COCOAPODS: 1.16.2
