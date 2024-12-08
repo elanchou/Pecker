@@ -9,13 +9,18 @@ class FeedListViewController: BaseViewController {
     private let rssService = RSSService()
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
     
+    private lazy var refreshControl: UIRefreshControl = {
+        let refresh = UIRefreshControl()
+        refresh.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        return refresh
+    }()
+    
     private lazy var tableView: UITableView = {
         let table = UITableView(frame: .zero, style: .insetGrouped)
         table.register(FeedCell.self, forCellReuseIdentifier: "FeedCell")
         table.delegate = self
         table.dataSource = self
-        table.refreshControl = UIRefreshControl()
-        table.refreshControl?.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        table.refreshControl = refreshControl
         return table
     }()
     
@@ -136,11 +141,11 @@ class FeedListViewController: BaseViewController {
                     try await rssService.updateFeed(feed)
                 }
                 await MainActor.run {
-                    refreshControl.endRefreshing()
+                    self.refreshControl.endRefreshing()
                 }
             } catch {
                 await MainActor.run {
-                    refreshControl.endRefreshing()
+                    self.refreshControl.endRefreshing()
                     showError(error)
                 }
             }
@@ -176,7 +181,7 @@ class FeedListViewController: BaseViewController {
     private func showFeedActions(for feed: Feed, at point: CGPoint) {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        // 标记所有已读
+        // 标记所��已读
         alert.addAction(UIAlertAction(title: "标记所有已读", style: .default) { [weak self] _ in
             self?.markAllAsRead(feed: feed)
         })
