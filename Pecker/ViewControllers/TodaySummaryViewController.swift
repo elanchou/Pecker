@@ -1,12 +1,13 @@
 import UIKit
 import RealmSwift
 import SnapKit
+import Lottie
 
 class TodaySummaryViewController: UIViewController {
     private let todayLabel: UILabel = {
         let label = UILabel()
         label.text = "Today"
-        label.font = .systemFont(ofSize: 80, weight: .bold)
+        label.font = .systemFont(ofSize: 65, weight: .bold)
         label.textColor = .label
         label.alpha = 0
         return label
@@ -30,10 +31,13 @@ class TodaySummaryViewController: UIViewController {
         return textView
     }()
     
-    private let loadingIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.hidesWhenStopped = true
-        return indicator
+    private let loadingAnimation: LottieAnimationView = {
+        let animation = LottieAnimationView(name: "bird")
+        animation.loopMode = .loop
+        animation.contentMode = .scaleAspectFit
+        animation.isHidden = true
+        animation.alpha = 0
+        return animation
     }()
     
     private lazy var dismissPanGesture: UIPanGestureRecognizer = {
@@ -66,7 +70,7 @@ class TodaySummaryViewController: UIViewController {
         view.addSubview(todayLabel)
         view.addSubview(dateLabel)
         view.addSubview(summaryTextView)
-        view.addSubview(loadingIndicator)
+        view.addSubview(loadingAnimation)
         
         todayLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
@@ -78,13 +82,14 @@ class TodaySummaryViewController: UIViewController {
         }
         
         summaryTextView.snp.makeConstraints { make in
-            make.top.equalTo(dateLabel.snp.bottom).offset(40)
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(220)
             make.leading.trailing.equalToSuperview().inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
         
-        loadingIndicator.snp.makeConstraints { make in
+        loadingAnimation.snp.makeConstraints { make in
             make.center.equalToSuperview()
+            make.size.equalTo(200)
         }
     }
     
@@ -156,11 +161,20 @@ class TodaySummaryViewController: UIViewController {
             self.todayLabel.alpha = 1
             self.dateLabel.alpha = 1
         } completion: { _ in
+            
+            self.todayLabel.snp.remakeConstraints { make in
+                make.top.equalTo(self.view.safeAreaLayoutGuide).offset(60)
+                make.leading.equalToSuperview().offset(20)
+                make.width.equalTo(self.view.bounds.width * 0.6)
+            }
+            
+            self.dateLabel.snp.remakeConstraints { make in
+                make.top.equalTo(self.todayLabel.snp.bottom).offset(8)
+                make.leading.equalTo(self.todayLabel)
+            }
+            
             UIView.animate(withDuration: 0.6, delay: 1.0, options: .curveEaseInOut) {
-                self.todayLabel.transform = CGAffineTransform(scaleX: 0.4, y: 0.4)
-                    .concatenating(CGAffineTransform(translationX: -self.view.bounds.width * 0.25, y: -self.view.bounds.height * 0.3))
-                
-                self.dateLabel.transform = CGAffineTransform(translationX: -self.view.bounds.width * 0.25, y: -self.view.bounds.height * 0.3)
+                self.view.layoutIfNeeded()
             } completion: { _ in
                 self.generateSummary()
             }
@@ -168,12 +182,18 @@ class TodaySummaryViewController: UIViewController {
     }
     
     private func generateSummary() {
-        loadingIndicator.startAnimating()
+        
+        self.loadingAnimation.isHidden = false
+        self.loadingAnimation.play()
+        
+        // 显示加载动画
+        UIView.animate(withDuration: 0.3) {
+            self.loadingAnimation.alpha = 1
+        }
         
         Task {
             do {
                 if TodaySummaryManager.shared.shouldUpdateSummary() {
-                    // 需要更新摘要
                     let realm = try await Realm()
                     let articles = realm.objects(Article.self)
                         .filter("isDeleted == false")
@@ -186,33 +206,44 @@ class TodaySummaryViewController: UIViewController {
                         showSummary(summary)
                     }
                 } else if let savedSummary = TodaySummaryManager.shared.getSavedSummary() {
-                    // 使用保存的摘要
-                    await MainActor.run {
-                        showSummary(savedSummary)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        Task {
+                            self.showSummary(savedSummary)
+                        }
                     }
                 }
             } catch {
                 print("Error generating summary: \(error)")
                 await MainActor.run {
-                    loadingIndicator.stopAnimating()
+                    // 停止并隐藏动画
+                    loadingAnimation.stop()
+                    loadingAnimation.isHidden = true
                 }
             }
         }
     }
     
     private func showSummary(_ summary: String) {
-        loadingIndicator.stopAnimating()
+        
         UIView.animate(withDuration: 0.3) {
+            self.loadingAnimation.alpha = 0
             self.summaryTextView.alpha = 1
         } completion: { _ in
+            self.loadingAnimation.stop()
+            self.loadingAnimation.isHidden = true
             self.summaryTextView.startTyping(summary)
         }
+        
         TodaySummaryManager.shared.updateLastShowTime()
     }
     
     private func generateDailySummary(for articles: [Article]) async throws -> String {
         let aiService = AISummaryService()
         return try await aiService.generateSummary(for: .dailyDigest(articles))
+    }
+    
+    deinit {
+        loadingAnimation.stop()
     }
 }
 

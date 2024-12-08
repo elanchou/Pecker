@@ -12,6 +12,7 @@ import RealmSwift
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        setupAppearance()
         // 配置 Realm
         let config = Realm.Configuration(
             schemaVersion: 2,
@@ -30,6 +31,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         return true
+    }
+
+    private func setupAppearance() {
+        // 导航栏外观
+        let navigationBarAppearance = UINavigationBarAppearance()
+        navigationBarAppearance.configureWithOpaqueBackground()
+        navigationBarAppearance.backgroundColor = AppTheme.Navigation.barTint
+        navigationBarAppearance.titleTextAttributes = [.foregroundColor: AppTheme.Text.title]
+        navigationBarAppearance.largeTitleTextAttributes = [.foregroundColor: AppTheme.Text.title]
+        
+        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
+        UINavigationBar.appearance().tintColor = AppTheme.Navigation.tint
+        
+        // 标签栏外观
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = AppTheme.Navigation.barTint
+        
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        UITabBar.appearance().tintColor = AppTheme.TabBar.tint
+        UITabBar.appearance().unselectedItemTintColor = AppTheme.TabBar.unselectedTint
     }
 
     // MARK: UISceneSession Lifecycle

@@ -13,6 +13,7 @@ PODS:
   - FeedKit (9.1.2)
   - FloatingButton (1.3.0)
   - JXSegmentedView (1.4.1)
+  - lottie-ios (4.5.0)
   - Realm (10.54.1):
     - Realm/Headers (= 10.54.1)
   - Realm/Headers (10.54.1)
@@ -30,6 +31,7 @@ DEPENDENCIES:
   - ExyteChat
   - FeedKit
   - JXSegmentedView
+  - lottie-ios
   - RealmSwift (~> 10)
   - SDWebImage
   - SnapKit
@@ -45,6 +47,7 @@ SPEC REPOS:
     - FeedKit
     - FloatingButton
     - JXSegmentedView
+    - lottie-ios
     - Realm
     - RealmSwift
     - SDWebImage
@@ -61,6 +64,7 @@ SPEC CHECKSUMS:
   FeedKit: 71653273ab08e618cd6fd1301ca08fc02dca6a9e
   FloatingButton: 86f862465b950e053279b3c2ccbfee7f823688bf
   JXSegmentedView: cd73555ce2134d1656db2cb383ba9c2f36fb5078
+  lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   Realm: 7c70fc7ae6ebfb635b29bc05ac1a6c5eeeb3c572
   RealmSwift: 12797d5849c90f37eafad8f44b4dadb8e558a806
   SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
@@ -68,6 +72,6 @@ SPEC CHECKSUMS:
   SwiftSoup: 9ec2526c76ebc3fe5d3157c82b40b45a27eeb82d
   SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
 
-PODFILE CHECKSUM: 250cf5a3610278f5d7c3ebbb5577e76d682ccb2b
+PODFILE CHECKSUM: e1d1e84149bae5627f621fca644dc7052e0c8fea
 
 COCOAPODS: 1.16.2

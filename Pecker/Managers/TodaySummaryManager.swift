@@ -42,6 +42,9 @@ class TodaySummaryManager {
     }
     
     func shouldShowSummary() -> Bool {
+        
+        return true
+        
         guard isEnabled else { return false }
         
         if let lastShowTime = defaults.object(forKey: Constants.lastUpdateTimeKey) as? Date {

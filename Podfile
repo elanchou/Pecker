@@ -14,4 +14,5 @@ target 'Pecker' do
   pod 'JXSegmentedView'
   pod 'SnapKit'
   pod 'Down'
+  pod 'lottie-ios'
 end
