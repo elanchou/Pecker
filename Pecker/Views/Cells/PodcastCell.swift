@@ -27,6 +27,7 @@ class PodcastCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .semibold)
         label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
     
@@ -95,16 +96,28 @@ class PodcastCell: UICollectionViewCell {
         contentView.addSubview(containerView)
         containerView.addSubview(contentStackView)
         
-        // 设置堆栈视图
-        contentStackView.axis = .vertical
+        // 创建水平主布局
+        contentStackView.axis = .horizontal
         contentStackView.spacing = 12
+        contentStackView.alignment = .top
         
-        // 添加子视图
-        [coverImageView, titleLabel, feedLabel].forEach {
-            contentStackView.addArrangedSubview($0)
+        // 创建右侧垂直布局
+        let rightStackView = UIStackView()
+        rightStackView.axis = .vertical
+        rightStackView.spacing = 8
+        
+        // 添加左侧封面图片
+        contentStackView.addArrangedSubview(coverImageView)
+        
+        // 添加右侧内容
+        contentStackView.addArrangedSubview(rightStackView)
+        
+        // 将标题、Feed名称等添加到右侧布局
+        [titleLabel, feedLabel].forEach {
+            rightStackView.addArrangedSubview($0)
         }
         
-        // 添加播放控制视图
+        // 添加播放控制视图到右侧布局
         let controlStack = UIStackView()
         controlStack.axis = .horizontal
         controlStack.spacing = 8
@@ -114,9 +127,9 @@ class PodcastCell: UICollectionViewCell {
             controlStack.addArrangedSubview($0)
         }
         
-        contentStackView.addArrangedSubview(controlStack)
+        rightStackView.addArrangedSubview(controlStack)
         
-        // 设置约束
+        // 修改约束
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0))
         }
@@ -125,12 +138,18 @@ class PodcastCell: UICollectionViewCell {
             make.edges.equalToSuperview()
         }
         
+        // 修改封面图片尺寸
         coverImageView.snp.makeConstraints { make in
-            make.size.equalTo(150)
+            make.width.height.equalTo(100) // 调整为更合适的尺寸
+        }
+        
+        // 让右侧堆栈视图填充剩余空间
+        rightStackView.snp.makeConstraints { make in
+            make.height.greaterThanOrEqualTo(coverImageView)
         }
         
         playButton.snp.makeConstraints { make in
-            make.width.height.equalTo(44)
+            make.width.height.equalTo(44) // 调整播放按钮尺寸
         }
         
         [timeLabel, durationLabel].forEach { label in
