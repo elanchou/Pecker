@@ -1,20 +1,20 @@
 import Foundation
 import RealmSwift
 
-func formatDate(_ date: Date) -> String {
+func formatDate(_ date: Date, needTime: Bool = true) -> String {
     let formatter = DateFormatter()
     
     if Calendar.current.isDateInToday(date) {
         formatter.dateFormat = "HH:mm"
-        return "今天 " + formatter.string(from: date)
+        return "Today " + (needTime ? formatter.string(from: date) : "")
     } else if Calendar.current.isDateInYesterday(date) {
         formatter.dateFormat = "HH:mm"
-        return "昨天 " + formatter.string(from: date)
+        return "Yesterday " + (needTime ? formatter.string(from: date) : "")
     } else if Calendar.current.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
-        formatter.dateFormat = "EEEE HH:mm"
+        formatter.dateFormat = needTime ? "EEEE HH:mm" : "EEEE"
         return formatter.string(from: date)
     } else {
-        formatter.dateFormat = "MM-dd HH:mm"
+        formatter.dateFormat = needTime ? "MM-dd HH:mm" : "MM-dd"
         return formatter.string(from: date)
     }
 }

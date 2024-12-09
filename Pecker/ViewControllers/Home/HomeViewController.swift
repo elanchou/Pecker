@@ -67,6 +67,9 @@ class HomeViewController: BaseViewController {
     private let loadingView = LoadingBirdView()
     private let refreshLoadingView = LoadingBirdView()
     
+    private var currentPlayingPodcast: Content?
+    private var miniPlayerView: MiniPlayerView?
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -127,6 +130,7 @@ class HomeViewController: BaseViewController {
         
         setupSegmentedView()
         setupCollectionView()
+        setupMiniPlayer()
     }
     
     private func setupSegmentedView() {
@@ -152,6 +156,20 @@ class HomeViewController: BaseViewController {
     private func setupCollectionView() {
         collectionView.refreshControl = refreshControl
         refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+    }
+    
+    private func setupMiniPlayer() {
+        miniPlayerView = MiniPlayerView()
+        guard let miniPlayerView = miniPlayerView else { return }
+        
+        view.addSubview(miniPlayerView)
+        
+        miniPlayerView.snp.makeConstraints { make in
+            make.left.right.equalToSuperview()
+            make.top.equalTo(view.snp.bottom)
+            make.height.equalTo(60).priority(.required)
+        }
+        miniPlayerView.isHidden = true
     }
     
     // MARK: - Data Loading
@@ -215,7 +233,7 @@ class HomeViewController: BaseViewController {
             Calendar.current.startOfDay(for: content.publishDate)
         }
         return grouped.map { (date, contents) in
-            (formatDate(date), contents.sorted { $0.publishDate > $1.publishDate })
+            (formatDate(date, needTime: false), contents.sorted { $0.publishDate > $1.publishDate })
         }.sorted { $0.0 > $1.0 }
     }
     
@@ -337,6 +355,10 @@ extension HomeViewController: UICollectionViewDataSource {
         header.configure(title: title, count: contents.count)
         return header
     }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: collectionView.frame.width, height: 120)
+    }
 }
 
 // MARK: - UICollectionViewDelegate
@@ -404,7 +426,7 @@ private extension HomeViewController {
             // 添加 header
             let headerSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(44)
+                heightDimension: .absolute(88)
             )
             let header = NSCollectionLayoutBoundarySupplementaryItem(
                 layoutSize: headerSize,
@@ -461,61 +483,76 @@ extension HomeViewController: ArticleCellDelegate {
 }
 
 extension HomeViewController: PodcastCellDelegate {
-    func podcastCell(_ cell: PodcastCell, didTapPlayPauseFor content: Content) {
-        // 更新 UI 和播放状态
-        if let indexPath = collectionView.indexPath(for: cell) {
-            collectionView.reloadItems(at: [indexPath])
-        }
-    }
-    
-    func podcastCell(_ cell: PodcastCell, didUpdateProgress progress: Float, for content: Content) {
-        // 可以在这里更新其他 UI 元素，比如迷你播放器
-        // 目前暂时不需要实现
-    }
-    
     func podcastCell(_ cell: PodcastCell, didChangePlayingState isPlaying: Bool) {
-        // 获取当前播放的内容
-        guard let indexPath = collectionView.indexPath(for: cell) else {
-            return
-        }
-        
+        guard let indexPath = collectionView.indexPath(for: cell) else { return }
         let content = sections[indexPath.section].1[indexPath.item]
         
-        // 如果开始播放，暂停其他正在播放的内容
         if isPlaying {
-            for (sectionIndex, section) in sections.enumerated() {
-                for (itemIndex, otherContent) in section.1.enumerated() {
-                    if otherContent.type == .podcast &&
-                       otherContent.id != content.id &&
-                       otherContent.isPlaying {
-                        // 更新数据库中的播放状态
-                        guard let realm = try? Realm() else { return }
-                        try? realm.write {
-                            otherContent.isPlaying = false
-                        }
-                        
-                        let otherIndexPath = IndexPath(item: itemIndex, section: sectionIndex)
-                        if let otherCell = collectionView.cellForItem(at: otherIndexPath) as? PodcastCell {
-                            otherCell.stopPlaying()
-                        }
-                    }
+            // 停止其他正在播放的内容
+            if let currentPlaying = currentPlayingPodcast,
+               currentPlaying.id != content.id {
+                stopAllPlayingPodcasts(except: content)
+            }
+            
+            currentPlayingPodcast = content
+            showMiniPlayer(for: content)
+        } else {
+            if content.id == currentPlayingPodcast?.id {
+                currentPlayingPodcast = nil
+                hideMiniPlayer()
+            }
+        }
+    }
+    
+    private func stopAllPlayingPodcasts(except: Content? = nil) {
+        for section in sections {
+            for content in section.1 where content.type == .podcast && content.isPlaying {
+                if let exceptId = except?.id, content.id == exceptId { continue }
+                
+                content.isPlaying = false
+                
+                // 更新 UI
+                if let cell = collectionView.visibleCells.first(where: { cell in
+                    guard let podcastCell = cell as? PodcastCell,
+                          let cellContent = podcastCell.content else { return false }
+                    return cellContent.id == content.id
+                }) as? PodcastCell {
+                    cell.stopPlaying()
                 }
             }
         }
+    }
+    
+    private func showMiniPlayer(for content: Content) {
+        guard let miniPlayerView = miniPlayerView else { return }
+        miniPlayerView.configure(with: content)
         
-        // 更新数据库中的播放状态
-        guard let realm = try? Realm() else { return }
-        try? realm.write {
-            content.isPlaying = isPlaying
+        // 计算偏移量，包含 TabBar 高度
+        let tabBarHeight = tabBarController?.tabBar.frame.height ?? 0
+        let offset = 60 + tabBarHeight // MiniPlayer 高度 + TabBar 高度
+        
+        if miniPlayerView.isHidden {
+            miniPlayerView.isHidden = false
+            miniPlayerView.transform = CGAffineTransform(translationX: 0, y: offset)
+            
+            UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5) {
+                miniPlayerView.transform = .identity
+            }
         }
+    }
+
+    private func hideMiniPlayer() {
+        guard let miniPlayerView = miniPlayerView else { return }
         
-        // 触感反馈
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
+        // 计算偏移量，包含 TabBar 高度
+        let tabBarHeight = tabBarController?.tabBar.frame.height ?? 0
+        let offset = 60 + tabBarHeight // MiniPlayer 高度 + TabBar 高度
         
-        // 更新 UI
-        if let indexPath = collectionView.indexPath(for: cell) {
-            collectionView.reloadItems(at: [indexPath])
+        UIView.animate(withDuration: 0.3) {
+            miniPlayerView.transform = CGAffineTransform(translationX: 0, y: offset)
+        } completion: { _ in
+            miniPlayerView.isHidden = true
+            miniPlayerView.transform = .identity
         }
     }
 }

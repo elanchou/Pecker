@@ -5,7 +5,7 @@ import SnapKit
 
 class PodcastCell: UICollectionViewCell {
     // MARK: - Properties
-    private var content: Content?
+    public var content: Content?
     private let audioPlayer = AVPlayer()
     private var timeObserver: Any?
     weak var delegate: PodcastCellDelegate?
@@ -96,66 +96,61 @@ class PodcastCell: UICollectionViewCell {
         contentView.addSubview(containerView)
         containerView.addSubview(contentStackView)
         
-        // 创建水平主布局
-        contentStackView.axis = .horizontal
-        contentStackView.spacing = 12
-        contentStackView.alignment = .top
-        
-        // 创建右侧垂直布局
-        let rightStackView = UIStackView()
-        rightStackView.axis = .vertical
-        rightStackView.spacing = 8
-        
-        // 添加左侧封面图片
-        contentStackView.addArrangedSubview(coverImageView)
-        
-        // 添加右侧内容
-        contentStackView.addArrangedSubview(rightStackView)
-        
-        // 将标题、Feed名称等添加到右侧布局
-        [titleLabel, feedLabel].forEach {
-            rightStackView.addArrangedSubview($0)
+        // 封面图片
+        containerView.addSubview(coverImageView)
+        coverImageView.snp.makeConstraints { make in
+            make.top.left.equalToSuperview().offset(0)
+            make.width.height.equalTo(100)
         }
-        
-        // 添加播放控制视图到右侧布局
-        let controlStack = UIStackView()
-        controlStack.axis = .horizontal
-        controlStack.spacing = 8
-        controlStack.alignment = .center
-        
-        [playButton, progressSlider, timeLabel, durationLabel].forEach {
-            controlStack.addArrangedSubview($0)
+
+        // 标题
+        containerView.addSubview(titleLabel)
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(coverImageView)
+            make.left.equalTo(coverImageView.snp.right).offset(12)
+            make.right.equalToSuperview().offset(0)
         }
-        
-        rightStackView.addArrangedSubview(controlStack)
-        
-        // 修改约束
+
+        // Feed 名称
+        containerView.addSubview(feedLabel)
+        feedLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.left.equalTo(titleLabel)
+            make.right.equalToSuperview().offset(0)
+        }
+
+        // 播放控制
+        containerView.addSubview(playButton)
+        playButton.snp.makeConstraints { make in
+            make.left.equalTo(titleLabel)
+            make.bottom.equalTo(coverImageView).offset(4)
+            make.width.height.equalTo(28)
+        }
+
+        containerView.addSubview(progressSlider)
+        progressSlider.snp.makeConstraints { make in
+            make.left.equalTo(playButton.snp.right).offset(8)
+            make.centerY.equalTo(playButton)
+            make.right.equalToSuperview().offset(-8)
+        }
+
+        containerView.addSubview(timeLabel)
+        timeLabel.snp.makeConstraints { make in
+            make.right.equalTo(progressSlider)
+            make.bottom.equalTo(progressSlider.snp.top).offset(-4)
+            make.width.equalTo(50)
+        }
+
+//        containerView.addSubview(durationLabel)
+//        durationLabel.snp.makeConstraints { make in
+//            make.right.equalTo(progressSlider)
+//            make.bottom.equalTo(progressSlider.snp.top).offset(-4)
+//            make.width.equalTo(50)
+//        }
+
+        // 容器视图边距
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 0, bottom: 12, right: 0))
-        }
-        
-        contentStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        // 修改封面图片尺寸
-        coverImageView.snp.makeConstraints { make in
-            make.width.height.equalTo(100) // 调整为更合适的尺寸
-        }
-        
-        // 让右侧堆栈视图填充剩余空间
-        rightStackView.snp.makeConstraints { make in
-            make.height.greaterThanOrEqualTo(coverImageView)
-        }
-        
-        playButton.snp.makeConstraints { make in
-            make.width.height.equalTo(44) // 调整播放按钮尺寸
-        }
-        
-        [timeLabel, durationLabel].forEach { label in
-            label.snp.makeConstraints { make in
-                make.width.equalTo(50)
-            }
         }
         
         // 添加事件处理

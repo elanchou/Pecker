@@ -41,8 +41,8 @@ class ArticleCell: UICollectionViewCell {
     private var containerBottomConstraint: NSLayoutConstraint?
     private var summaryHeightConstraint: NSLayoutConstraint?
     
-    private let defaultHeight: CGFloat = 130
-    private let expandedHeight: CGFloat = 290 // 130 + 160 (summary height)
+    private let defaultHeight: CGFloat = 120
+    private let expandedHeight: CGFloat = 280 // 130 + 160 (summary height)
     
     private let loadingView = LoadingBirdView()
     
