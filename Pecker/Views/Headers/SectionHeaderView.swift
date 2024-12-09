@@ -5,8 +5,8 @@ class SectionHeaderView: UICollectionReusableView {
     // MARK: - UI Elements
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.textColor = AppTheme.secondary
         return label
     }()
     
@@ -35,7 +35,7 @@ class SectionHeaderView: UICollectionReusableView {
         addSubview(countLabel)
         
         titleLabel.snp.makeConstraints { make in
-            make.left.equalToSuperview().offset(16)
+            make.left.equalToSuperview().offset(8)
             make.centerY.equalToSuperview()
         }
         

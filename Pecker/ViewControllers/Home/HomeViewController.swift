@@ -31,7 +31,13 @@ class HomeViewController: BaseViewController {
         return cv
     }()
     
-    private let refreshControl = UIRefreshControl()
+    private lazy var refreshControl: UIRefreshControl = {
+        let refresh = UIRefreshControl()
+        refresh.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        refresh.tintColor = .clear
+        refresh.backgroundColor = .clear
+        return refresh
+    }()
     
     private let aiButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
@@ -57,6 +63,9 @@ class HomeViewController: BaseViewController {
     
     private var expandedCells = Set<String>()
     private let aiService = AISummaryService()
+    
+    private let loadingView = LoadingBirdView()
+    private let refreshLoadingView = LoadingBirdView()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -84,6 +93,7 @@ class HomeViewController: BaseViewController {
         view.addSubview(segmentBackground)
         view.addSubview(segmentedView)
         view.addSubview(collectionView)
+        view.addSubview(loadingView)
         
         segmentBackground.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
@@ -99,6 +109,20 @@ class HomeViewController: BaseViewController {
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(segmentedView.snp.bottom)
             make.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        loadingView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(150)
+        }
+        
+        refreshLoadingView.frame = CGRect(x: 0, y: 0, width: 60, height: 60)
+        refreshControl.addSubview(refreshLoadingView)
+        
+        refreshLoadingView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(10)
+            make.size.equalTo(60)
         }
         
         setupSegmentedView()
@@ -211,24 +235,31 @@ class HomeViewController: BaseViewController {
     
     // MARK: - Actions
     @objc private func refreshData() {
-        // 刷新所有订阅源
+        refreshLoadingView.startLoading()
+        
         Task { @MainActor in
             do {
                 let realm = try await Realm()
-                let feeds = realm.objects(Feed.self).filter("isDeleted == false")
+                let feeds = Array(realm.objects(Feed.self).filter("isDeleted == false"))
                 let rssService = RSSService()
                 
                 for feed in feeds {
-                    try await rssService.updateFeed(feed)
+                    if let currentFeed = realm.object(ofType: Feed.self, forPrimaryKey: feed.id) {
+                        try await rssService.updateFeed(currentFeed)
+                    }
                 }
                 
                 await MainActor.run {
-                    refreshControl.endRefreshing()
+                    refreshLoadingView.stopLoading { [weak self] in
+                        self?.refreshControl.endRefreshing()
+                    }
                 }
             } catch {
                 await MainActor.run {
-                    refreshControl.endRefreshing()
-                    showError(error)
+                    refreshLoadingView.stopLoading { [weak self] in
+                        self?.refreshControl.endRefreshing()
+                        self?.showError(error)
+                    }
                 }
             }
         }
@@ -254,6 +285,20 @@ class HomeViewController: BaseViewController {
         let nav = UINavigationController(rootViewController: searchVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        
+        if offsetY < 0 {
+            // 计算下拉进度
+            let progress = min(abs(offsetY) / 100, 1.0)
+            
+            // 如果还没有开始刷新，根据下拉进度调整动画
+            if !refreshControl.isRefreshing {
+                refreshLoadingView.alpha = progress
+            }
+        }
     }
 }
 

@@ -115,7 +115,7 @@ class FeedListViewController: BaseViewController {
         refreshLoadingView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.centerY.equalToSuperview().offset(10)
-            make.size.equalTo(30)
+            make.size.equalTo(60)
         }
     }
     
@@ -157,10 +157,18 @@ class FeedListViewController: BaseViewController {
         
         Task {
             do {
+                let realm = try await Realm()
+                // 将 Results 转换为数组，并确保每个 feed 都是有效的
                 guard let feeds = feeds else { return }
-                for feed in feeds {
-                    try await rssService.updateFeed(feed)
+                let feedArray = Array(feeds)
+                
+                for feed in feedArray {
+                    // 在每次循环中重新获取最新的 feed 对象
+                    if let currentFeed = realm.object(ofType: Feed.self, forPrimaryKey: feed.id) {
+                        try await rssService.updateFeed(currentFeed)
+                    }
                 }
+                
                 await MainActor.run {
                     refreshLoadingView.stopLoading { [weak self] in
                         self?.refreshControl.endRefreshing()
