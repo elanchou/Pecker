@@ -89,7 +89,7 @@ class AddFeedViewController: BaseViewController {
             normalizedURL = "https://" + normalizedURL
         }
         
-        guard let url = URL(string: normalizedURL) else {
+        guard URL(string: normalizedURL) != nil else {
             showError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "无效的 URL"]))
             return
         }

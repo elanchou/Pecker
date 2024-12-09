@@ -89,14 +89,23 @@ actor RSSService {
                     case .atom(let atomFeed):
                         feed.title = atomFeed.title ?? "未命名订阅源"
                         feed.iconURL = atomFeed.icon ?? atomFeed.logo
+                        feed.feedType = .article
                         
                     case .rss(let rssFeed):
                         feed.title = rssFeed.title ?? "未命名订阅源"
                         feed.iconURL = rssFeed.image?.url
                         
+                        // 检查是否为播客
+                        if rssFeed.iTunes != nil {
+                            feed.feedType = .podcast
+                        } else {
+                            feed.feedType = .article
+                        }
+                        
                     case .json(let jsonFeed):
                         feed.title = jsonFeed.title ?? "未命名订阅源"
                         feed.iconURL = jsonFeed.icon ?? jsonFeed.favicon
+                        feed.feedType = .article
                     }
                     continuation.resume(returning: feed)
                     
@@ -126,21 +135,46 @@ actor RSSService {
     }
     
     private func parseRSSFeed(_ feed: RSSFeed) -> [Content] {
-        return feed.items?.compactMap { item in
-            let content = Content()
-            content.id = item.guid?.value ?? item.link ?? UUID().uuidString
-            content.title = item.title ?? "无标题"
-            content.body = item.content?.contentEncoded ?? item.description ?? ""
-            content.url = item.link ?? ""
-            content.publishDate = item.pubDate ?? Date()
-            content.summary = item.description
-            
-            if let itemContent = item.content?.contentEncoded ?? item.description {
-                content.imageURLs.append(objectsIn: extractImageURLs(from: itemContent))
-            }
-            
-            return content
-        } ?? []
+        if feed.iTunes != nil {
+            // 如果是播客，解析音频内容
+            return feed.items?.compactMap { item in
+                let content = Content()
+                content.id = item.guid?.value ?? item.link ?? UUID().uuidString
+                content.title = item.title ?? "无标题"
+                content.body = item.description ?? ""
+                content.url = item.link ?? ""
+                content.audioURL = item.enclosure?.attributes?.url
+                content.publishDate = item.pubDate ?? Date()
+                content.summary = item.description
+                content.duration = TimeInterval(item.iTunes?.iTunesDuration ?? 0)
+                content.type = .podcast
+                
+                // 处理图片
+                if let imageURL = item.iTunes?.iTunesImage?.attributes?.href ?? feed.iTunes?.iTunesImage?.attributes?.href ?? feed.image?.url {
+                    content.imageURLs.append(imageURL)
+                }
+                
+                return content
+            } ?? []
+        } else {
+            // 原有的文章解析逻辑
+            return feed.items?.compactMap { item in
+                let content = Content()
+                content.id = item.guid?.value ?? item.link ?? UUID().uuidString
+                content.title = item.title ?? "无标题"
+                content.body = item.content?.contentEncoded ?? item.description ?? ""
+                content.url = item.link ?? ""
+                content.publishDate = item.pubDate ?? Date()
+                content.summary = item.description
+                content.type = .article
+                
+                if let itemContent = item.content?.contentEncoded ?? item.description {
+                    content.imageURLs.append(objectsIn: extractImageURLs(from: itemContent))
+                }
+                
+                return content
+            } ?? []
+        }
     }
     
     private func parseJSONFeed(_ feed: JSONFeed) -> [Content] {
@@ -202,7 +236,7 @@ actor RSSService {
                 }
             }
             
-            // ���加到 Realm
+            // 添加到 Realm
             realm.add(content)
             feed.contents.append(content)
         }

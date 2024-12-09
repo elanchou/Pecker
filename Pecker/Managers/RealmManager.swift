@@ -38,31 +38,30 @@ actor RealmManager {
             
             for content in contents {
                 if let existingContent = realm.objects(Content.self).filter("url == %@", content.url).first {
-                    // 更新现有文章
+                    // 更新现有内容
                     existingContent.title = content.title
                     existingContent.body = content.body
                     existingContent.summary = content.summary
                     existingContent.publishDate = content.publishDate
+                    existingContent.type = content.type
                     
-                    // 确保文章与订阅源关联
+                    // 更新播客特有属性
+                    if content.type == .podcast {
+                        existingContent.audioURL = content.audioURL
+                        existingContent.duration = content.duration
+                        // 保持播放进度不变
+                    }
+                    
+                    // 确保内容与订阅源关联
                     if !feed.contents.contains(existingContent) {
                         feed.contents.append(existingContent)
                     }
                 } else {
-                    // 添加新文章
-                    let newContent = Content()
-                    newContent.id = content.id
-                    newContent.title = content.title
-                    newContent.body = content.body
-                    newContent.summary = content.summary
-                    newContent.url = content.url
-                    newContent.publishDate = content.publishDate
-                    newContent.imageURLs.append(objectsIn: content.imageURLs)
+                    // 添加新内容
+                    realm.add(content)
+                    feed.contents.append(content)
                     
-                    realm.add(newContent)
-                    feed.contents.append(newContent)
-                    
-                    if !newContent.isRead {
+                    if !content.isRead {
                         feed.unreadCount += 1
                     }
                 }
@@ -165,6 +164,17 @@ actor RealmManager {
         try realm.write {
             // 保存用户设置
             // 实现具体的设置保存逻辑
+        }
+    }
+    
+    // MARK: - Playback Operations
+    @MainActor
+    func updatePlaybackPosition(_ contentId: String, position: TimeInterval) async throws {
+        let realm = try await Realm()
+        guard let content = realm.object(ofType: Content.self, forPrimaryKey: contentId) else { return }
+        
+        try realm.write {
+            content.playbackPosition = position
         }
     }
 }

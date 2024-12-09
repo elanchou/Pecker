@@ -1,6 +1,15 @@
 import Foundation
 import RealmSwift
 
+enum ContentType: String {
+    case article = "article"
+    case podcast = "podcast"
+    
+    var isAudio: Bool {
+        self == .podcast
+    }
+}
+
 class Content: Object, Identifiable {
     @Persisted(primaryKey: true) var id: String
     @Persisted var title: String = ""
@@ -15,6 +24,17 @@ class Content: Object, Identifiable {
     @Persisted(originProperty: "contents") var feed: LinkingObjects<Feed>
     @Persisted var imageURLs = List<String>()
     @Persisted var updatedAt: Date = Date()
+    // Podcast
+    @Persisted var audioURL: String?
+    @Persisted var duration: TimeInterval = 0
+    @Persisted var playbackPosition: TimeInterval = 0
+    var isPlaying: Bool = false
+    
+    @Persisted private var typeRaw: String = ContentType.article.rawValue
+    var type: ContentType {
+        get { ContentType(rawValue: typeRaw) ?? .article }
+        set { typeRaw = newValue.rawValue }
+    }
     
     convenience init(title: String, body: String, url: String) {
         self.init()

@@ -12,14 +12,26 @@ class Feed: Object, Identifiable {
     @Persisted var cloudID: String?
     @Persisted var isDeleted: Bool = false
     @Persisted var contents: List<Content>
+    @Persisted var type: String = "article"
     
-    convenience init(title: String, url: String) {
+    var feedType: FeedType {
+        get { FeedType(rawValue: type) ?? .article }
+        set { type = newValue.rawValue }
+    }
+    
+    convenience init(title: String, url: String, type: FeedType = .article) {
         self.init()
         self.id = UUID().uuidString
         self.title = title
         self.url = url
+        self.type = type.rawValue
         self.lastUpdated = Date()
     }
+}
+
+enum FeedType: String {
+    case article = "article"
+    case podcast = "podcast"
 }
 
 // MARK: - Helper Functions

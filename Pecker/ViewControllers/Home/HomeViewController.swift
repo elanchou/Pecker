@@ -24,6 +24,7 @@ class HomeViewController: BaseViewController {
         cv.delegate = self
         cv.dataSource = self
         cv.register(ArticleCell.self, forCellWithReuseIdentifier: "ArticleCell")
+        cv.register(PodcastCell.self, forCellWithReuseIdentifier: "PodcastCell")
         cv.register(SectionHeaderView.self,
                    forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
                    withReuseIdentifier: "HeaderView")
@@ -76,7 +77,7 @@ class HomeViewController: BaseViewController {
     private func setupUI() {
         title = "文章"
         
-        // 配置分段控制器背景
+        // 配置分段控制器景
         let segmentBackground = UIView()
         segmentBackground.backgroundColor = .systemBackground
         
@@ -183,7 +184,6 @@ class HomeViewController: BaseViewController {
     }
     
     // 添加一个属性来储组后的数据
-    // 添加一个属性来储组后的数据
     private var sections: [(String, [Content])] = []
     
     private func groupContentsByDate(_ contents: [Content]) -> [(String, [Content])] {
@@ -268,16 +268,19 @@ extension HomeViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
         let content = sections[indexPath.section].1[indexPath.item]
         
-        cell.delegate = self
-        cell.configure(
-            with: content,
-            isExpanded: expandedCells.contains(content.id)
-        )
-        
-        return cell
+        if content.type == .podcast {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PodcastCell", for: indexPath) as! PodcastCell
+            cell.configure(with: content)
+            cell.delegate = self
+            return cell
+        } else {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
+            cell.configure(with: content)
+            cell.delegate = self
+            return cell
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -318,6 +321,9 @@ extension HomeViewController: UICollectionViewDelegate {
         if let articleCell = cell as? ArticleCell {
             articleCell.setNeedsLayout()
             articleCell.layoutIfNeeded()
+        } else if let podcastCell = cell as? PodcastCell {
+            podcastCell.setNeedsLayout()
+            podcastCell.layoutIfNeeded()
         }
     }
 }
@@ -368,7 +374,7 @@ private extension HomeViewController {
     }
 }
 
-// MARK: - ContentCellDelegate
+// MARK: - ArticleCellDelegate
 extension HomeViewController: ArticleCellDelegate {
     func articleCell(_ cell: ArticleCell, didTapAIButton article: Content) {
         if article.aiSummary != nil {
@@ -405,6 +411,66 @@ extension HomeViewController: ArticleCellDelegate {
             } catch {
                 showError(error)
             }
+        }
+    }
+}
+
+extension HomeViewController: PodcastCellDelegate {
+    func podcastCell(_ cell: PodcastCell, didTapPlayPauseFor content: Content) {
+        // 更新 UI 和播放状态
+        if let indexPath = collectionView.indexPath(for: cell) {
+            collectionView.reloadItems(at: [indexPath])
+        }
+    }
+    
+    func podcastCell(_ cell: PodcastCell, didUpdateProgress progress: Float, for content: Content) {
+        // 可以在这里更新其他 UI 元素，比如迷你播放器
+        // 目前暂时不需要实现
+    }
+    
+    func podcastCell(_ cell: PodcastCell, didChangePlayingState isPlaying: Bool) {
+        // 获取当前播放的内容
+        guard let indexPath = collectionView.indexPath(for: cell) else {
+            return
+        }
+        
+        let content = sections[indexPath.section].1[indexPath.item]
+        
+        // 如果开始播放，暂停其他正在播放的内容
+        if isPlaying {
+            for (sectionIndex, section) in sections.enumerated() {
+                for (itemIndex, otherContent) in section.1.enumerated() {
+                    if otherContent.type == .podcast &&
+                       otherContent.id != content.id &&
+                       otherContent.isPlaying {
+                        // 更新数据库中的播放状态
+                        guard let realm = try? Realm() else { return }
+                        try? realm.write {
+                            otherContent.isPlaying = false
+                        }
+                        
+                        let otherIndexPath = IndexPath(item: itemIndex, section: sectionIndex)
+                        if let otherCell = collectionView.cellForItem(at: otherIndexPath) as? PodcastCell {
+                            otherCell.stopPlaying()
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 更新数据库中的播放状态
+        guard let realm = try? Realm() else { return }
+        try? realm.write {
+            content.isPlaying = isPlaying
+        }
+        
+        // 触感反馈
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+        
+        // 更新 UI
+        if let indexPath = collectionView.indexPath(for: cell) {
+            collectionView.reloadItems(at: [indexPath])
         }
     }
 }
