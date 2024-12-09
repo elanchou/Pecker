@@ -184,11 +184,11 @@ class TodaySummaryViewController: UIViewController {
             do {
                 if TodaySummaryManager.shared.shouldUpdateSummary() {
                     let realm = try await Realm()
-                    let articles = realm.objects(Article.self)
+                    let contents = realm.objects(Content.self)
                         .filter("isDeleted == false")
                         .sorted(byKeyPath: "publishDate", ascending: false)
                     
-                    let summary = try await generateDailySummary(for: Array(articles))
+                    let summary = try await generateDailySummary(for: Array(contents))
                     TodaySummaryManager.shared.saveSummary(summary)
                     
                     await MainActor.run {
@@ -222,9 +222,9 @@ class TodaySummaryViewController: UIViewController {
         TodaySummaryManager.shared.updateLastShowTime()
     }
     
-    private func generateDailySummary(for articles: [Article]) async throws -> String {
+    private func generateDailySummary(for contents: [Content]) async throws -> String {
         let aiService = AISummaryService()
-        return try await aiService.generateSummary(for: .dailyDigest(articles))
+        return try await aiService.generateSummary(for: .dailyDigest(contents))
     }
     
     deinit {

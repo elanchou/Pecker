@@ -6,7 +6,7 @@ actor RSSService {
     private let queue = DispatchQueue(label: "com.elanchou.pecker.rss", qos: .userInitiated)
     
     @MainActor
-    func fetchFeed(url: String) async throws -> [Article] {
+    func fetchFeed(url: String) async throws -> [Content] {
         return try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 guard let feedURL = URL(string: url) else {
@@ -19,16 +19,16 @@ actor RSSService {
                 
                 switch result {
                 case .success(let feed):
-                    let articles: [Article]
+                    let contents: [Content]
                     switch feed {
                     case .atom(let atomFeed):
-                        articles = self.parseAtomFeed(atomFeed)
+                        contents = self.parseAtomFeed(atomFeed)
                     case .rss(let rssFeed):
-                        articles = self.parseRSSFeed(rssFeed)
+                        contents = self.parseRSSFeed(rssFeed)
                     case .json(let jsonFeed):
-                        articles = self.parseJSONFeed(jsonFeed)
+                        contents = self.parseJSONFeed(jsonFeed)
                     }
-                    continuation.resume(returning: articles)
+                    continuation.resume(returning: contents)
                 case .failure(let error):
                     continuation.resume(throwing: error)
                 }
@@ -38,8 +38,8 @@ actor RSSService {
     
     @MainActor
     func updateFeed(_ feed: Feed) async throws {
-        let articles = try await fetchFeed(url: feed.url)
-        try await RealmManager.shared.updateFeed(feed, with: articles)
+        let contents = try await fetchFeed(url: feed.url)
+        try await RealmManager.shared.updateFeed(feed, with: contents)
     }
     
     @MainActor
@@ -49,11 +49,11 @@ actor RSSService {
         feed.url = url
         
         // 先获取文章以验证订阅源有效
-        let articles = try await fetchFeed(url: url)
+        let contents = try await fetchFeed(url: url)
         
         // 如果成功获取文章，添加订阅源
         try await RealmManager.shared.addFeed(feed)
-        try await RealmManager.shared.updateFeed(feed, with: articles)
+        try await RealmManager.shared.updateFeed(feed, with: contents)
     }
     
     @MainActor
@@ -107,57 +107,57 @@ actor RSSService {
         }
     }
     
-    private func parseAtomFeed(_ feed: AtomFeed) -> [Article] {
+    private func parseAtomFeed(_ feed: AtomFeed) -> [Content] {
         return feed.entries?.compactMap { entry in
-            let article = Article()
-            article.id = entry.id ?? UUID().uuidString
-            article.title = entry.title ?? "无标题"
-            article.content = entry.content?.value ?? entry.summary?.value ?? ""
-            article.url = entry.links?.first?.attributes?.href ?? ""
-            article.publishDate = entry.published ?? Date()
-            article.summary = entry.summary?.value
+            let content = Content()
+            content.id = entry.id ?? UUID().uuidString
+            content.title = entry.title ?? "无标题"
+            content.body = entry.content?.value ?? entry.summary?.value ?? ""
+            content.url = entry.links?.first?.attributes?.href ?? ""
+            content.publishDate = entry.published ?? Date()
+            content.summary = entry.summary?.value
             
-            if let content = entry.content?.value {
-                article.imageURLs.append(objectsIn: extractImageURLs(from: content))
+            if let entryContent = entry.content?.value {
+                content.imageURLs.append(objectsIn: extractImageURLs(from: entryContent))
             }
             
-            return article
+            return content
         } ?? []
     }
     
-    private func parseRSSFeed(_ feed: RSSFeed) -> [Article] {
+    private func parseRSSFeed(_ feed: RSSFeed) -> [Content] {
         return feed.items?.compactMap { item in
-            let article = Article()
-            article.id = item.guid?.value ?? item.link ?? UUID().uuidString
-            article.title = item.title ?? "无标题"
-            article.content = item.content?.contentEncoded ?? item.description ?? ""
-            article.url = item.link ?? ""
-            article.publishDate = item.pubDate ?? Date()
-            article.summary = item.description
+            let content = Content()
+            content.id = item.guid?.value ?? item.link ?? UUID().uuidString
+            content.title = item.title ?? "无标题"
+            content.body = item.content?.contentEncoded ?? item.description ?? ""
+            content.url = item.link ?? ""
+            content.publishDate = item.pubDate ?? Date()
+            content.summary = item.description
             
-            if let content = item.content?.contentEncoded ?? item.description {
-                article.imageURLs.append(objectsIn: extractImageURLs(from: content))
+            if let itemContent = item.content?.contentEncoded ?? item.description {
+                content.imageURLs.append(objectsIn: extractImageURLs(from: itemContent))
             }
             
-            return article
+            return content
         } ?? []
     }
     
-    private func parseJSONFeed(_ feed: JSONFeed) -> [Article] {
+    private func parseJSONFeed(_ feed: JSONFeed) -> [Content] {
         return feed.items?.compactMap { item in
-            let article = Article()
-            article.id = item.id ?? item.url ?? UUID().uuidString
-            article.title = item.title ?? "无标题"
-            article.content = item.contentHtml ?? item.contentText ?? ""
-            article.url = item.url ?? ""
-            article.publishDate = item.datePublished ?? Date()
-            article.summary = item.summary
+            let content = Content()
+            content.id = item.id ?? item.url ?? UUID().uuidString
+            content.title = item.title ?? "无标题"
+            content.body = item.contentHtml ?? item.contentText ?? ""
+            content.url = item.url ?? ""
+            content.publishDate = item.datePublished ?? Date()
+            content.summary = item.summary
             
             if let image = item.image {
-                article.imageURLs.append(image)
+                content.imageURLs.append(image)
             }
             
-            return article
+            return content
         } ?? []
     }
     
@@ -176,35 +176,35 @@ actor RSSService {
     private func processRSSItems(_ items: [RSSFeedItem], for feed: Feed, in realm: Realm) async throws {
         for item in items {
             // 使用 URL 作为唯一标识
-            let articleId = item.link ?? UUID().uuidString
+            let contentId = item.link ?? UUID().uuidString
             
             // 检查文章是否已存在
-            if realm.object(ofType: Article.self, forPrimaryKey: articleId) != nil {
+            if realm.object(ofType: Content.self, forPrimaryKey: contentId) != nil {
                 // 如果文章已存在，跳过
                 continue
             }
             
             // 创建新文章
-            let article = Article()
-            article.id = articleId
-            article.title = item.title ?? ""
-            article.content = item.description ?? ""
-            article.url = item.link ?? ""
-            article.publishDate = item.pubDate ?? Date()
-            article.summary = item.description ?? ""
+            let content = Content()
+            content.id = contentId
+            content.title = item.title ?? ""
+            content.body = item.description ?? ""
+            content.url = item.link ?? ""
+            content.publishDate = item.pubDate ?? Date()
+            content.summary = item.description ?? ""
             
             // 处理图片 URL
             if let mediaContent = item.media?.mediaContents {
                 for media in mediaContent {
                     if let url = media.attributes?.url {
-                        article.imageURLs.append(url)
+                        content.imageURLs.append(url)
                     }
                 }
             }
             
             // ���加到 Realm
-            realm.add(article)
-            feed.articles.append(article)
+            realm.add(content)
+            feed.contents.append(content)
         }
     }
 }

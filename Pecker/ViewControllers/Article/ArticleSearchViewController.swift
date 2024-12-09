@@ -1,7 +1,7 @@
 import UIKit
 import RealmSwift
 
-class ArticleSearchViewController: BaseViewController {
+class ContentSearchViewController: BaseViewController {
     private let searchBar: UISearchBar = {
         let bar = UISearchBar()
         bar.placeholder = "搜索文章"
@@ -18,7 +18,7 @@ class ArticleSearchViewController: BaseViewController {
         return cv
     }()
     
-    private var articles: [Article] = []
+    private var contents: [Content] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -84,12 +84,12 @@ class ArticleSearchViewController: BaseViewController {
     private func performSearch(with query: String) {
         do {
             let realm = try Realm()
-            let results = realm.objects(Article.self)
+            let results = realm.objects(Content.self)
                 .filter("isDeleted == false")
                 .filter("title CONTAINS[c] %@ OR content CONTAINS[c] %@", query, query)
                 .sorted(byKeyPath: "publishDate", ascending: false)
             
-            articles = Array(results)
+            contents = Array(results)
             
             // 添加动画效果
             let animation = CATransition()
@@ -111,7 +111,7 @@ class ArticleSearchViewController: BaseViewController {
 }
 
 // MARK: - UISearchBarDelegate
-extension ArticleSearchViewController: UISearchBarDelegate {
+extension ContentSearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         NSObject.cancelPreviousPerformRequests(withTarget: self)
         perform(#selector(delayedSearch), with: nil, afterDelay: 0.5)
@@ -120,7 +120,7 @@ extension ArticleSearchViewController: UISearchBarDelegate {
     @objc private func delayedSearch() {
         guard let query = searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines),
               !query.isEmpty else {
-            articles = []
+            contents = []
             collectionView.reloadData()
             return
         }
@@ -134,27 +134,27 @@ extension ArticleSearchViewController: UISearchBarDelegate {
 }
 
 // MARK: - UICollectionViewDataSource
-extension ArticleSearchViewController: UICollectionViewDataSource {
+extension ContentSearchViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return articles.count
+        return contents.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
-        cell.configure(with: articles[indexPath.item])
+        cell.configure(with: contents[indexPath.item])
         return cell
     }
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
-extension ArticleSearchViewController: UICollectionViewDelegateFlowLayout {
+extension ContentSearchViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: collectionView.bounds.width, height: 140)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let article = articles[indexPath.item]
-        let detailVC = ArticleDetailViewController(articleId: article.id)
+        let content = contents[indexPath.item]
+        let detailVC = ArticleDetailViewController(articleId: content.id)
         navigationController?.pushViewController(detailVC, animated: true)
     }
 } 

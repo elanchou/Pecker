@@ -30,39 +30,39 @@ actor RealmManager {
     }
     
     @MainActor
-    func updateFeed(_ feed: Feed, with articles: [Article]) async throws {
+    func updateFeed(_ feed: Feed, with contents: [Content]) async throws {
         let realm = try await Realm()
         
         try realm.write {
             feed.lastUpdated = Date()
             
-            for article in articles {
-                if let existingArticle = realm.objects(Article.self).filter("url == %@", article.url).first {
+            for content in contents {
+                if let existingContent = realm.objects(Content.self).filter("url == %@", content.url).first {
                     // 更新现有文章
-                    existingArticle.title = article.title
-                    existingArticle.content = article.content
-                    existingArticle.summary = article.summary
-                    existingArticle.publishDate = article.publishDate
+                    existingContent.title = content.title
+                    existingContent.body = content.body
+                    existingContent.summary = content.summary
+                    existingContent.publishDate = content.publishDate
                     
                     // 确保文章与订阅源关联
-                    if !feed.articles.contains(existingArticle) {
-                        feed.articles.append(existingArticle)
+                    if !feed.contents.contains(existingContent) {
+                        feed.contents.append(existingContent)
                     }
                 } else {
                     // 添加新文章
-                    let newArticle = Article()
-                    newArticle.id = article.id
-                    newArticle.title = article.title
-                    newArticle.content = article.content
-                    newArticle.summary = article.summary
-                    newArticle.url = article.url
-                    newArticle.publishDate = article.publishDate
-                    newArticle.imageURLs.append(objectsIn: article.imageURLs)
+                    let newContent = Content()
+                    newContent.id = content.id
+                    newContent.title = content.title
+                    newContent.body = content.body
+                    newContent.summary = content.summary
+                    newContent.url = content.url
+                    newContent.publishDate = content.publishDate
+                    newContent.imageURLs.append(objectsIn: content.imageURLs)
                     
-                    realm.add(newArticle)
-                    feed.articles.append(newArticle)
+                    realm.add(newContent)
+                    feed.contents.append(newContent)
                     
-                    if !newArticle.isRead {
+                    if !newContent.isRead {
                         feed.unreadCount += 1
                     }
                 }
@@ -74,21 +74,21 @@ actor RealmManager {
     func deleteFeed(_ feed: Feed) async throws {
         let realm = try await Realm()
         try realm.write {
-            realm.delete(feed.articles)
+            realm.delete(feed.contents)
             realm.delete(feed)
         }
     }
     
-    // MARK: - Article Operations
+    // MARK: - Content Operations
     @MainActor
-    func markArticleAsRead(_ articleId: String) async throws {
+    func markContentAsRead(_ contentId: String) async throws {
         let realm = try await Realm()
-        guard let article = realm.object(ofType: Article.self, forPrimaryKey: articleId) else { return }
+        guard let content = realm.object(ofType: Content.self, forPrimaryKey: contentId) else { return }
         
         try realm.write {
-            if !article.isRead {
-                article.isRead = true
-                if let feed = article.feed.first {
+            if !content.isRead {
+                content.isRead = true
+                if let feed = content.feed.first {
                     feed.unreadCount = max(0, feed.unreadCount - 1)
                 }
             }
@@ -96,54 +96,54 @@ actor RealmManager {
     }
     
     @MainActor
-    func toggleArticleFavorite(_ articleId: String) async throws {
+    func toggleContentFavorite(_ contentId: String) async throws {
         let realm = try await Realm()
-        guard let article = realm.object(ofType: Article.self, forPrimaryKey: articleId) else { return }
+        guard let content = realm.object(ofType: Content.self, forPrimaryKey: contentId) else { return }
         
         try realm.write {
-            article.isFavorite.toggle()
+            content.isFavorite.toggle()
         }
     }
     
     @MainActor
-    func markAllArticlesAsRead(in feed: Feed) async throws {
+    func markAllContentsAsRead(in feed: Feed) async throws {
         let realm = try await Realm()
         try realm.write {
-            let articles = realm.objects(Article.self).filter("ANY feed == %@", feed)
-            articles.forEach { $0.isRead = true }
+            let contents = realm.objects(Content.self).filter("ANY feed == %@", feed)
+            contents.forEach { $0.isRead = true }
             feed.unreadCount = 0
         }
     }
     
     @MainActor
-    func updateArticleSummary(_ articleId: String, summary: String) async throws {
+    func updateContentSummary(_ contentId: String, summary: String) async throws {
         let realm = try await Realm()
-        guard let article = realm.object(ofType: Article.self, forPrimaryKey: articleId) else { return }
+        guard let content = realm.object(ofType: Content.self, forPrimaryKey: contentId) else { return }
         
         try realm.write {
-            article.aiSummary = summary
+            content.aiSummary = summary
         }
     }
     
     @MainActor
-    func markArticleAsDeleted(_ articleId: String) async throws {
+    func markContentAsDeleted(_ contentId: String) async throws {
         let realm = try await Realm()
-        guard let article = realm.object(ofType: Article.self, forPrimaryKey: articleId) else { return }
+        guard let content = realm.object(ofType: Content.self, forPrimaryKey: contentId) else { return }
         
         try realm.write {
-            article.isDeleted = true
+            content.isDeleted = true
         }
     }
     
     // MARK: - Query Operations
     @MainActor
-    func getArticles(filter: String? = nil) -> Results<Article>? {
+    func getContents(filter: String? = nil) -> Results<Content>? {
         guard let realm = try? Realm() else { return nil }
-        var articles = realm.objects(Article.self).filter("isDeleted == false")
+        var contents = realm.objects(Content.self).filter("isDeleted == false")
         if let filter = filter {
-            articles = articles.filter(filter)
+            contents = contents.filter(filter)
         }
-        return articles
+        return contents
     }
     
     @MainActor
@@ -153,9 +153,9 @@ actor RealmManager {
     }
     
     @MainActor
-    func getArticle(byId id: String) -> Article? {
+    func getContent(byId id: String) -> Content? {
         guard let realm = try? Realm() else { return nil }
-        return realm.object(ofType: Article.self, forPrimaryKey: id)
+        return realm.object(ofType: Content.self, forPrimaryKey: id)
     }
     
     // MARK: - Settings Operations

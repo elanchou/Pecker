@@ -106,7 +106,7 @@ class AddFeedViewController: BaseViewController {
                 let feed = try await rssService.fetchFeedInfo(url: urlTextField.text ?? "")
                 try await RealmManager.shared.addNewFeed(feed)
                 
-                // Add Articles
+                // Add Contents
                 try await rssService.updateFeed(feed)
                 
                 await MainActor.run {

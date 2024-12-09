@@ -19,21 +19,21 @@ func formatDate(_ date: Date) -> String {
     }
 }
 
-func groupArticlesByDate(_ articles: [Article]) -> [(Date, [Article])] {
+func groupContentsByDate(_ contents: [Content]) -> [(Date, [Content])] {
     let calendar = Calendar.current
     
-    let grouped = Dictionary(grouping: articles) { article in
-        calendar.startOfDay(for: article.publishDate)
+    let grouped = Dictionary(grouping: contents) { content in
+        calendar.startOfDay(for: content.publishDate)
     }
     
     return grouped.sorted { $0.key > $1.key }
 }
 
-func filterArticles(_ articles: [Article], searchText: String) -> [Article] {
+func filterContents(_ contents: [Content], searchText: String) -> [Content] {
     if searchText.isEmpty {
-        return articles.sorted { $0.publishDate > $1.publishDate }
+        return contents.sorted { $0.publishDate > $1.publishDate }
     }
-    return articles
+    return contents
         .filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         .sorted { $0.publishDate > $1.publishDate }
 } 

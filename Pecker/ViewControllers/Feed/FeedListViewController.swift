@@ -237,7 +237,7 @@ class FeedListViewController: BaseViewController {
     private func markAllAsRead(feed: Feed) {
         Task {
             do {
-                try await RealmManager.shared.markAllArticlesAsRead(in: feed)
+                try await RealmManager.shared.markAllContentsAsRead(in: feed)
                 // 成功的反馈
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)

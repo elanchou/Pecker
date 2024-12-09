@@ -5,9 +5,9 @@ import SnapKit
 
 class HomeViewController: BaseViewController {
     // MARK: - Properties
-    private var articles: Results<Article>?
+    private var contents: Results<Content>?
     private var notificationToken: NotificationToken?
-    private var currentGrouping: ArticleGrouping = .byDate {
+    private var currentGrouping: ContentGrouping = .byDate {
         didSet {
             updateUI()
         }
@@ -133,9 +133,9 @@ class HomeViewController: BaseViewController {
     private func loadData() {
         do {
             let realm = try Realm()
-            articles = realm.objects(Article.self).filter("isDeleted == false")
+            contents = realm.objects(Content.self).filter("isDeleted == false")
             
-            notificationToken = articles?.observe { [weak self] changes in
+            notificationToken = contents?.observe { [weak self] changes in
                 guard let self = self else { return }
                 switch changes {
                 case .initial:
@@ -155,15 +155,15 @@ class HomeViewController: BaseViewController {
     
     private func updateUI() {
         // 获取基础数据
-        guard let baseArticles = articles else { return }
-        var filteredArticles = baseArticles.filter("isDeleted == false")
+        guard let baseContents = contents else { return }
+        var filteredContents = baseContents.filter("isDeleted == false")
         
         // 应用分组过滤
         switch currentGrouping {
         case .favorites:
-            filteredArticles = filteredArticles.filter("isFavorite == true")
+            filteredContents = filteredContents.filter("isFavorite == true")
         case .unread:
-            filteredArticles = filteredArticles.filter("isRead == false")
+            filteredContents = filteredContents.filter("isRead == false")
         default:
             break
         }
@@ -171,11 +171,11 @@ class HomeViewController: BaseViewController {
         // 根据分组方式组织数据
         switch currentGrouping {
         case .byDate:
-            sections = groupArticlesByDate(Array(filteredArticles))
+            sections = groupContentsByDate(Array(filteredContents))
         case .byFeed:
-            sections = groupArticlesByFeed(Array(filteredArticles))
+            sections = groupContentsByFeed(Array(filteredContents))
         case .favorites, .unread:
-            sections = [("", Array(filteredArticles))]
+            sections = [("", Array(filteredContents))]
         }
         
         // 更新 UI
@@ -184,28 +184,28 @@ class HomeViewController: BaseViewController {
     
     // 添加一个属性来储组后的数据
     // 添加一个属性来储组后的数据
-    private var sections: [(String, [Article])] = []
+    private var sections: [(String, [Content])] = []
     
-    private func groupArticlesByDate(_ articles: [Article]) -> [(String, [Article])] {
-        let grouped = Dictionary(grouping: articles) { article in
-            Calendar.current.startOfDay(for: article.publishDate)
+    private func groupContentsByDate(_ contents: [Content]) -> [(String, [Content])] {
+        let grouped = Dictionary(grouping: contents) { content in
+            Calendar.current.startOfDay(for: content.publishDate)
         }
-        return grouped.map { (date, articles) in
-            (formatDate(date), articles.sorted { $0.publishDate > $1.publishDate })
+        return grouped.map { (date, contents) in
+            (formatDate(date), contents.sorted { $0.publishDate > $1.publishDate })
         }.sorted { $0.0 > $1.0 }
     }
     
-    private func groupArticlesByFeed(_ articles: [Article]) -> [(String, [Article])] {
-        var feedGroups: [Feed: [Article]] = [:]
+    private func groupContentsByFeed(_ contents: [Content]) -> [(String, [Content])] {
+        var feedGroups: [Feed: [Content]] = [:]
         
-        for article in articles {
-            if let feed = article.feed.first {
-                feedGroups[feed, default: []].append(article)
+        for content in contents {
+            if let feed = content.feed.first {
+                feedGroups[feed, default: []].append(content)
             }
         }
         
-        return feedGroups.map { (feed, articles) in
-            (feed.title, articles.sorted { $0.publishDate > $1.publishDate })
+        return feedGroups.map { (feed, contents) in
+            (feed.title, contents.sorted { $0.publishDate > $1.publishDate })
         }.sorted { $0.0 < $1.0 }
     }
     
@@ -243,14 +243,14 @@ class HomeViewController: BaseViewController {
     }
     
     @objc private func aiButtonTapped() {
-//        guard let articles = articles else { return }
-//        let aiVC = AIConversationViewController(type: .feedSummary(Array(articles)))
+//        guard let contents = contents else { return }
+//        let aiVC = AIConversationViewController(type: .feedSummary(Array(contents)))
 //        let navController = UINavigationController(rootViewController: aiVC)
 //        present(navController, animated: true)
     }
     
     @objc private func showSearch() {
-        let searchVC = ArticleSearchViewController()
+        let searchVC = ContentSearchViewController()
         let nav = UINavigationController(rootViewController: searchVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
@@ -269,12 +269,12 @@ extension HomeViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
-        let article = sections[indexPath.section].1[indexPath.item]
+        let content = sections[indexPath.section].1[indexPath.item]
         
         cell.delegate = self
         cell.configure(
-            with: article,
-            isExpanded: expandedCells.contains(article.id)
+            with: content,
+            isExpanded: expandedCells.contains(content.id)
         )
         
         return cell
@@ -285,8 +285,8 @@ extension HomeViewController: UICollectionViewDataSource {
                                                                    withReuseIdentifier: "HeaderView",
                                                                    for: indexPath) as! SectionHeaderView
         
-        let (title, articles) = sections[indexPath.section]
-        header.configure(title: title, count: articles.count)
+        let (title, contents) = sections[indexPath.section]
+        header.configure(title: title, count: contents.count)
         return header
     }
 }
@@ -296,14 +296,14 @@ extension HomeViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         Task {
             // 获取文章 ID
-            let articleId = sections[indexPath.section].1[indexPath.item].id
+            let contentId = sections[indexPath.section].1[indexPath.item].id
             
             // 在主线程获取文对象
             await MainActor.run {
                 do {
                     let realm = try Realm()
-                    if let article = realm.object(ofType: Article.self, forPrimaryKey: articleId) {
-                        let detailVC = ArticleDetailViewController(articleId: article.id)
+                    if let content = realm.object(ofType: Content.self, forPrimaryKey: contentId) {
+                        let detailVC = ArticleDetailViewController(articleId: content.id)
                         navigationController?.pushViewController(detailVC, animated: true)
                     }
                 } catch {
@@ -322,8 +322,8 @@ extension HomeViewController: UICollectionViewDelegate {
     }
 }
 
-// MARK: - ArticleGrouping
-private enum ArticleGrouping: Int {
+// MARK: - ContentGrouping
+private enum ContentGrouping: Int {
     case byDate = 0
     case byFeed = 1
     case favorites = 2
@@ -333,7 +333,7 @@ private enum ArticleGrouping: Int {
 // MARK: - Layout
 private extension HomeViewController {
     func createLayout() -> UICollectionViewLayout {
-        let layout = UICollectionViewCompositionalLayout { [weak self] section, env -> NSCollectionLayoutSection? in
+        let layout = UICollectionViewCompositionalLayout { section, env -> NSCollectionLayoutSection? in
             let itemSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
                 heightDimension: .estimated(130)
@@ -368,9 +368,9 @@ private extension HomeViewController {
     }
 }
 
-// MARK: - ArticleCellDelegate
+// MARK: - ContentCellDelegate
 extension HomeViewController: ArticleCellDelegate {
-    func articleCell(_ cell: ArticleCell, didTapAIButton article: Article) {
+    func articleCell(_ cell: ArticleCell, didTapAIButton article: Content) {
         if article.aiSummary != nil {
             if expandedCells.contains(article.id) {
                 expandedCells.remove(article.id)
@@ -390,7 +390,7 @@ extension HomeViewController: ArticleCellDelegate {
         
         Task {
             do {
-                let summary = try await aiService.generateSummary(for: .singleArticle(article))
+                let summary = try await aiService.generateSummary(for: .singleContent(article))
                 await MainActor.run {
                     article.updateAISummary(summary)
                     self.expandedCells.insert(article.id)
@@ -412,6 +412,6 @@ extension HomeViewController: ArticleCellDelegate {
 // MARK: - JXSegmentedViewDelegate
 extension HomeViewController: JXSegmentedViewDelegate {
     func segmentedView(_ segmentedView: JXSegmentedView, didSelectedItemAt index: Int) {
-        currentGrouping = ArticleGrouping(rawValue: index) ?? .byDate
+        currentGrouping = ContentGrouping(rawValue: index) ?? .byDate
     }
 } 

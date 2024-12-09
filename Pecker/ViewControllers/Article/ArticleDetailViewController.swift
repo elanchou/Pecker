@@ -5,7 +5,7 @@ import RealmSwift
 class ArticleDetailViewController: BaseViewController {
     // MARK: - Properties
     private let articleId: String
-    private var article: Article?
+    private var article: Content?
     private let aiService = AISummaryService()
     
     private let headerView: UIView = {
@@ -139,7 +139,7 @@ class ArticleDetailViewController: BaseViewController {
     
     @objc private func aiButtonTapped() {
         guard let article = article else { return }
-        let aiVC = AIViewController(article: article)
+        let aiVC = AIViewController(content: article)
         let nav = UINavigationController(rootViewController: aiVC)
         present(nav, animated: true)
     }
@@ -150,7 +150,7 @@ class ArticleDetailViewController: BaseViewController {
             await MainActor.run {
                 do {
                     let realm = try Realm()
-                    if let loadedArticle = realm.object(ofType: Article.self, forPrimaryKey: articleId) {
+                    if let loadedArticle = realm.object(ofType: Content.self, forPrimaryKey: articleId) {
                         self.article = loadedArticle
                         loadContent()
                         markAsRead()
@@ -213,7 +213,7 @@ class ArticleDetailViewController: BaseViewController {
         </head>
         <body>
             <h1>\(article.title)</h1>
-            \(article.content)
+            \(article.body)
         </body>
         </html>
         """

@@ -7,7 +7,7 @@ class ArticleContentView: UIView {
     // MARK: - Properties
     private let webView: WKWebView
     private let loadingIndicator = UIActivityIndicatorView(style: .medium)
-    private var article: Article?
+    private var article: Content?
     private var imageCache = NSCache<NSString, UIImage>()
     
     // MARK: - Init
@@ -69,7 +69,7 @@ class ArticleContentView: UIView {
     }
     
     // MARK: - Public Methods
-    func load(article: Article) {
+    func load(article: Content) {
         self.article = article
         loadingIndicator.startAnimating()
         
@@ -87,8 +87,8 @@ class ArticleContentView: UIView {
     }
     
     // MARK: - Private Methods
-    private func processContent(_ article: Article) async throws -> ProcessedContent {
-        let doc = try SwiftSoup.parse(article.content)
+    private func processContent(_ article: Content) async throws -> ProcessedContent {
+        let doc = try SwiftSoup.parse(article.body)
         
         // 清理文档
         try cleanDocument(doc)
@@ -149,7 +149,7 @@ class ArticleContentView: UIView {
         
         // 2. 如���没找到，尝试查找最长的文本块
         let candidates = try doc.select("div, section, article")
-        var bestElement = try doc.body() ?? doc
+        var bestElement = doc.body() ?? doc
         var maxLength = 0
         
         for element in candidates {
@@ -163,7 +163,7 @@ class ArticleContentView: UIView {
         
         // 3. 如果内容太短，返回整个 body
         if maxLength < 100 {
-            return try doc.body() ?? doc
+            return doc.body() ?? doc
         }
         
         return bestElement

@@ -2,7 +2,7 @@ import UIKit
 
 class AIConversationViewController: BaseViewController {
     // MARK: - Properties
-    private let article: Article
+    private let content: Content
     
     private let conversationTextView: UITextView = {
         let textView = UITextView()
@@ -12,8 +12,8 @@ class AIConversationViewController: BaseViewController {
     }()
     
     // MARK: - Init
-    init(article: Article) {
-        self.article = article
+    init(content: Content) {
+        self.content = content
         super.init(nibName: nil, bundle: nil)
     }
     

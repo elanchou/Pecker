@@ -1,7 +1,7 @@
 import UIKit
 
 class AIViewController: BaseViewController {
-    private let article: Article
+    private let content: Content
     private let aiService = AISummaryService()
     
     private let loadingView = LoadingBirdView()
@@ -18,8 +18,8 @@ class AIViewController: BaseViewController {
         return textView
     }()
     
-    init(article: Article) {
-        self.article = article
+    init(content: Content) {
+        self.content = content
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -65,7 +65,7 @@ class AIViewController: BaseViewController {
         
         Task { @MainActor in
             do {
-                let summary = try await aiService.generateSummary(for: .singleArticle(article))
+                let summary = try await aiService.generateSummary(for: .singleContent(content))
                 loadingView.stopLoading { [weak self] in
                     self?.showResult(summary)
                 }

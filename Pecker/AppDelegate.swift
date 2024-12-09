@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             schemaVersion: 2,
             migrationBlock: { migration, oldSchemaVersion in
                 if oldSchemaVersion < 2 {
-                    migration.enumerateObjects(ofType: Article.className()) { oldObject, newObject in
+                    migration.enumerateObjects(ofType: Content.className()) { oldObject, newObject in
                         newObject!["isDeleted"] = false
                     }
                 }

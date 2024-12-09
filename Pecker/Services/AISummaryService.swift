@@ -7,26 +7,26 @@ actor AISummaryService {
     
     @MainActor
     enum SummaryType {
-        case singleArticle(Article)
-        case multipleArticles([Article])
-        case dailyDigest([Article])
+        case singleContent(Content)
+        case multipleContents([Content])
+        case dailyDigest([Content])
         
         var model: String {
             switch self {
-            case .singleArticle:
+            case .singleContent:
                 return "bot-20241208044143-d2mw2"  // 单文章摘要模型
-            case .multipleArticles, .dailyDigest:
+            case .multipleContents, .dailyDigest:
                 return "bot-20241208130849-cng7b"  // 多文章分析模型
             }
         }
         
         var prompt: String {
             switch self {
-            case .singleArticle(let article):
+            case .singleContent(let content):
                 return """
                 请为以下文章生成一个简洁的摘要，重点突出文章的主要内容和关键信息：
                 
-                链接：\(article.url)
+                链接：\(content.url)
                 
                 要求：
                 1. 保持客观准确
@@ -35,8 +35,8 @@ actor AISummaryService {
                 4. 控制在200字以内
                 """
                 
-            case .multipleArticles(let articles):
-                let urls = articles.prefix(10).map { "- \($0.url)" }.joined(separator: "\n")
+            case .multipleContents(let contents):
+                let urls = contents.prefix(10).map { "- \($0.url)" }.joined(separator: "\n")
                 return """
                 请分析以下相关文章，生成一个综合性的主题分析：
                 
@@ -53,8 +53,8 @@ actor AISummaryService {
                 3. 控制在300字以内
                 """
                 
-            case .dailyDigest(let articles):
-                let urls = articles.prefix(3).map { "- \($0.url)" }.joined(separator: "\n")
+            case .dailyDigest(let contents):
+                let urls = contents.prefix(3).map { "- \($0.url)" }.joined(separator: "\n")
                 return """
                 请为以下今日新闻生成一个简洁的日报总结：
                 
@@ -71,9 +71,9 @@ actor AISummaryService {
         
         var systemPrompt: String {
             switch self {
-            case .singleArticle:
+            case .singleContent:
                 return "你是一个专业的文章分析助手，善于提取文章重点并生成简洁的摘要。"
-            case .multipleArticles:
+            case .multipleContents:
                 return "你是一个专业的内容分析师，善于发现文章主题和趋势，并进行深度分析。"
             case .dailyDigest:
                 return "你是一个专业的新闻编辑，善于整理和总结每日重要新闻，并以简洁明了的方式呈现。"

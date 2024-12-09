@@ -6,7 +6,7 @@ import SnapKit
 class ArticleCell: UICollectionViewCell {
     // MARK: - Properties
     weak var delegate: ArticleCellDelegate?
-    private var article: Article?
+    private var article: Content?
     private var isExpanded = false
     
     // MARK: - UI Elements
@@ -192,7 +192,7 @@ class ArticleCell: UICollectionViewCell {
     }
     
     // MARK: - Configuration
-    func configure(with article: Article, isExpanded: Bool = false) {
+    func configure(with article: Content, isExpanded: Bool = false) {
         self.article = article
         self.isExpanded = isExpanded
         
@@ -221,7 +221,7 @@ class ArticleCell: UICollectionViewCell {
         layoutIfNeeded()
     }
     
-    private func configureImage(with article: Article) {
+    private func configureImage(with article: Content) {
         if let imageURL = article.imageURLs.first,
            let url = URL(string: imageURL) {
             thumbnailImageView.isHidden = false
@@ -384,5 +384,5 @@ extension ArticleCell: UIContextMenuInteractionDelegate {
 }
 
 protocol ArticleCellDelegate: AnyObject {
-    func articleCell(_ cell: ArticleCell, didTapAIButton article: Article)
+    func articleCell(_ cell: ArticleCell, didTapAIButton article: Content)
 } 

@@ -1,10 +1,10 @@
 import Foundation
 import RealmSwift
 
-class Article: Object, Identifiable {
+class Content: Object, Identifiable {
     @Persisted(primaryKey: true) var id: String
     @Persisted var title: String = ""
-    @Persisted var content: String = ""
+    @Persisted var body: String = ""
     @Persisted var url: String = ""
     @Persisted var publishDate: Date = Date()
     @Persisted var summary: String?
@@ -12,15 +12,15 @@ class Article: Object, Identifiable {
     @Persisted var isRead: Bool = false
     @Persisted var isFavorite: Bool = false
     @Persisted var isDeleted: Bool = false
-    @Persisted(originProperty: "articles") var feed: LinkingObjects<Feed>
+    @Persisted(originProperty: "contents") var feed: LinkingObjects<Feed>
     @Persisted var imageURLs = List<String>()
     @Persisted var updatedAt: Date = Date()
     
-    convenience init(title: String, content: String, url: String) {
+    convenience init(title: String, body: String, url: String) {
         self.init()
         self.id = UUID().uuidString
         self.title = title
-        self.content = content
+        self.body = body
         self.url = url
         self.publishDate = Date()
     }
@@ -36,37 +36,37 @@ class Article: Object, Identifiable {
 }
 
 // MARK: - Helper Functions
-extension Article {
-    static func findOrCreate(withUrl url: String, in realm: Realm) -> Article {
-        if let existingArticle = realm.objects(Article.self).filter("url == %@", url).first {
-            return existingArticle
+extension Content {
+    static func findOrCreate(withUrl url: String, in realm: Realm) -> Content {
+        if let existingContent = realm.objects(Content.self).filter("url == %@", url).first {
+            return existingContent
         }
         
-        let article = Article(title: "", content: "", url: url)
+        let content = Content(title: "", body: "", url: url)
         try? realm.write {
-            realm.add(article)
+            realm.add(content)
         }
-        return article
+        return content
     }
     
     @MainActor
     func markAsRead() async {
-        try? await RealmManager.shared.markArticleAsRead(id)
+        try? await RealmManager.shared.markContentAsRead(id)
     }
     
     @MainActor
     func toggleFavorite() async {
-        try? await RealmManager.shared.toggleArticleFavorite(id)
+        try? await RealmManager.shared.toggleContentFavorite(id)
     }
     
     @MainActor
     func markAsDeleted() async {
-        try? await RealmManager.shared.markArticleAsDeleted(id)
+        try? await RealmManager.shared.markContentAsDeleted(id)
     }
     
     func updateSummary(_ summary: String) {
         Task { @MainActor in
-            try? await RealmManager.shared.updateArticleSummary(id, summary: summary)
+            try? await RealmManager.shared.updateContentSummary(id, summary: summary)
         }
     }
     

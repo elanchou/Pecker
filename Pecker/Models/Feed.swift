@@ -11,7 +11,7 @@ class Feed: Object, Identifiable {
     @Persisted var lastUpdated: Date = Date()
     @Persisted var cloudID: String?
     @Persisted var isDeleted: Bool = false
-    @Persisted var articles: List<Article>
+    @Persisted var contents: List<Content>
     
     convenience init(title: String, url: String) {
         self.init()
@@ -36,22 +36,22 @@ extension Feed {
         return feed
     }
     
-    func addArticle(_ article: Article) {
+    func addContent(_ content: Content) {
         let realm = try? Realm()
         try? realm?.write {
-            articles.append(article)
+            contents.append(content)
             unreadCount += 1
         }
     }
     
-    func removeArticle(_ article: Article) {
+    func removeContent(_ content: Content) {
         let realm = try? Realm()
         try? realm?.write {
-            if let index = articles.firstIndex(of: article) {
-                if !article.isRead {
+            if let index = contents.firstIndex(of: content) {
+                if !content.isRead {
                     unreadCount = max(0, unreadCount - 1)
                 }
-                articles.remove(at: index)
+                contents.remove(at: index)
             }
         }
     }
