@@ -3,6 +3,7 @@ import RealmSwift
 
 func formatDate(_ date: Date, needTime: Bool = true) -> String {
     let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "zh_CN")
     
     if Calendar.current.isDateInToday(date) {
         formatter.dateFormat = "HH:mm"
@@ -14,7 +15,7 @@ func formatDate(_ date: Date, needTime: Bool = true) -> String {
         formatter.dateFormat = needTime ? "EEEE HH:mm" : "EEEE"
         return formatter.string(from: date)
     } else {
-        formatter.dateFormat = needTime ? "MM-dd HH:mm" : "MM-dd"
+        formatter.dateFormat = needTime ? "MM月dd日 HH:mm" : "MM-dd"
         return formatter.string(from: date)
     }
 }

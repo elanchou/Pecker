@@ -245,7 +245,6 @@ class HomeViewController: BaseViewController {
     
     private func groupContentsByDate(_ contents: [Content]) -> [(String, [Content])] {
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
         
         // 先按日期分组内容
         var dateGroups: [Date: [Content]] = [:]
@@ -263,17 +262,7 @@ class HomeViewController: BaseViewController {
         return dateGroups.keys
             .sorted(by: >)  // 日期倒序排列
             .map { date in
-                let title: String
-                if calendar.isDateInToday(date) {
-                    title = "今天"
-                } else if calendar.isDateInYesterday(date) {
-                    title = "昨天"
-                } else {
-                    let formatter = DateFormatter()
-                    formatter.locale = Locale(identifier: "zh_CN")
-                    formatter.dateFormat = "MM月dd日"
-                    title = formatter.string(from: date)
-                }
+                let title = formatDate(date, needTime: false)
                 return (title, dateGroups[date]!)
             }
     }
