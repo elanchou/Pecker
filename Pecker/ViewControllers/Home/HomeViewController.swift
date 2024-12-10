@@ -244,12 +244,38 @@ class HomeViewController: BaseViewController {
     private var sections: [(String, [Content])] = []
     
     private func groupContentsByDate(_ contents: [Content]) -> [(String, [Content])] {
-        let grouped = Dictionary(grouping: contents) { content in
-            Calendar.current.startOfDay(for: content.publishDate)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        // 先按日期分组内容
+        var dateGroups: [Date: [Content]] = [:]
+        for content in contents {
+            let startOfDay = calendar.startOfDay(for: content.publishDate)
+            dateGroups[startOfDay, default: []].append(content)
         }
-        return grouped.map { (date, contents) in
-            (formatDate(date, needTime: false), contents.sorted { $0.publishDate > $1.publishDate })
-        }.sorted { $0.0 > $1.0 }
+        
+        // 对每个组内的内容按时间排序
+        for (date, items) in dateGroups {
+            dateGroups[date] = items.sorted { $0.publishDate > $1.publishDate }
+        }
+        
+        // 对日期进行排序并生成最终结果
+        return dateGroups.keys
+            .sorted(by: >)  // 日期倒序排列
+            .map { date in
+                let title: String
+                if calendar.isDateInToday(date) {
+                    title = "今天"
+                } else if calendar.isDateInYesterday(date) {
+                    title = "昨天"
+                } else {
+                    let formatter = DateFormatter()
+                    formatter.locale = Locale(identifier: "zh_CN")
+                    formatter.dateFormat = "MM月dd日"
+                    title = formatter.string(from: date)
+                }
+                return (title, dateGroups[date]!)
+            }
     }
     
     private func groupContentsByFeed(_ contents: [Content]) -> [(String, [Content])] {
