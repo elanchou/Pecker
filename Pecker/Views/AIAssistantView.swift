@@ -414,6 +414,24 @@ extension AIAssistantView: UITableViewDelegate {
         let insight = insights[indexPath.row]
         insight.action?()
     }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        let insight = insights[indexPath.row]
+        
+        // 计算文本高度
+        let titleHeight = insight.title.height(
+            withConstrainedWidth: tableView.bounds.width - 72, // 减去左右边距和图标宽度
+            font: .systemFont(ofSize: 15, weight: .medium)
+        )
+        
+        let descriptionHeight = insight.description.height(
+            withConstrainedWidth: tableView.bounds.width - 72,
+            font: .systemFont(ofSize: 13)
+        )
+        
+        // 返回总高度（上下内边距 + 标题高度 + 间距 + 描述文本高度）
+        return 16 + titleHeight + 4 + descriptionHeight + 16
+    }
 }
 
 // MARK: - Models
@@ -505,7 +523,7 @@ class AIInsightCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13)
         label.textColor = .secondaryLabel
-        label.numberOfLines = 2
+        label.numberOfLines = 0
         return label
     }()
     
@@ -518,8 +536,8 @@ class AIInsightCell: UITableViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // MARK: - UI Setup
+
+    // MARK: Setup UI
     private func setupUI() {
         backgroundColor = .clear
         selectionStyle = .none
@@ -529,27 +547,31 @@ class AIInsightCell: UITableViewCell {
         containerView.addSubview(titleLabel)
         containerView.addSubview(descriptionLabel)
         
+        // 容器视图约束
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 0, bottom: 4, right: 0))
         }
         
+        // 图标约束
         iconView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(12)
-            make.centerY.equalToSuperview()
+            make.top.equalToSuperview().offset(12) // 改为固定顶部
             make.size.equalTo(24)
         }
         
+        // 标题约束
         titleLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
             make.leading.equalTo(iconView.snp.trailing).offset(12)
             make.trailing.equalToSuperview().offset(-12)
         }
         
+        // 描述文本约束
         descriptionLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
             make.leading.equalTo(titleLabel)
             make.trailing.equalTo(titleLabel)
-            make.bottom.equalToSuperview().offset(-12)
+            make.bottom.equalToSuperview().offset(-12) // 底部约束确保cell高度自适应
         }
     }
     
