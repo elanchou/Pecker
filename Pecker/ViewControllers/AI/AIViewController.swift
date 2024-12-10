@@ -65,7 +65,8 @@ class AIViewController: BaseViewController {
         
         Task { @MainActor in
             do {
-                let summary = try await aiService.generateSummary(for: .singleContent(content))
+                let prompt = aiService.generateSummary(for: .singleContent(content))
+                let summary = try await aiService.chat(prompt)
                 loadingView.stopLoading { [weak self] in
                     self?.showResult(summary)
                 }

@@ -7,6 +7,7 @@
 
 import UIKit
 import RealmSwift
+import SDWebImage
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -29,6 +30,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let fileURL = config.fileURL {
             print("Realm 数据库位置: \(fileURL)")
         }
+        
+        // 配置 SDWebImage
+        SDImageCache.shared.config.maxMemoryCost = 100 * 1024 * 1024 // 100MB 内存缓存
+        SDImageCache.shared.config.maxDiskAge = 7 * 24 * 60 * 60 // 7天磁盘缓存
+        SDImageCache.shared.config.maxDiskSize = 500 * 1024 * 1024 // 500MB 磁盘缓存上限
+        SDWebImageDownloader.shared.config.downloadTimeout = 15 // 15秒超时
+        SDWebImageDownloader.shared.config.maxConcurrentDownloads = 6 // 最大并发下载数
+        SDWebImageDownloader.shared.config.executionOrder = .lifoExecutionOrder // 后进先出顺序
+        
+        // 配置压缩和缓存
+        SDImageCache.shared.config.shouldCacheImagesInMemory = true
+        SDImageCache.shared.config.shouldUseWeakMemoryCache = true
         
         return true
     }

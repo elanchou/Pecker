@@ -15,4 +15,7 @@ target 'Pecker' do
   pod 'SnapKit'
   pod 'Down'
   pod 'lottie-ios'
+  pod 'MessageKit'
+  
+  pod 'LookinServer', :configurations => ['Debug']
 end

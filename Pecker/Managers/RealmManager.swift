@@ -5,6 +5,21 @@ actor RealmManager {
     static let shared = RealmManager()
     private init() {}
     
+    func write(_ block: () -> Void) throws {
+        let realm = try Realm()
+        try realm.write {
+            block()
+        }
+    }
+    
+    // 或者使用异步版本
+    func write(_ block: @escaping () -> Void) async throws {
+        let realm = try await Realm()
+        try realm.write {
+            block()
+        }
+    }
+    
     // MARK: - Feed Operations
     @MainActor
     func addNewFeed(_ feed: Feed) async throws {

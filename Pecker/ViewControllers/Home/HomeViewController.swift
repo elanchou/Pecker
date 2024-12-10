@@ -39,17 +39,6 @@ class HomeViewController: BaseViewController {
         return refresh
     }()
     
-    private let aiButton: UIBarButtonItem = {
-        let button = UIBarButtonItem(
-            image: UIImage(systemName: "sparkles"),
-            style: .plain,
-            target: HomeViewController.self,
-            action: #selector(aiButtonTapped)
-        )
-        button.tintColor = .systemPurple
-        return button
-    }()
-    
     private let searchButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
             image: UIImage(systemName: "magnifyingglass"),
@@ -70,10 +59,23 @@ class HomeViewController: BaseViewController {
     private var currentPlayingPodcast: Content?
     private var miniPlayerView: MiniPlayerView?
     
+    private let aiFloatingButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "sparkles.bubble.fill"), for: .normal)
+        button.tintColor = .systemPurple
+        button.backgroundColor = .systemBackground
+        button.layer.cornerRadius = 28
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowOpacity = 0.2
+        button.layer.shadowRadius = 4
+        return button
+    }()
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.rightBarButtonItems = [aiButton, searchButton]
+        navigationItem.rightBarButtonItems = [searchButton]
         setupUI()
         loadData()
         
@@ -131,6 +133,7 @@ class HomeViewController: BaseViewController {
         setupSegmentedView()
         setupCollectionView()
         setupMiniPlayer()
+        setupAIButton()
     }
     
     private func setupSegmentedView() {
@@ -170,6 +173,18 @@ class HomeViewController: BaseViewController {
             make.height.equalTo(60).priority(.required)
         }
         miniPlayerView.isHidden = true
+    }
+    
+    private func setupAIButton() {
+        view.addSubview(aiFloatingButton)
+        
+        aiFloatingButton.snp.makeConstraints { make in
+            make.right.equalToSuperview().offset(-20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-100)
+            make.width.height.equalTo(56)
+        }
+        
+        aiFloatingButton.addTarget(self, action: #selector(showAIConversation), for: .touchUpInside)
     }
     
     // MARK: - Data Loading
@@ -291,16 +306,17 @@ class HomeViewController: BaseViewController {
         present(alert, animated: true)
     }
     
-    @objc private func aiButtonTapped() {
-//        guard let contents = contents else { return }
-//        let aiVC = AIConversationViewController(type: .feedSummary(Array(contents)))
-//        let navController = UINavigationController(rootViewController: aiVC)
-//        present(navController, animated: true)
-    }
-    
     @objc private func showSearch() {
         let searchVC = ContentSearchViewController()
         let nav = UINavigationController(rootViewController: searchVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
+    }
+    
+    @MainActor
+    @objc private func showAIConversation() {
+        let aiVC = AIConversationViewController()
+        let nav = UINavigationController(rootViewController: aiVC)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
@@ -352,7 +368,8 @@ extension HomeViewController: UICollectionViewDataSource {
                                                                    for: indexPath) as! SectionHeaderView
         
         let (title, contents) = sections[indexPath.section]
-        header.configure(title: title, count: contents.count)
+        header.configure(title: title, count: contents.count, contents: contents)
+        header.delegate = self
         return header
     }
     
@@ -444,40 +461,15 @@ private extension HomeViewController {
 // MARK: - ArticleCellDelegate
 extension HomeViewController: ArticleCellDelegate {
     func articleCell(_ cell: ArticleCell, didTapAIButton article: Content) {
-        if article.aiSummary != nil {
-            if expandedCells.contains(article.id) {
-                expandedCells.remove(article.id)
-                cell.hideSummary()
-            } else {
-                expandedCells.insert(article.id)
-                cell.configure(with: article, isExpanded: true)
-            }
-            
-            // 使用 performBatchUpdates 来确保布局更新
-            collectionView.performBatchUpdates(nil) { _ in
-                // 强制重新计算布局
-                self.collectionView.collectionViewLayout.invalidateLayout()
-            }
-            return
-        }
+        let aiVC = AIConversationViewController()
+        let nav = UINavigationController(rootViewController: aiVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
         
+        // 自动发送总结请求
         Task {
-            do {
-                let summary = try await aiService.generateSummary(for: .singleContent(article))
-                await MainActor.run {
-                    article.updateAISummary(summary)
-                    self.expandedCells.insert(article.id)
-                    cell.configure(with: article, isExpanded: true)
-                    
-                    // 使用 performBatchUpdates 来确保布局更新
-                    self.collectionView.performBatchUpdates(nil) { _ in
-                        // 强制重新计算布局
-                        self.collectionView.collectionViewLayout.invalidateLayout()
-                    }
-                }
-            } catch {
-                showError(error)
-            }
+            let message = aiService.generateSummary(for: .singleContent(article))
+            await aiVC.sendSummary(message)
         }
     }
 }
@@ -561,5 +553,21 @@ extension HomeViewController: PodcastCellDelegate {
 extension HomeViewController: JXSegmentedViewDelegate {
     func segmentedView(_ segmentedView: JXSegmentedView, didSelectedItemAt index: Int) {
         currentGrouping = ContentGrouping(rawValue: index) ?? .byDate
+    }
+}
+
+// MARK: - SectionHeaderViewDelegate
+extension HomeViewController: SectionHeaderViewDelegate {
+    func sectionHeader(_ header: SectionHeaderView, didTapAIButtonWith contents: [Content]) {
+        let aiVC = AIConversationViewController()
+        let nav = UINavigationController(rootViewController: aiVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
+        
+        // 自动发送总结请求
+        Task {
+            let message = aiService.generateSummary(for: .multipleContents(contents))
+            await aiVC.sendSummary(message)
+        }
     }
 } 

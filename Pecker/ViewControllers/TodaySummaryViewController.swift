@@ -224,7 +224,9 @@ class TodaySummaryViewController: UIViewController {
     
     private func generateDailySummary(for contents: [Content]) async throws -> String {
         let aiService = AISummaryService()
-        return try await aiService.generateSummary(for: .dailyDigest(contents))
+        let prompt = aiService.generateSummary(for: .dailyDigest(contents))
+        let summary = try await aiService.chat(prompt)
+        return summary
     }
     
     deinit {

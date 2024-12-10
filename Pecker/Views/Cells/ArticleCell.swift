@@ -102,7 +102,7 @@ class ArticleCell: UICollectionViewCell {
         contentStackView.addArrangedSubview(thumbnailImageView)
         
         // 添加元数据视图
-        [unreadIndicator, feedLabel, dateLabel, UIView(), aiButton, favoriteIcon].forEach {
+        [unreadIndicator, feedLabel, dateLabel, UIView(), favoriteIcon].forEach {
             metaStackView.addArrangedSubview($0)
         }
         
@@ -130,7 +130,7 @@ class ArticleCell: UICollectionViewCell {
         favoriteIcon.tintColor = .systemYellow
         favoriteIcon.contentMode = .scaleAspectFit
         
-        [unreadIndicator, feedLabel, dateLabel, UIView(), aiButton, favoriteIcon].forEach {
+        [unreadIndicator, feedLabel, dateLabel, UIView(), favoriteIcon].forEach {
             metaStackView.addArrangedSubview($0)
         }
     }
@@ -153,7 +153,7 @@ class ArticleCell: UICollectionViewCell {
             make.height.equalTo(defaultHeight)
         }
         
-        // 内容堆栈约束
+        // 内堆栈约束
         contentStackView.snp.makeConstraints { make in
             make.edges.equalTo(containerView).inset(UIEdgeInsets(top: 16, left: 0, bottom: 16, right: 0))
         }
