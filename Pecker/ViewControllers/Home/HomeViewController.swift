@@ -59,19 +59,6 @@ class HomeViewController: BaseViewController {
     private var currentPlayingPodcast: Content?
     private var miniPlayerView: MiniPlayerView?
     
-    private let aiFloatingButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "sparkles.bubble.fill"), for: .normal)
-        button.tintColor = .systemPurple
-        button.backgroundColor = .systemBackground
-        button.layer.cornerRadius = 28
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowRadius = 4
-        return button
-    }()
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -133,7 +120,6 @@ class HomeViewController: BaseViewController {
         setupSegmentedView()
         setupCollectionView()
         setupMiniPlayer()
-        setupAIButton()
     }
     
     private func setupSegmentedView() {
@@ -173,18 +159,6 @@ class HomeViewController: BaseViewController {
             make.height.equalTo(60).priority(.required)
         }
         miniPlayerView.isHidden = true
-    }
-    
-    private func setupAIButton() {
-        view.addSubview(aiFloatingButton)
-        
-        aiFloatingButton.snp.makeConstraints { make in
-            make.right.equalToSuperview().offset(-20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-100)
-            make.width.height.equalTo(56)
-        }
-        
-        aiFloatingButton.addTarget(self, action: #selector(showAIConversation), for: .touchUpInside)
     }
     
     // MARK: - Data Loading
@@ -574,15 +548,14 @@ extension HomeViewController: JXSegmentedViewDelegate {
 // MARK: - SectionHeaderViewDelegate
 extension HomeViewController: SectionHeaderViewDelegate {
     func sectionHeader(_ header: SectionHeaderView, didTapAIButtonWith contents: [Content]) {
-        let aiVC = AIConversationViewController()
-        let nav = UINavigationController(rootViewController: aiVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
-        
         // 自动发送总结请求
         Task {
             let message = aiService.generateSummary(for: .multipleContents(contents))
-            await aiVC.sendSummary(message)
+            AIAssistantManager.shared.startThinking()
+            let text = try await aiService.chat(message)
+            AIAssistantManager.shared.addInsight(.init(type: .summary, title: "总结", description: text, action: {
+                
+            }))
         }
     }
 } 

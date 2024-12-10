@@ -56,6 +56,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let summaryVC = TodaySummaryViewController()
             window.rootViewController?.present(summaryVC, animated: false)
         }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            AIAssistantManager.shared.setup(in: window)
+        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

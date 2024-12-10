@@ -47,7 +47,6 @@ class AITextView: UITextView {
         if isMarkdown {
             do {
                 let down = Down(markdownString: text)
-                let options = DownOptions.smartUnsafe
                 
                 // 创建富文本
                 let attributedString = try down.toAttributedString(stylesheet: markdownStylesheet)

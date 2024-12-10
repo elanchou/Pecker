@@ -58,7 +58,6 @@ class ContentSearchViewController: BaseViewController {
     }
     
     @objc private func dismissVC() {
-        let nav = BaseNavigationController(rootViewController: self)
         // 添加消失动画
         UIView.animate(withDuration: 0.3, animations: {
             self.view.alpha = 0
