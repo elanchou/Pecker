@@ -336,19 +336,34 @@ extension HomeViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
         let content = sections[indexPath.section].1[indexPath.item]
+        cell.configure(with: content)
         
-        if content.type == .podcast {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PodcastCell", for: indexPath) as! PodcastCell
-            cell.configure(with: content)
-            cell.delegate = self
-            return cell
-        } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
-            cell.configure(with: content)
-            cell.delegate = self
-            return cell
+        // 设置长按回调
+        cell.onLongPress = { [weak self] content in
+            // 自动发送总结请求
+            Task {
+                let message = self?.aiService.generateSummary(for: .singleContent(content))
+                AIAssistantManager.shared.startThinking()
+                if let message = message {
+                    let text = try await self?.aiService.chat(message)
+                    AIAssistantManager.shared.addInsight(.init(
+                        type: .summary,
+                        title: content.title,
+                        description: text ?? "",
+                        action: { [weak self] in
+                            // 点击总结后的操作，可以跳转到详情页
+                            let detailVC = ArticleDetailViewController(articleId: content.id)
+                            self?.navigationController?.pushViewController(detailVC, animated: true)
+                        }
+                    ))
+                }
+                AIAssistantManager.shared.stopThinking()
+            }
         }
+        
+        return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {

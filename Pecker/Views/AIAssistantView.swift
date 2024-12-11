@@ -5,13 +5,38 @@ import Lottie
 class AIAssistantView: UIView {
     // MARK: - Properties
     private let buttonSize: CGFloat = 56
-    private let expandedHeight: CGFloat = 200
+    private let maxExpandedHeight: CGFloat = UIScreen.main.bounds.height * 0.6
+    private let minExpandedHeight: CGFloat = 400
     private let expandedWidth: CGFloat = UIScreen.main.bounds.width - 40
     private var isExpanded = false
     private var isThinking = false
     
     private var insights: [AIInsight] = []
     private var tapAction: (() -> Void)?
+    
+    private var currentExpandedHeight: CGFloat = UIScreen.main.bounds.height * 0.6
+    private var initialTouchPoint: CGPoint = .zero
+    private var initialHeight: CGFloat = 200
+    
+    // 添加调整手柄视图
+    private let resizeHandleView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .tertiarySystemFill
+        view.layer.cornerRadius = 2.5
+        
+        // 添加一个更大的触摸区域视图
+        let touchArea = UIView()
+        touchArea.backgroundColor = .clear // 透明的触摸区域
+        view.addSubview(touchArea)
+        touchArea.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().offset(-20) // 扩大上部触摸区域
+            make.bottom.equalToSuperview().offset(20) // 扩大下部触摸区域
+            make.width.equalTo(100) // 扩大左右触摸区域
+        }
+        
+        return view
+    }()
     
     // MARK: - UI Elements
     private let containerView: UIView = {
@@ -20,8 +45,8 @@ class AIAssistantView: UIView {
         view.layer.cornerRadius = 28
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 8)
-        view.layer.shadowOpacity = 0.15
-        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.3 // 增加阴影不透明度
+        view.layer.shadowRadius = 20 // 增加阴影范围
         return view
     }()
     
@@ -29,11 +54,25 @@ class AIAssistantView: UIView {
         let view = UIView()
         view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 28
+        
+        // 添加内边框
+        view.layer.borderWidth = 0.5
+        view.layer.borderColor = UIColor.separator.cgColor
+        
+        // 添加内部阴影效果
+        let innerShadow = CALayer()
+        innerShadow.frame = view.bounds
+        innerShadow.shadowColor = UIColor.black.cgColor
+        innerShadow.shadowOffset = CGSize(width: 0, height: 2)
+        innerShadow.shadowOpacity = 0.1
+        innerShadow.shadowRadius = 4
+        view.layer.addSublayer(innerShadow)
+        
         return view
     }()
     
     private let blurView: UIVisualEffectView = {
-        let blur = UIBlurEffect(style: .systemUltraThinMaterial)
+        let blur = UIBlurEffect(style: .systemThinMaterial) // 改用更强的模糊效果
         let view = UIVisualEffectView(effect: blur)
         view.layer.cornerRadius = 28
         view.clipsToBounds = true
@@ -69,14 +108,6 @@ class AIAssistantView: UIView {
         imageView.layer.shadowOpacity = 0.1
         imageView.layer.shadowRadius = 4
         return imageView
-    }()
-    
-    private let insightLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .secondaryLabel
-        label.text = "正在分析..."
-        return label
     }()
     
     private let contentView: UIView = {
@@ -146,12 +177,13 @@ class AIAssistantView: UIView {
         containerView.addSubview(blurView)
         containerView.addSubview(backgroundView)
         containerView.addSubview(iconImageView)
-//        containerView.addSubview(insightLabel)
         containerView.addSubview(contentView)
         contentView.addSubview(insightTableView)
         
         containerView.addSubview(birdNestView)
         birdNestView.addSubview(birdView)
+        
+        containerView.addSubview(resizeHandleView)
         
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = [
@@ -169,12 +201,6 @@ class AIAssistantView: UIView {
         highlightLayer.locations = [0.0, 0.5]
         highlightLayer.cornerRadius = 28
         highlightLayer.frame = CGRect(x: 0, y: 0, width: buttonSize, height: buttonSize/2)
-        
-        let innerShadow = CALayer()
-        innerShadow.frame = backgroundView.bounds
-        innerShadow.backgroundColor = UIColor.white.withAlphaComponent(0.1).cgColor
-        innerShadow.cornerRadius = 28
-        innerShadow.masksToBounds = true
         
         backgroundView.layer.insertSublayer(gradientLayer, at: 0)
 //        backgroundView.layer.addSublayer(highlightLayer)
@@ -200,11 +226,6 @@ class AIAssistantView: UIView {
             make.size.equalTo(40)
         }
         
-//        insightLabel.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.bottom.equalToSuperview().offset(-8)
-//        }
-        
         contentView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -225,8 +246,15 @@ class AIAssistantView: UIView {
             make.size.equalTo(50)
         }
         
-        birdNestView.alpha = 0
-        birdView.alpha = 0
+        birdNestView.isHidden = true
+        
+        resizeHandleView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview().offset(8)
+            make.width.equalTo(36)
+            make.height.equalTo(5)
+        }
+        resizeHandleView.alpha = 0
         
         layoutIfNeeded()
         gradientLayer.frame = backgroundView.bounds
@@ -236,8 +264,9 @@ class AIAssistantView: UIView {
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         containerView.addGestureRecognizer(tap)
         
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-        addGestureRecognizer(pan)
+        let resizePanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleResizePan))
+        resizeHandleView.addGestureRecognizer(resizePanGesture)
+        resizeHandleView.isUserInteractionEnabled = true
     }
     
     private func setupTableView() {
@@ -248,11 +277,63 @@ class AIAssistantView: UIView {
         insightTableView.showsVerticalScrollIndicator = false
     }
     
+    // MARK: - Gesture Handling
+    @objc private func handleResizePan(_ gesture: UIPanGestureRecognizer) {
+        let translation = gesture.translation(in: containerView)
+        
+        switch gesture.state {
+        case .began:
+            initialHeight = containerView.frame.height
+            
+        case .changed:
+            var newHeight = initialHeight - translation.y
+            newHeight = min(max(newHeight, minExpandedHeight), maxExpandedHeight)
+            
+            // 使用 transform 而不是约束来实现实时拖动
+            containerView.snp.updateConstraints { make in
+                make.height.equalTo(newHeight)
+            }
+            
+            // 立即更新布局，避免延迟
+            containerView.layoutIfNeeded()
+            
+            // 减少触感反馈的频率
+            if abs(translation.y).truncatingRemainder(dividingBy: 50) < 1 {
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred(intensity: 0.3)
+            }
+            
+        case .ended, .cancelled:
+            // 计算最终高度
+            var finalHeight = initialHeight - translation.y
+            finalHeight = min(max(finalHeight, minExpandedHeight), maxExpandedHeight)
+            self.currentExpandedHeight = finalHeight
+            
+            // 使用动画平滑过渡到最终高度
+            UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0) {
+                self.containerView.snp.updateConstraints { make in
+                    make.height.equalTo(finalHeight)
+                }
+                self.containerView.layoutIfNeeded()
+            }
+            
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            
+        default:
+            break
+        }
+    }
+    
     // MARK: - Public Methods
     func addInsight(_ insight: AIInsight) {
         insights.append(insight)
         if isExpanded {
-            insightTableView.reloadData()
+            let indexPath = IndexPath(row: insights.count - 1, section: 0)
+            insightTableView.insertRows(at: [indexPath], with: .fade)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.insightTableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+            }
         }
         showInsightIndicator()
     }
@@ -300,23 +381,18 @@ class AIAssistantView: UIView {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
         
+        self.iconImageView.isHidden = true
+        
         UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5) {
             self.containerView.snp.updateConstraints { make in
                 make.width.equalTo(self.expandedWidth)
-                make.height.equalTo(self.expandedHeight)
+                make.height.equalTo(self.currentExpandedHeight)
             }
             self.layoutIfNeeded()
             self.contentView.alpha = 1
             self.iconImageView.alpha = 0
-            self.insightLabel.alpha = 0
-            
-            self.birdNestView.transform = .identity
-            self.birdNestView.alpha = 1
-            self.birdView.alpha = 1
-        } completion: { _ in
-            if self.isThinking {
-                self.birdView.play()
-            }
+            self.resizeHandleView.alpha = 1
+            self.birdNestView.isHidden = false
         }
     }
     
@@ -328,6 +404,7 @@ class AIAssistantView: UIView {
         generator.impactOccurred()
         
         birdView.stop()
+        self.iconImageView.isHidden = false
         
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5) {
             self.containerView.snp.updateConstraints { make in
@@ -336,11 +413,8 @@ class AIAssistantView: UIView {
             self.layoutIfNeeded()
             self.contentView.alpha = 0
             self.iconImageView.alpha = 1
-            self.insightLabel.alpha = 1
-            
-            self.birdNestView.transform = CGAffineTransform(translationX: 0, y: 40)
-            self.birdNestView.alpha = 0
-            self.birdView.alpha = 0
+            self.resizeHandleView.alpha = 0
+            self.birdNestView.isHidden = true
         }
     }
     
@@ -350,45 +424,6 @@ class AIAssistantView: UIView {
             collapse()
         } else {
             expand()
-        }
-    }
-    
-    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: self)
-        let velocity = gesture.velocity(in: self)
-        
-        switch gesture.state {
-        case .changed:
-            center = CGPoint(x: center.x + translation.x, y: center.y + translation.y)
-            gesture.setTranslation(.zero, in: self)
-            
-        case .ended:
-            let screenWidth = UIScreen.main.bounds.width
-            let screenHeight = UIScreen.main.bounds.height
-            
-            var finalX = center.x
-            var finalY = center.y
-            
-            if velocity.x > 500 {
-                finalX = screenWidth - 40
-            } else if velocity.x < -500 {
-                finalX = 40
-            } else {
-                if center.x > screenWidth / 2 {
-                    finalX = screenWidth - 40
-                } else {
-                    finalX = 40
-                }
-            }
-            
-            finalY = max(40, min(screenHeight - 40, finalY))
-            
-            UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.2) {
-                self.center = CGPoint(x: finalX, y: finalY)
-            }
-            
-        default:
-            break
         }
     }
 }
@@ -419,18 +454,15 @@ extension AIAssistantView: UITableViewDelegate {
         let insight = insights[indexPath.row]
         
         // 计算文本高度
-        let titleHeight = insight.title.height(
-            withConstrainedWidth: tableView.bounds.width - 72, // 减去左右边距和图标宽度
-            font: .systemFont(ofSize: 15, weight: .medium)
-        )
+        let titleHeight: CGFloat = 24 // 固定标题高度
         
         let descriptionHeight = insight.description.height(
-            withConstrainedWidth: tableView.bounds.width - 72,
-            font: .systemFont(ofSize: 13)
+            withConstrainedWidth: tableView.bounds.width - 76, // 考虑增加的边距
+            font: .systemFont(ofSize: 16)
         )
         
-        // 返回总高度（上下内边距 + 标题高度 + 间距 + 描述文本高度）
-        return 16 + titleHeight + 4 + descriptionHeight + 16
+        // 返回总高度（上下边距 + 标题高度 + 间距 + 描述文本高度）
+        return 16 + titleHeight + 12 + descriptionHeight + 16
     }
 }
 
@@ -472,36 +504,15 @@ struct AIInsight {
 
 // MARK: - AIInsightCell
 class AIInsightCell: UITableViewCell {
+    // MARK: - Properties
+    private var fullText: String = ""
+    private var currentTypingIndex: Int = 0
+    private var typingTimer: Timer?
+    
     // MARK: - UI Elements
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 12
-        
-        // 外凸效果的阴影
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowOpacity = 0.1
-        view.layer.shadowRadius = 8
-        
-        // 添加渐变背景
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor { traitCollection in
-                return traitCollection.userInterfaceStyle == .dark ? 
-                    .secondarySystemBackground.withAlphaComponent(0.9) : 
-                    .white
-            }.cgColor,
-            UIColor { traitCollection in
-                return traitCollection.userInterfaceStyle == .dark ? 
-                    .systemBackground.withAlphaComponent(0.7) : 
-                    .systemBackground.withAlphaComponent(0.9)
-            }.cgColor
-        ]
-        gradientLayer.locations = [0.0, 1.0]
-        gradientLayer.cornerRadius = 12
-        view.layer.insertSublayer(gradientLayer, at: 0)
-        
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -514,16 +525,19 @@ class AIInsightCell: UITableViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .medium)
+        label.font = .systemFont(ofSize: 17, weight: .semibold) // 增大字号，加粗
         label.textColor = .label
         return label
     }()
     
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
+        label.font = .systemFont(ofSize: 16) // 增大描述文字
         label.textColor = .secondaryLabel
         label.numberOfLines = 0
+        label.textAlignment = .left
+        label.lineBreakMode = .byWordWrapping
+        label.baselineAdjustment = .none
         return label
     }()
     
@@ -547,31 +561,29 @@ class AIInsightCell: UITableViewCell {
         containerView.addSubview(titleLabel)
         containerView.addSubview(descriptionLabel)
         
-        // 容器视图约束
-        containerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 0, bottom: 4, right: 0))
-        }
-        
-        // 图标约束
-        iconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(12)
-            make.top.equalToSuperview().offset(12) // 改为固定顶部
-            make.size.equalTo(24)
-        }
-        
-        // 标题约束
+        // 调整间距和布局
         titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.leading.equalTo(iconView.snp.trailing).offset(12)
-            make.trailing.equalToSuperview().offset(-12)
+            make.top.equalToSuperview().offset(16) // 增加上边距
+            make.leading.equalTo(iconView.snp.trailing).offset(16) // 增加图标和文字间距
+            make.trailing.equalToSuperview().offset(-16)
+            make.height.equalTo(24) // 增加标题高度
         }
         
-        // 描述文本约束
+        iconView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(16) // 增加左边距
+            make.centerY.equalTo(titleLabel)
+            make.size.equalTo(28) // 增大图标尺寸
+        }
+        
         descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
+            make.top.equalTo(titleLabel.snp.bottom).offset(12) // 增加标题和描述间距
             make.leading.equalTo(titleLabel)
             make.trailing.equalTo(titleLabel)
-            make.bottom.equalToSuperview().offset(-12) // 底部约束确保cell高度自适应
+            make.bottom.equalToSuperview().offset(-16) // 增加下边距
+        }
+        
+        containerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0))
         }
     }
     
@@ -580,7 +592,67 @@ class AIInsightCell: UITableViewCell {
         iconView.image = UIImage(systemName: insight.type.icon)
         iconView.tintColor = insight.type.color
         titleLabel.text = insight.title
-        descriptionLabel.text = insight.description
+        
+        // 保存完整文本
+        fullText = insight.description
+        // 清空描述标签
+        descriptionLabel.text = ""
+        // 开始打字动画
+        startTypingAnimation()
+    }
+    
+    // MARK: - Typing Animation
+    private func startTypingAnimation() {
+        // 重置状态
+        currentTypingIndex = 0
+        typingTimer?.invalidate()
+        
+        // 先设置完整文本但透明度为0
+        descriptionLabel.text = fullText
+        descriptionLabel.alpha = 0
+        
+        // 动画显示文本
+        UIView.animate(withDuration: 0.3) {
+            self.descriptionLabel.alpha = 1
+        }
+        
+        typingTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            
+            if self.currentTypingIndex < self.fullText.count {
+                let index = self.fullText.index(self.fullText.startIndex, offsetBy: self.currentTypingIndex)
+                self.descriptionLabel.text = String(self.fullText[...index])
+                self.currentTypingIndex += 1
+                
+                // 每10个字符触发一次触感反馈
+                if self.currentTypingIndex % 10 == 0 {
+                    let generator = UIImpactFeedbackGenerator(style: .soft)
+                    generator.impactOccurred(intensity: 0.3)
+                }
+                
+                // 如果是标点符号，增加延迟
+                if [",", ".", "，", "。", "!", "?", "！", "？"].contains(String(self.fullText[index])) {
+                    timer.fireDate = Date().addingTimeInterval(0.2)
+                }
+            } else {
+                timer.invalidate()
+                self.typingTimer = nil
+                
+                // 完成时的触感反馈
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+            }
+        }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        typingTimer?.invalidate()
+        typingTimer = nil
+        descriptionLabel.text = ""
     }
     
     // MARK: - Trait Collection Did Change

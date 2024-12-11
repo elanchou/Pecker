@@ -4,8 +4,12 @@ import SDWebImage
 import SnapKit
 
 class ArticleCell: UICollectionViewCell {
-    // MARK: - Properties
+    
+    // 添加回调闭包
+    var onLongPress: ((Content) -> Void)?
     weak var delegate: ArticleCellDelegate?
+
+    private var longPressGesture: UILongPressGestureRecognizer?
     private var article: Content?
     private var isExpanded = false
     
@@ -293,8 +297,8 @@ class ArticleCell: UICollectionViewCell {
         contentView.addGestureRecognizer(longPress)
         
         // 添加上下文菜单
-        let interaction = UIContextMenuInteraction(delegate: self)
-        contentView.addInteraction(interaction)
+//        let interaction = UIContextMenuInteraction(delegate: self)
+//        contentView.addInteraction(interaction)
     }
     
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
@@ -302,6 +306,20 @@ class ArticleCell: UICollectionViewCell {
             // 触感反馈
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
+            
+            // 添加动画效果
+            UIView.animate(withDuration: 0.1, animations: {
+                self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            }) { _ in
+                UIView.animate(withDuration: 0.1) {
+                    self.transform = .identity
+                }
+            }
+            
+            // 调用回调
+            if let article = article {
+                onLongPress?(article)
+            }
         }
     }
     
