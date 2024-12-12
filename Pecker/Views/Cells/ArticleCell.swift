@@ -83,13 +83,16 @@ class ArticleCell: UICollectionViewCell {
     }
     
     private func setupStackViews() {
+        contentStackView.isUserInteractionEnabled = false
         contentStackView.axis = .horizontal
         contentStackView.spacing = 16
         contentStackView.alignment = .top
         
+        textStackView.isUserInteractionEnabled = false
         textStackView.axis = .vertical
         textStackView.spacing = 8
         
+        metaStackView.isUserInteractionEnabled = false
         metaStackView.axis = .horizontal
         metaStackView.spacing = 12
         metaStackView.alignment = .center

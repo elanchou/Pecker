@@ -5,8 +5,8 @@ import Lottie
 class AIAssistantView: UIView {
     // MARK: - Properties
     private let buttonSize: CGFloat = 56
-    private let maxExpandedHeight: CGFloat = UIScreen.main.bounds.height * 0.6
-    private let minExpandedHeight: CGFloat = 400
+    private let maxExpandedHeight: CGFloat = UIScreen.main.bounds.height - 300
+    private let minExpandedHeight: CGFloat = 200
     private let expandedWidth: CGFloat = UIScreen.main.bounds.width - 40
     private var isExpanded = false
     private var isThinking = false
@@ -14,7 +14,7 @@ class AIAssistantView: UIView {
     private var insights: [AIInsight] = []
     private var tapAction: (() -> Void)?
     
-    private var currentExpandedHeight: CGFloat = UIScreen.main.bounds.height * 0.6
+    private var currentExpandedHeight: CGFloat = UIScreen.main.bounds.height - 300
     private var initialTouchPoint: CGPoint = .zero
     private var initialHeight: CGFloat = 200
     
