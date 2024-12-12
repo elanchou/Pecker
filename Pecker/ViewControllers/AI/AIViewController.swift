@@ -2,7 +2,7 @@ import UIKit
 
 class AIViewController: BaseViewController {
     private let content: Content
-    private let aiService = AISummaryService()
+    private let aiService = AIService()
     
     private let loadingView = LoadingBirdView()
     

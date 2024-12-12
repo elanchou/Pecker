@@ -51,7 +51,7 @@ class HomeViewController: BaseViewController {
     }()
     
     private var expandedCells = Set<String>()
-    private let aiService = AISummaryService()
+    private let aiService = AIService()
     
     private let loadingView = LoadingBirdView()
     private let refreshLoadingView = LoadingBirdView()

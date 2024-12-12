@@ -5,7 +5,7 @@ import Lottie
 class AIConversationViewController: UIViewController {
     // MARK: - Properties
     private var messages: [AIMessage] = []
-    private let aiService = AISummaryService()
+    private let aiService = AIService()
     private var isProcessing = false
     
     // MARK: - UI Elements

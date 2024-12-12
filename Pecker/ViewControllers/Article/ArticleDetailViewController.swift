@@ -6,7 +6,7 @@ class ArticleDetailViewController: BaseViewController {
     // MARK: - Properties
     private let articleId: String
     private var article: Content?
-    private let aiService = AISummaryService()
+    private let aiService = AIService()
     
     private let headerView: UIView = {
         let view = UIView()

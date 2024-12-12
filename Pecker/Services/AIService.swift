@@ -1,6 +1,6 @@
 import Foundation
 
-class AISummaryService {
+class AIService {
     // MARK: - Properties
     private let openAIService = OpenAIService()
     private var messageHistory: [OpenAIService.ChatMessage] = []
@@ -146,7 +146,7 @@ private func formatDate(_ date: Date) -> String {
 }
 
 // MARK: - Types
-extension AISummaryService {
+extension AIService {
     enum AISummaryType {
         case normal
         case singleContent(Content)

@@ -603,7 +603,7 @@ class AIInsightCell: UITableViewCell {
     private var typingTimer: Timer?
     
     // MARK: - UI Elements
-    private let containerView: UIView = {
+    private let headerView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
         return view
@@ -618,96 +618,102 @@ class AIInsightCell: UITableViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .semibold) // 增大字号，加粗
+        label.font = .systemFont(ofSize: 20, weight: .bold)
         label.textColor = .label
+        label.numberOfLines = 1 // 限制为单行
+        label.lineBreakMode = .byTruncatingTail // 添加省略号
         return label
     }()
     
-    private let descriptionLabel: UILabel = {
+    private let markdownTextView: UITextView = {
+        let textView = UITextView()
+        textView.backgroundColor = .clear
+        textView.isScrollEnabled = false
+        textView.isEditable = false
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.linkTextAttributes = [
+            .foregroundColor: UIColor.systemBlue,
+            .underlineStyle: NSUnderlineStyle.single.rawValue
+        ]
+        return textView
+    }()
+    
+    private let timestampLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16) // 增大描述文字
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 0
-        label.textAlignment = .left
-        label.lineBreakMode = .byWordWrapping
-        label.baselineAdjustment = .none
+        label.font = .systemFont(ofSize: 13)
+        label.textColor = .tertiaryLabel
         return label
     }()
     
-    // MARK: - Init
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupUI()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
     // MARK: Setup UI
     private func setupUI() {
         backgroundColor = .clear
         selectionStyle = .none
         
-        contentView.addSubview(containerView)
-        containerView.addSubview(iconView)
-        containerView.addSubview(titleLabel)
-        containerView.addSubview(descriptionLabel)
+        contentView.addSubview(headerView)
+        headerView.addSubview(iconView)
+        headerView.addSubview(titleLabel)
+        headerView.addSubview(timestampLabel)
+        contentView.addSubview(markdownTextView)
         
-        // 调整间距和布局
-        titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16) // 增加上边距
-            make.leading.equalTo(iconView.snp.trailing).offset(16) // 增加图标和文字间距
-            make.trailing.equalToSuperview().offset(-16)
-            make.height.equalTo(24) // 增加标题高度
+        headerView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.height.equalTo(44)
         }
         
+        // 修改图标尺寸和位置
         iconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16) // 增加左边距
-            make.centerY.equalTo(titleLabel)
-            make.size.equalTo(28) // 增大图标尺寸
+            make.leading.equalToSuperview().offset(12)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(20) // 减小图标尺寸
         }
         
-        descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(12) // 增加标题和描述间距
-            make.leading.equalTo(titleLabel)
-            make.trailing.equalTo(titleLabel)
-            make.bottom.equalToSuperview().offset(-16) // 增加下边距
+        // 优化标题布局
+        titleLabel.snp.makeConstraints { make in
+            make.leading.equalTo(iconView.snp.trailing).offset(8) // 减小间距
+            make.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(timestampLabel.snp.leading).offset(-8) // 确保不会与时间戳重叠
         }
         
-        containerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0))
+        timestampLabel.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-12)
+            make.centerY.equalToSuperview()
+            make.width.greaterThanOrEqualTo(45) // 保证时间戳有足够空间
+        }
+        
+        // 调整文本视图布局
+        markdownTextView.snp.makeConstraints { make in
+            make.top.equalTo(headerView.snp.bottom).offset(8)
+            make.leading.equalTo(iconView) // 与图标对齐
+            make.trailing.equalToSuperview().offset(-12)
+            make.bottom.equalToSuperview().offset(-12)
         }
     }
     
-    // MARK: - Configuration
+    // 修改配置方法
     func configure(with insight: AIInsight) {
-        iconView.image = UIImage(systemName: insight.type.icon)
+        iconView.image = UIImage(systemName: insight.type.icon)?.withRenderingMode(.alwaysTemplate)
         iconView.tintColor = insight.type.color
         titleLabel.text = insight.title
         
+        // 格式化时间
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        timestampLabel.text = formatter.string(from: Date())
+        
         // 保存完整文本
         fullText = insight.description
-        // 清空描述标签
-        descriptionLabel.text = ""
+        // 清空文本
+        markdownTextView.attributedText = nil
         // 开始打字动画
         startTypingAnimation()
     }
     
-    // MARK: - Typing Animation
+    // 修改打字动画以支持 Markdown
     private func startTypingAnimation() {
-        // 重置状态
         currentTypingIndex = 0
         typingTimer?.invalidate()
-        
-        // 先设置完整文本但透明度为0
-        descriptionLabel.text = fullText
-        descriptionLabel.alpha = 0
-        
-        // 动画显示文本
-        UIView.animate(withDuration: 0.3) {
-            self.descriptionLabel.alpha = 1
-        }
         
         typingTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] timer in
             guard let self = self else {
@@ -717,16 +723,41 @@ class AIInsightCell: UITableViewCell {
             
             if self.currentTypingIndex < self.fullText.count {
                 let index = self.fullText.index(self.fullText.startIndex, offsetBy: self.currentTypingIndex)
-                self.descriptionLabel.text = String(self.fullText[...index])
+                let currentText = String(self.fullText[...index])
+                
+                // 修复参数顺序
+                if let attributedString = try? AttributedString(markdown: currentText, options: .init(
+                    allowsExtendedAttributes: true,
+                    interpretedSyntax: .inlineOnlyPreservingWhitespace,
+                    failurePolicy: .returnPartiallyParsedIfPossible
+                )) {
+                    let mutableAttrString = NSMutableAttributedString(attributedString)
+                    
+                    // 设置基本字体和颜色
+                    let range = NSRange(location: 0, length: mutableAttrString.length)
+                    mutableAttrString.addAttributes([
+                        .font: UIFont.systemFont(ofSize: 17, weight: .regular),
+                        .foregroundColor: UIColor.label,
+                        .paragraphStyle: {
+                            let style = NSMutableParagraphStyle()
+                            style.lineSpacing = 6 // 增加行间距
+                            style.paragraphSpacing = 12 // 增加段落间距
+                            return style
+                        }()
+                    ], range: range)
+                    
+                    self.markdownTextView.attributedText = mutableAttrString
+                }
+                
                 self.currentTypingIndex += 1
                 
-                // 每10个字符触发一次触感反馈
+                // 触感反馈
                 if self.currentTypingIndex % 10 == 0 {
                     let generator = UIImpactFeedbackGenerator(style: .soft)
                     generator.impactOccurred(intensity: 0.3)
                 }
                 
-                // 如果是标点符号，增加延迟
+                // 标点符号延迟
                 if [",", ".", "，", "。", "!", "?", "！", "？"].contains(String(self.fullText[index])) {
                     timer.fireDate = Date().addingTimeInterval(0.2)
                 }
@@ -734,40 +765,44 @@ class AIInsightCell: UITableViewCell {
                 timer.invalidate()
                 self.typingTimer = nil
                 
-                // 完成时的触感反馈
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
             }
         }
     }
     
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        typingTimer?.invalidate()
-        typingTimer = nil
-        descriptionLabel.text = ""
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+        configureBackground()
     }
     
-    // MARK: - Trait Collection Did Change
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func configureBackground() {
+        // 移除默认背景
+        self.backgroundView = nil
+        self.backgroundColor = .clear
         
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            // 更新渐变颜色
-            if let gradientLayer = containerView.layer.sublayers?.first as? CAGradientLayer {
-                gradientLayer.colors = [
-                    UIColor { traitCollection in
-                        return traitCollection.userInterfaceStyle == .dark ? 
-                            .secondarySystemBackground.withAlphaComponent(0.9) : 
-                            .white
-                    }.cgColor,
-                    UIColor { traitCollection in
-                        return traitCollection.userInterfaceStyle == .dark ? 
-                            .systemBackground.withAlphaComponent(0.7) : 
-                            .systemBackground.withAlphaComponent(0.9)
-                    }.cgColor
-                ]
-            }
+        // 确保内容视图背景透明
+        contentView.backgroundColor = .clear
+        
+        // 移除选中状态背景
+        self.selectedBackgroundView = nil
+        
+        // 移除系统背景视图
+        if let backgroundView = subviews.first(where: { String(describing: type(of: $0)).contains("BackgroundView") }) {
+            backgroundView.removeFromSuperview()
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 确保在��局更新时也移除系统背景
+        if let backgroundView = subviews.first(where: { String(describing: type(of: $0)).contains("BackgroundView") }) {
+            backgroundView.removeFromSuperview()
         }
     }
 }
