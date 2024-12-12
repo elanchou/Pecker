@@ -159,6 +159,38 @@ class AIAssistantView: UIView {
         return animation
     }()
     
+    // 添加新的 UI 组件
+    private let welcomeView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+    
+    private let welcomeImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = .systemGray2.withAlphaComponent(0.5)
+        return imageView
+    }()
+    
+    private let welcomeLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 24, weight: .bold)
+        label.textColor = .systemGray2.withAlphaComponent(0.5)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let welcomeSubtitleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16)
+        label.textColor = .systemGray2.withAlphaComponent(0.5)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -258,6 +290,9 @@ class AIAssistantView: UIView {
         
         layoutIfNeeded()
         gradientLayer.frame = backgroundView.bounds
+        
+        // 在 setupUI 中添加
+        setupWelcomeView()
     }
     
     private func setupGestures() {
@@ -426,12 +461,70 @@ class AIAssistantView: UIView {
             expand()
         }
     }
+    
+    // 在 setupUI 中添加
+    private func setupWelcomeView() {
+        contentView.addSubview(welcomeView)
+        welcomeView.addSubview(welcomeImageView)
+        welcomeView.addSubview(welcomeLabel)
+        welcomeView.addSubview(welcomeSubtitleLabel)
+        
+        welcomeView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalToSuperview().multipliedBy(0.8)
+        }
+        
+        welcomeImageView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview()
+            make.size.equalTo(80)
+        }
+        
+        welcomeLabel.snp.makeConstraints { make in
+            make.top.equalTo(welcomeImageView.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview()
+        }
+        
+        welcomeSubtitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(welcomeLabel.snp.bottom).offset(8)
+            make.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        updateWelcomeMessage()
+    }
+    
+    // 添加更新欢迎消息的方法
+    private func updateWelcomeMessage() {
+        let hour = Calendar.current.component(.hour, from: Date())
+        
+        let (message, image) = getWelcomeContent(for: hour)
+        welcomeLabel.text = message
+        welcomeImageView.image = UIImage(systemName: image)
+        welcomeSubtitleLabel.text = "有什么我可以帮你的吗？"
+    }
+    
+    private func getWelcomeContent(for hour: Int) -> (message: String, image: String) {
+        switch hour {
+        case 5..<12:
+            return ("早安", "sun.max.fill")
+        case 12..<14:
+            return ("午安", "sun.min.fill")
+        case 14..<18:
+            return ("下午好", "sun.and.horizon.fill")
+        case 18..<22:
+            return ("晚上好", "moon.stars.fill")
+        default:
+            return ("夜深了", "moon.zzz.fill")
+        }
+    }
 }
 
 // MARK: - UITableViewDataSource
 extension AIAssistantView: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return insights.count
+        let count = insights.count
+        welcomeView.isHidden = count > 0
+        return count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
