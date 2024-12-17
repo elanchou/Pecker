@@ -28,39 +28,48 @@ class FeedListViewController: BaseViewController {
         return table
     }()
     
-    private lazy var emptyStateView: UIView = {
+    private let emptyStateView: UIView = {
         let view = UIView()
         view.isHidden = true
-        
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 16
-        stackView.alignment = .center
-        
-        let imageView = UIImageView(image: UIImage(systemName: "newspaper"))
-        imageView.tintColor = .secondaryLabel
-        imageView.contentMode = .scaleAspectFit
-        imageView.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 60).isActive = true
-        
-        let label = UILabel()
-        label.text = "还没有订阅源\n点击右上角添加"
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        label.textColor = .secondaryLabel
-        
-        stackView.addArrangedSubview(imageView)
-        stackView.addArrangedSubview(label)
-        
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stackView)
-        
-        NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
-        
         return view
+    }()
+    
+    private let emptyImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "square.stack.3d.up.fill")
+        imageView.tintColor = .systemGray3
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private let emptyTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "没有订阅源"
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let emptyDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "添加你喜欢的网站和博客，获取最新内容"
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .tertiaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let addFeedButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("添加订阅源", for: .normal)
+        button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        button.backgroundColor = .systemBlue
+        button.tintColor = .white
+        button.layer.cornerRadius = 20
+        return button
     }()
     
     // MARK: - Lifecycle
@@ -285,6 +294,57 @@ class FeedListViewController: BaseViewController {
                 refreshLoadingView.alpha = progress
             }
         }
+    }
+    
+    private func setupEmptyState() {
+        view.addSubview(emptyStateView)
+        emptyStateView.addSubview(emptyImageView)
+        emptyStateView.addSubview(emptyTitleLabel)
+        emptyStateView.addSubview(emptyDescriptionLabel)
+        emptyStateView.addSubview(addFeedButton)
+        
+        emptyStateView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalToSuperview().multipliedBy(0.8)
+        }
+        
+        emptyImageView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+            make.centerX.equalToSuperview()
+            make.size.equalTo(100)
+        }
+        
+        emptyTitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(emptyImageView.snp.bottom).offset(20)
+            make.centerX.equalToSuperview()
+        }
+        
+        emptyDescriptionLabel.snp.makeConstraints { make in
+            make.top.equalTo(emptyTitleLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview()
+        }
+        
+        addFeedButton.snp.makeConstraints { make in
+            make.top.equalTo(emptyDescriptionLabel.snp.bottom).offset(24)
+            make.centerX.equalToSuperview()
+            make.width.equalTo(140)
+            make.height.equalTo(40)
+            make.bottom.equalToSuperview()
+        }
+        
+        addFeedButton.addTarget(self, action: #selector(addFeedTapped), for: .touchUpInside)
+    }
+    
+    @objc private func addFeedTapped() {
+        let addFeedVC = AddFeedViewController()
+        let nav = UINavigationController(rootViewController: addFeedVC)
+        present(nav, animated: true)
+    }
+    
+    private func updateEmptyState() {
+        let isEmpty = feeds?.isEmpty ?? true
+        emptyStateView.isHidden = !isEmpty
+        tableView.isHidden = isEmpty
     }
 }
 

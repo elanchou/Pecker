@@ -39,11 +39,11 @@ class HomeViewController: BaseViewController {
         return refresh
     }()
     
-    private let searchButton: UIBarButtonItem = {
+    private lazy var searchButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
             image: UIImage(systemName: "magnifyingglass"),
             style: .plain,
-            target: HomeViewController.self,
+            target: self,
             action: #selector(showSearch)
         )
         button.tintColor = .systemRed
@@ -59,10 +59,55 @@ class HomeViewController: BaseViewController {
     private var currentPlayingPodcast: Content?
     private var miniPlayerView: MiniPlayerView?
     
+    // 添加空状态视图
+    private let emptyStateView: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        return view
+    }()
+    
+    private let emptyImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "doc.text.magnifyingglass")
+        imageView.tintColor = .systemGray3
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private let emptyTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "还没有任何内容"
+        label.font = .systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let emptyDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "点击下方按钮添加订阅源，开始阅读之旅"
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .tertiaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let addFeedButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("添加订阅源", for: .normal)
+        button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        button.backgroundColor = .systemRed
+        button.tintColor = .white
+        button.layer.cornerRadius = 20
+        return button
+    }()
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.rightBarButtonItems = [searchButton]
+//        navigationItem.rightBarButtonItems = [searchButton]
         setupUI()
         loadData()
         
@@ -120,6 +165,7 @@ class HomeViewController: BaseViewController {
         setupSegmentedView()
         setupCollectionView()
         setupMiniPlayer()
+        setupEmptyState()
     }
     
     private func setupSegmentedView() {
@@ -144,7 +190,6 @@ class HomeViewController: BaseViewController {
     
     private func setupCollectionView() {
         collectionView.refreshControl = refreshControl
-        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
     }
     
     private func setupMiniPlayer() {
@@ -159,6 +204,51 @@ class HomeViewController: BaseViewController {
             make.height.equalTo(60).priority(.required)
         }
         miniPlayerView.isHidden = true
+    }
+    
+    private func setupEmptyState() {
+        view.addSubview(emptyStateView)
+        emptyStateView.addSubview(emptyImageView)
+        emptyStateView.addSubview(emptyTitleLabel)
+        emptyStateView.addSubview(emptyDescriptionLabel)
+        emptyStateView.addSubview(addFeedButton)
+        
+        emptyStateView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalToSuperview().multipliedBy(0.8)
+        }
+        
+        emptyImageView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+            make.centerX.equalToSuperview()
+            make.size.equalTo(100)
+        }
+        
+        emptyTitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(emptyImageView.snp.bottom).offset(20)
+            make.centerX.equalToSuperview()
+        }
+        
+        emptyDescriptionLabel.snp.makeConstraints { make in
+            make.top.equalTo(emptyTitleLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview()
+        }
+        
+        addFeedButton.snp.makeConstraints { make in
+            make.top.equalTo(emptyDescriptionLabel.snp.bottom).offset(24)
+            make.centerX.equalToSuperview()
+            make.width.equalTo(140)
+            make.height.equalTo(40)
+            make.bottom.equalToSuperview()
+        }
+        
+        addFeedButton.addTarget(self, action: #selector(addFeedTapped), for: .touchUpInside)
+    }
+    
+    private func updateEmptyState() {
+        let isEmpty = sections.isEmpty
+        emptyStateView.isHidden = !isEmpty
+        collectionView.isHidden = isEmpty
     }
     
     // MARK: - Data Loading
@@ -212,6 +302,7 @@ class HomeViewController: BaseViewController {
         
         // 更新 UI
         collectionView.reloadData()
+        updateEmptyState()
     }
     
     // 添加一个属性来储组后的数据
@@ -257,7 +348,15 @@ class HomeViewController: BaseViewController {
     
     // MARK: - Actions
     @objc private func refreshData() {
+        // Lottie动画
         refreshLoadingView.startLoading()
+        // 触感反馈
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        if #available(iOS 17.5, *) {
+            generator.impactOccurred(at: .init(x: 0, y: UIScreen.main.bounds.size.width / 2))
+        } else {
+            generator.impactOccurred()
+        }
         
         Task { @MainActor in
             do {
@@ -323,6 +422,12 @@ class HomeViewController: BaseViewController {
             }
         }
     }
+    
+    @objc private func addFeedTapped() {
+        let addFeedVC = AddFeedViewController()
+        let nav = UINavigationController(rootViewController: addFeedVC)
+        present(nav, animated: true)
+    }
 }
 
 // MARK: - UICollectionViewDataSource
@@ -336,34 +441,40 @@ extension HomeViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
         let content = sections[indexPath.section].1[indexPath.item]
-        cell.configure(with: content)
-        
-        // 设置长按回调
-        cell.onLongPress = { [weak self] content in
-            // 自动发送总结请求
-            Task {
-                let message = self?.aiService.generateSummary(for: .singleContent(content))
-                AIAssistantManager.shared.startThinking()
-                if let message = message {
-                    let text = try await self?.aiService.chat(message)
-                    AIAssistantManager.shared.addInsight(.init(
-                        type: .summary,
-                        title: content.title,
-                        description: text ?? "",
-                        action: { [weak self] in
-                            // 点击总结后的操作，可以跳转到详情页
-                            let detailVC = ArticleDetailViewController(articleId: content.id)
-                            self?.navigationController?.pushViewController(detailVC, animated: true)
-                        }
-                    ))
+        if content.type == .article {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ArticleCell", for: indexPath) as! ArticleCell
+            cell.configure(with: content)
+            // 设置长按回调
+            cell.onLongPress = { [weak self] content in
+                // 自动发送总结请求
+                Task {
+                    let message = self?.aiService.generateSummary(for: .singleContent(content))
+                    AIAssistantManager.shared.startThinking()
+                    if let message = message {
+                        let text = try await self?.aiService.chat(message)
+                        AIAssistantManager.shared.addInsight(.init(
+                            type: .summary,
+                            title: content.title,
+                            description: text ?? "",
+                            action: { [weak self] in
+                                // 点击总结后的操作，可以跳转到详情页
+                                let detailVC = ArticleDetailViewController(articleId: content.id)
+                                self?.navigationController?.pushViewController(detailVC, animated: true)
+                            }
+                        ))
+                    }
+                    AIAssistantManager.shared.stopThinking()
                 }
-                AIAssistantManager.shared.stopThinking()
             }
+            
+            return cell
+        } else if content.type == .podcast {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PodcastCell", for: indexPath) as! PodcastCell
+            cell.configure(with: content)
+            return cell
         }
-        
-        return cell
+        return UICollectionViewCell()
     }
     
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {

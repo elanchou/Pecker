@@ -8,18 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */; };
-		EE65971E2D05DDD2000732E0 /* PeckerWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = EE6597112D05DDD1000732E0 /* PeckerWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		EE65971C2D05DDD2000732E0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = EE0249BE2CFCA1AD00CA6901 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = EE6597102D05DDD1000732E0;
-			remoteInfo = "PeckerWatch Watch App";
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		EE65971F2D05DDD2000732E0 /* Embed Watch Content */ = {
@@ -28,7 +17,6 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				EE65971E2D05DDD2000732E0 /* PeckerWatch Watch App.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -50,7 +38,6 @@
 		6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Pecker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A460761F813BB71A51CBE090 /* Pods-Pecker.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Pecker.release.xcconfig"; path = "Target Support Files/Pods-Pecker/Pods-Pecker.release.xcconfig"; sourceTree = "<group>"; };
 		EE0249C62CFCA1AD00CA6901 /* Pecker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pecker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		EE6597112D05DDD1000732E0 /* PeckerWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PeckerWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -72,11 +59,6 @@
 			path = Pecker;
 			sourceTree = "<group>";
 		};
-		EE6597122D05DDD1000732E0 /* PeckerWatch Watch App */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "PeckerWatch Watch App";
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,13 +67,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		EE65970E2D05DDD1000732E0 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,7 +86,6 @@
 			isa = PBXGroup;
 			children = (
 				EE0249C82CFCA1AD00CA6901 /* Pecker */,
-				EE6597122D05DDD1000732E0 /* PeckerWatch Watch App */,
 				EEB088E72CFE25C3006DC4E9 /* Frameworks */,
 				EE0249C72CFCA1AD00CA6901 /* Products */,
 				454ED695674616730D80EE04 /* Pods */,
@@ -122,7 +96,6 @@
 			isa = PBXGroup;
 			children = (
 				EE0249C62CFCA1AD00CA6901 /* Pecker.app */,
-				EE6597112D05DDD1000732E0 /* PeckerWatch Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -153,7 +126,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				EE65971D2D05DDD2000732E0 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				EE0249C82CFCA1AD00CA6901 /* Pecker */,
@@ -163,28 +135,6 @@
 			);
 			productName = Pecker;
 			productReference = EE0249C62CFCA1AD00CA6901 /* Pecker.app */;
-			productType = "com.apple.product-type.application";
-		};
-		EE6597102D05DDD1000732E0 /* PeckerWatch Watch App */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = EE6597222D05DDD2000732E0 /* Build configuration list for PBXNativeTarget "PeckerWatch Watch App" */;
-			buildPhases = (
-				EE65970D2D05DDD1000732E0 /* Sources */,
-				EE65970E2D05DDD1000732E0 /* Frameworks */,
-				EE65970F2D05DDD1000732E0 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				EE6597122D05DDD1000732E0 /* PeckerWatch Watch App */,
-			);
-			name = "PeckerWatch Watch App";
-			packageProductDependencies = (
-			);
-			productName = "PeckerWatch Watch App";
-			productReference = EE6597112D05DDD1000732E0 /* PeckerWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -200,9 +150,6 @@
 					EE0249C52CFCA1AD00CA6901 = {
 						CreatedOnToolsVersion = 16.1;
 						LastSwiftMigration = 1610;
-					};
-					EE6597102D05DDD1000732E0 = {
-						CreatedOnToolsVersion = 16.1;
 					};
 				};
 			};
@@ -223,20 +170,12 @@
 			projectRoot = "";
 			targets = (
 				EE0249C52CFCA1AD00CA6901 /* Pecker */,
-				EE6597102D05DDD1000732E0 /* PeckerWatch Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		EE0249C42CFCA1AD00CA6901 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		EE65970F2D05DDD1000732E0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -295,22 +234,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		EE65970D2D05DDD1000732E0 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		EE65971D2D05DDD2000732E0 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = EE6597102D05DDD1000732E0 /* PeckerWatch Watch App */;
-			targetProxy = EE65971C2D05DDD2000732E0 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		EE0249DA2CFCA1AF00CA6901 /* Debug */ = {
@@ -333,12 +257,12 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.elanchou.Pecker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -368,12 +292,12 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.elanchou.Pecker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -501,68 +425,6 @@
 			};
 			name = Release;
 		};
-		EE6597202D05DDD2000732E0 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"PeckerWatch Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = HSJP264LHP;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = PeckerWatch;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.elanchou.Pecker;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.elanchou.Pecker.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 11.1;
-			};
-			name = Debug;
-		};
-		EE6597212D05DDD2000732E0 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"PeckerWatch Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = HSJP264LHP;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = PeckerWatch;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.elanchou.Pecker;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = me.elanchou.Pecker.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 11.1;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -580,15 +442,6 @@
 			buildConfigurations = (
 				EE0249DA2CFCA1AF00CA6901 /* Debug */,
 				EE0249DB2CFCA1AF00CA6901 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		EE6597222D05DDD2000732E0 /* Build configuration list for PBXNativeTarget "PeckerWatch Watch App" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				EE6597202D05DDD2000732E0 /* Debug */,
-				EE6597212D05DDD2000732E0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

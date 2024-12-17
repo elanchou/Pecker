@@ -46,7 +46,7 @@ class SettingsViewController: BaseViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.register(SettingCell.self, forCellReuseIdentifier: "SettingCell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         contentView.addSubview(tableView)
@@ -64,18 +64,17 @@ class SettingsViewController: BaseViewController {
                 .iCloudSync,
                 .syncStatus
             ]),
-            ("关于", [
-                .version,
-                .buildVersion
-            ]),
             ("每日总结", [
                 .todaySummaryEnabled,
                 .todaySummaryUpdateTime,
                 .todaySummaryFrequency
             ]),
+            ("关于", [
+                .version,
+            ]),
             ("", [
                 .copyright
-            ])
+            ]),
         ]
     }
     
@@ -131,59 +130,90 @@ extension SettingsViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SettingCell", for: indexPath) as! SettingCell
         let row = sections[indexPath.section].rows[indexPath.row]
-        
-        cell.textLabel?.textColor = .label
-        cell.detailTextLabel?.textColor = .secondaryLabel
         
         switch row {
         case .iCloudSync:
-            cell.textLabel?.text = "启用 iCloud 同步"
+            cell.configure(with: Setting(
+                icon: "icloud",
+                iconBackgroundColor: .systemBlue,
+                title: "启用 iCloud 同步",
+                subtitle: nil,
+                action: nil
+            ))
             let toggle = UISwitch()
             toggle.isOn = iCloudSyncEnabled
             toggle.addTarget(self, action: #selector(iCloudSyncToggled), for: .valueChanged)
             cell.accessoryView = toggle
-            cell.selectionStyle = .none
             
         case .syncStatus:
-            cell.textLabel?.text = "同步状态"
-            cell.detailTextLabel?.text = syncStatus
-            cell.selectionStyle = .none
+            cell.configure(with: Setting(
+                icon: "arrow.triangle.2.circlepath",
+                iconBackgroundColor: .systemGreen,
+                title: "同步状态",
+                subtitle: syncStatus,
+                action: nil
+            ))
             
         case .version:
-            cell.textLabel?.text = "版本"
-            cell.detailTextLabel?.text = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            cell.selectionStyle = .none
+            cell.configure(with: Setting(
+                icon: "info.circle",
+                iconBackgroundColor: .systemYellow,
+                title: "版本",
+                subtitle: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
+                action: nil
+            ))
             
         case .buildVersion:
-            cell.textLabel?.text = "构建版本"
-            cell.detailTextLabel?.text = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-            cell.selectionStyle = .none
+            cell.configure(with: Setting(
+                icon: "info.circle",
+                iconBackgroundColor: .systemYellow,
+                title: "构建版本",
+                subtitle: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1",
+                action: nil
+            ))
             
         case .copyright:
-            cell.textLabel?.text = "© 2024 Your Name. All rights reserved."
-            cell.textLabel?.textAlignment = .center
-            cell.textLabel?.textColor = .secondaryLabel
-            cell.textLabel?.font = .systemFont(ofSize: 14)
-            cell.selectionStyle = .none
+            cell.configure(with: Setting(
+                icon: "heart.fill",
+                iconBackgroundColor: .systemRed,
+                title: "© 2024 ElanChou. All rights reserved.",
+                subtitle: nil,
+                action: nil
+            ))
             
         case .todaySummaryEnabled:
-            cell.textLabel?.text = "启用每日总结"
+            cell.configure(with: Setting(
+                icon: "calendar.badge.clock",
+                iconBackgroundColor: .systemOrange,
+                title: "启用每日总结",
+                subtitle: nil,
+                action: nil
+            ))
             let toggle = UISwitch()
             toggle.isOn = TodaySummaryManager.shared.isEnabled
             toggle.addTarget(self, action: #selector(todaySummaryToggled), for: .valueChanged)
             cell.accessoryView = toggle
-            cell.selectionStyle = .none
             
         case .todaySummaryUpdateTime:
-            cell.textLabel?.text = "更新时间"
-            cell.detailTextLabel?.text = "\(TodaySummaryManager.shared.updateTime):00"
+            cell.configure(with: Setting(
+                icon: "clock",
+                iconBackgroundColor: .systemTeal,
+                title: "更新时间",
+                subtitle: "\(TodaySummaryManager.shared.updateTime):00",
+                action: nil
+            ))
             cell.accessoryType = .disclosureIndicator
             
         case .todaySummaryFrequency:
-            cell.textLabel?.text = "显示频率"
-            cell.detailTextLabel?.text = "\(TodaySummaryManager.shared.showFrequency) 小时"
+            cell.configure(with: Setting(
+                icon: "clock",
+                iconBackgroundColor: .systemTeal,
+                title: "显示频率",
+                subtitle: "\(TodaySummaryManager.shared.showFrequency) 小时",
+                action: nil
+            ))
             cell.accessoryType = .disclosureIndicator
         }
         
