@@ -24,7 +24,7 @@ class SectionHeaderView: UICollectionReusableView {
     private let aiButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "sparkles"), for: .normal)
-        button.tintColor = .systemPurple
+        button.tintColor = AppTheme.dark
         return button
     }()
     
