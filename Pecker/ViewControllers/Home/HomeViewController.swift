@@ -2,6 +2,7 @@ import UIKit
 import RealmSwift
 import JXSegmentedView
 import SnapKit
+import Lottie
 
 class HomeViewController: BaseViewController {
     // MARK: - Properties
@@ -63,15 +64,15 @@ class HomeViewController: BaseViewController {
     private let emptyStateView: UIView = {
         let view = UIView()
         view.isHidden = true
+        view.backgroundColor = .clear
         return view
     }()
     
-    private let emptyImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "doc.text.magnifyingglass")
-        imageView.tintColor = .systemGray3
-        imageView.contentMode = .scaleAspectFit
-        return imageView
+    private let emptyImageView: LottieAnimationView = {
+        let animation = LottieAnimationView(name: "bird")
+        animation.loopMode = .loop
+        animation.contentMode = .scaleAspectFit
+        return animation
     }()
     
     private let emptyTitleLabel: UILabel = {
@@ -98,7 +99,7 @@ class HomeViewController: BaseViewController {
         button.setTitle("添加订阅源", for: .normal)
         button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .systemRed
+        button.backgroundColor = AppTheme.primary
         button.tintColor = .white
         button.layer.cornerRadius = 20
         return button
@@ -245,10 +246,22 @@ class HomeViewController: BaseViewController {
         addFeedButton.addTarget(self, action: #selector(addFeedTapped), for: .touchUpInside)
     }
     
+    private func removeEmptyState() {
+        emptyStateView.removeFromSuperview()
+    }
+    
     private func updateEmptyState() {
         let isEmpty = sections.isEmpty
+        if isEmpty {
+            if (emptyStateView.superview == nil) {
+                setupEmptyState()
+            }
+        } else {
+            if (emptyStateView.superview != nil) {
+                removeEmptyState()
+            }
+        }
         emptyStateView.isHidden = !isEmpty
-        collectionView.isHidden = isEmpty
     }
     
     // MARK: - Data Loading
