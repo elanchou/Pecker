@@ -85,7 +85,7 @@ class ArticleDetailViewController: BaseViewController {
             action: #selector(showSettings)
         )
         settingsButton.tintColor = .systemPurple
-        navigationItem.rightBarButtonItems = [settingsButton, aiButton]
+//        navigationItem.rightBarButtonItems = [settingsButton, aiButton]
         
         // 清除标题
         navigationItem.title = nil
