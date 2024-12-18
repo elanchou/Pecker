@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要使用您的照片用于识别</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>需要使用您的声音用于识别</string>
+	<key>NSCameraUsageDescription</key>
+	<string>需要使用您的图像用于识别</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
