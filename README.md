@@ -1,67 +1,81 @@
 # Pecker
 
-Pecker is an AI-driven RSS reader designed to revolutionize how you consume and organize information. With cutting-edge AI technology, Pecker delivers personalized content summaries, categorization, and seamless reading experiences.
 
----
+**Your AI-Powered RSS Reading Experience**
 
-## Features
 
-- **AI Summaries:** Automatically summarize articles to save time while grasping key points.
-- **Personalized Recommendations:** AI-powered algorithms suggest feeds based on your reading preferences.
-- **Customizable Categories:** Organize your RSS feeds into categories that match your workflow.
-- **Multi-Device Syncing:** Access your subscriptions and reading history across devices.
-- **Keyword Search:** Quickly find articles or feeds with a powerful built-in search.
-- **Dark Mode:** Comfortable reading experience during night-time.
+## 🚀 Overview
 
----
+Pecker revolutionizes how you consume and organize information through its intelligent RSS reader powered by cutting-edge AI technology. Experience personalized content summaries, smart categorization, and seamless reading across all your devices.
 
-## Benefits
+## ✨ Key Features
 
-- **Stay Informed:** Get updates from your favorite sources instantly.
-- **Save Time:** Focus on essential content without digging through long articles.
-- **Enhanced Productivity:** Organize and prioritize information effortlessly.
+### 🤖 AI-Powered Intelligence
+- **Smart Summaries:** Get concise, automatically generated article summaries that capture key points while saving your valuable time
+- **Personalized Feed:** Receive tailored content recommendations based on your reading preferences and behavior
+- **Intelligent Categorization:** Let AI help organize your feeds into meaningful categories that match your workflow
 
----
+### 📱 Seamless Experience
+- **Cross-Device Sync:** Access your subscriptions, reading progress, and preferences across all your devices
+- **Dark Mode:** Enjoy comfortable reading during any time of day with automatic theme switching
+- **Powerful Search:** Find any article or feed instantly with our advanced search capabilities
 
-## Getting Started
+### 🎯 Productivity Tools
+- **Custom Categories:** Create and manage feed categories that align perfectly with your information needs
+- **Reading Progress:** Track what you've read and pick up exactly where you left off
+- **Bookmark & Share:** Save important articles for later and share insights with your network
 
-1. **Download Pecker:** Available on [App Store](https://www.apple.com/app-store/). (Insert actual link once available.)
-2. **Set Up Your Feeds:** Add your favorite RSS links or explore recommended categories.
-3. **Let AI Work for You:** Enjoy automated summaries, personalized suggestions, and more.
+## 🎬 Getting Started
 
----
+1. **Download Pecker**
+   - Get it now on the [App Store](https://apps.apple.com/cn/app/pecker/id6739542190?l=en-GB)
 
-## Screenshots
+2. **Set Up Your Feeds**
+   - Add your favorite RSS feeds manually
+   - Explore our curated categories
+   - Import existing OPML files
 
-(Include screenshots showcasing the app interface.)
+3. **Personalize Your Experience**
+   - Choose your preferred categories
+   - Set up reading preferences
+   - Enable AI features that matter to you
 
----
+## 💡 Why Choose Pecker?
 
-## Why Choose Pecker?
+Traditional RSS readers simply deliver content. Pecker transforms your reading experience by:
 
-Unlike traditional RSS readers, Pecker incorporates advanced AI to:
-- Reduce information overload.
-- Deliver insights tailored to your needs.
-- Simplify the reading process while enhancing productivity.
+- **Reducing Information Overload:** AI-powered summaries help you grasp key points quickly
+- **Delivering Personal Insights:** Smart algorithms learn your preferences to surface relevant content
+- **Enhancing Productivity:** Intelligent organization tools help you focus on what matters most
 
----
+## 🤝 Contributing
 
-## Contributing
+We believe in building together! Here's how you can help make Pecker even better:
 
-We welcome contributions to make Pecker even better. Feel free to submit feature requests or report issues by opening a ticket in the [issues section](https://github.com/your-repo/issues).
+- Report issues or suggest features through our [Issue Tracker](https://github.com/your-repo/issues)
+- Share your feedback and ideas with our team
+- Join our community discussions
 
----
-
-## License
+## 📄 License
 
 Pecker is licensed under the MIT License. See the [LICENSE](https://github.com/your-repo/blob/main/LICENSE) file for details.
 
----
+## 📱 Screenshots
 
-## Contact
+<div align="center">
+<table>
+  <tr>
+    <td><img src="screenshots/home.png" alt="Home Screen" width="200"/></td>
+    <td><img src="screenshots/reading.png" alt="Reading View" width="200"/></td>
+    <td><img src="screenshots/categories.png" alt="Categories" width="200"/></td>
+  </tr>
+</table>
+</div>
 
-For questions or feedback, reach out to our team:
-- Email: support@pecker.ai
-- Twitter: [@PeckerAI](https://twitter.com/PeckerAI)
-- Website: [www.pecker.ai](https://www.pecker.ai)
+## 📬 Contact
 
+We'd love to hear from you! Reach out through any of these channels:
+
+- **Email:** support@pecker.ai
+- **Twitter:** [@PeckerAI](https://twitter.com/PeckerAI)
+- **Website:** [www.pecker.ai](https://www.pecker.ai)
