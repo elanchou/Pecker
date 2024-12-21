@@ -7,7 +7,7 @@
 
 import UIKit
 import RealmSwift
-import SDWebImage
+import Kingfisher
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,32 +16,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         setupAppearance()
         // 配置 Realm
         let config = Realm.Configuration(
-            schemaVersion: 2,
+            schemaVersion: 1,
             migrationBlock: { migration, oldSchemaVersion in
-                if oldSchemaVersion < 2 {
-                    migration.enumerateObjects(ofType: Content.className()) { oldObject, newObject in
-                        newObject!["isDeleted"] = false
-                    }
+                if oldSchemaVersion < 1 {
+                    // 在这里处理数据迁移
                 }
-            })
-        
+            }
+        )
         Realm.Configuration.defaultConfiguration = config
         
-        if let fileURL = config.fileURL {
-            print("Realm 数据库位置: \(fileURL)")
-        }
+        // 配置 Kingfisher
+        let cache = ImageCache.default
+        cache.memoryStorage.config.totalCostLimit = 300 * 1024 * 1024 // 300MB
+        cache.diskStorage.config.sizeLimit = 1000 * 1024 * 1024 // 1GB
         
-        // 配置 SDWebImage
-        SDImageCache.shared.config.maxMemoryCost = 100 * 1024 * 1024 // 100MB 内存缓存
-        SDImageCache.shared.config.maxDiskAge = 7 * 24 * 60 * 60 // 7天磁盘缓存
-        SDImageCache.shared.config.maxDiskSize = 500 * 1024 * 1024 // 500MB 磁盘缓存上限
-        SDWebImageDownloader.shared.config.downloadTimeout = 15 // 15秒超时
-        SDWebImageDownloader.shared.config.maxConcurrentDownloads = 6 // 最大并发下载数
-        SDWebImageDownloader.shared.config.executionOrder = .lifoExecutionOrder // 后进先出顺序
-        
-        // 配置压缩和缓存
-        SDImageCache.shared.config.shouldCacheImagesInMemory = true
-        SDImageCache.shared.config.shouldUseWeakMemoryCache = true
+        KingfisherManager.shared.downloader.downloadTimeout = 15.0 // 15秒超时
         
         return true
     }

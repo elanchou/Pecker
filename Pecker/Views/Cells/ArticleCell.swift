@@ -1,7 +1,7 @@
 import UIKit
 import RealmSwift
-import SDWebImage
 import SnapKit
+import Kingfisher
 
 class ArticleCell: UICollectionViewCell {
     
@@ -232,11 +232,12 @@ class ArticleCell: UICollectionViewCell {
         if let imageURL = article.imageURLs.first,
            let url = URL(string: imageURL) {
             thumbnailImageView.isHidden = false
-            thumbnailImageView.sd_setImage(
+            thumbnailImageView.kf.setImage(
                 with: url,
-                placeholderImage: nil,
-                options: [.retryFailed, .progressiveLoad, .scaleDownLargeImages],
-                context: nil  // 移除 thumbnailPixelSize 以使用原图
+                options: [
+                    .transition(.fade(0.2)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 400, height: 400)))
+                ]
             )
         } else {
             thumbnailImageView.isHidden = true
@@ -286,7 +287,7 @@ class ArticleCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        thumbnailImageView.sd_cancelCurrentImageLoad()
+        thumbnailImageView.kf.cancelDownloadTask()
         thumbnailImageView.image = nil
         summaryView.stopTyping()
         summaryView.isHidden = true

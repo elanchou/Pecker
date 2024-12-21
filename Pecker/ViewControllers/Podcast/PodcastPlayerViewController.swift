@@ -1,6 +1,6 @@
 import UIKit
 import SnapKit
-import SDWebImage
+import Kingfisher
 import AVFoundation
 import RealmSwift
 
@@ -262,7 +262,16 @@ class PodcastPlayerViewController: UIViewController {
         // 设置封面图片
         if let imageURL = content.imageURLs.first,
            let url = URL(string: imageURL) {
-            coverImageView.sd_setImage(with: url)
+            coverImageView.kf.setImage(
+                with: url,
+                placeholder: UIImage(systemName: "music.note"),
+                options: [
+                    .transition(.fade(0.3)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 300, height: 300)))
+                ]
+            )
+        } else {
+            coverImageView.image = UIImage(systemName: "music.note")
         }
         
         // 设置音频

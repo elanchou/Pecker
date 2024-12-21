@@ -1,5 +1,5 @@
 # Uncomment the next line to define a global platform for your project
- platform :ios, '16.0'
+ platform :ios, '15.0'
 
 target 'Pecker' do
   # Comment the next line if you don't want to use dynamic frameworks
@@ -9,13 +9,18 @@ target 'Pecker' do
   pod 'RealmSwift', '~>10'
   pod 'FeedKit'
   pod 'SwiftSoup'
-  pod 'ExyteChat'
-  pod 'SDWebImage'
+  pod 'Kingfisher'
   pod 'JXSegmentedView'
   pod 'SnapKit'
   pod 'Down'
   pod 'lottie-ios'
-  pod 'MessageKit'
+  pod 'SwiftGen'
+  pod 'SwiftLint'
+  pod 'SwiftDate'
+  pod 'SwiftyJSON'
+  pod 'SwiftUIX'
+  pod 'SwiftSpeech'
+  pod 'SwiftAudioEx'
   
   pod 'LookinServer', :configurations => ['Debug']
 end

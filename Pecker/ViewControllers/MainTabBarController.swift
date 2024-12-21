@@ -6,6 +6,8 @@ class MainTabBarController: UITabBarController {
     enum TabIndex: Int, CaseIterable {
         case home
         case feedList
+//        case podcast
+//        case rss
         case settings
     }
     
@@ -51,6 +53,32 @@ class MainTabBarController: UITabBarController {
                         .withRenderingMode(.alwaysTemplate)
                 )
                 viewController = BaseNavigationController(rootViewController: feedVC)
+                
+//            case .podcast:
+//                let podcastVC = PodcastBrowseViewController()
+//                podcastVC.tabBarItem = UITabBarItem(
+//                    title: nil,
+//                    image: UIImage(systemName: "mic")?
+//                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+//                        .withRenderingMode(.alwaysTemplate),
+//                    selectedImage: UIImage(systemName: "mic.fill")?
+//                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+//                        .withRenderingMode(.alwaysTemplate)
+//                )
+//                viewController = BaseNavigationController(rootViewController: podcastVC)
+//                
+//            case .rss:
+//                let rssVC = RSSBrowseViewController()
+//                rssVC.tabBarItem = UITabBarItem(
+//                    title: nil,
+//                    image: UIImage(systemName: "newspaper")?
+//                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+//                        .withRenderingMode(.alwaysTemplate),
+//                    selectedImage: UIImage(systemName: "newspaper.fill")?
+//                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+//                        .withRenderingMode(.alwaysTemplate)
+//                )
+//                viewController = BaseNavigationController(rootViewController: rssVC)
                 
             case .settings:
                 let settingsVC = SettingsViewController()

@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 import SwiftSoup
-import SDWebImage
+import Kingfisher
 
 class ArticleContentView: UIView {
     // MARK: - Properties
@@ -147,7 +147,7 @@ class ArticleContentView: UIView {
             }
         }
         
-        // 2. 如���没找到，尝试查找最长的文本块
+        // 2. 如果没找到，尝试查找最长的文本块
         let candidates = try doc.select("div, section, article")
         var bestElement = doc.body() ?? doc
         var maxLength = 0
@@ -197,7 +197,7 @@ class ArticleContentView: UIView {
                   let url = URL(string: src) else { continue }
             
             // 使用 SDWebImage 预加载图片
-            SDWebImagePrefetcher.shared.prefetchURLs([url])
+            preloadImages([url])
             
             // 添加延迟加载属性
             try img.attr("data-original-src", src)
@@ -215,15 +215,7 @@ class ArticleContentView: UIView {
     
     private func getImageSize(from url: URL) async throws -> CGSize? {
         return try await withCheckedThrowingContinuation { continuation in
-            SDWebImageManager.shared.loadImage(
-                with: url,
-                options: [.retryFailed, .progressiveLoad],
-                progress: nil
-            ) { image, _, error, _, _, _ in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                    return
-                }
+            loadImage(url) { image in
                 continuation.resume(returning: image?.size)
             }
         }
@@ -458,6 +450,22 @@ class ArticleContentView: UIView {
     @objc private func refreshContent() {
         if let article = article {
             load(article: article)
+        }
+    }
+    
+    private func preloadImages(_ urls: [URL]) {
+        // 使用 Kingfisher 预加载图片
+        ImagePrefetcher(urls: urls).start()
+    }
+    
+    private func loadImage(_ url: URL, completion: @escaping (UIImage?) -> Void) {
+        KingfisherManager.shared.retrieveImage(with: url) { result in
+            switch result {
+            case .success(let value):
+                completion(value.image)
+            case .failure:
+                completion(nil)
+            }
         }
     }
 }

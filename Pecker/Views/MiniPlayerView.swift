@@ -1,6 +1,5 @@
 import UIKit
 import SnapKit
-import SDWebImage
 
 class MiniPlayerView: UIView {
     // MARK: - Properties
@@ -134,7 +133,7 @@ class MiniPlayerView: UIView {
         // 设置封面图片
         if let imageURL = content.imageURLs.first,
            let url = URL(string: imageURL) {
-            coverImageView.sd_setImage(with: url)
+            coverImageView.kf.setImage(with: url)
         }
         
         // 更新播放按钮状态

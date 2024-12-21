@@ -1,7 +1,7 @@
 import UIKit
 import RealmSwift
-import SDWebImage
 import SnapKit
+import Kingfisher
 
 class FeedCell: UITableViewCell {
     // MARK: - UI Elements
@@ -86,31 +86,25 @@ class FeedCell: UITableViewCell {
     // MARK: - Configuration
     func configure(with feed: Feed) {
         titleLabel.text = feed.title
-        urlLabel.text = feed.url
         
-        if let url = URL(string: feed.url) {
-            let faviconURL = "https://www.google.com/s2/favicons?sz=64&domain=\(url.host ?? "")"
-            iconImageView.sd_setImage(
-                with: URL(string: faviconURL),
-                placeholderImage: UIImage(systemName: "globe"),
-                options: [.retryFailed, .progressiveLoad]
+        if let iconURL = URL(string: feed.iconURL ?? "") {
+            iconImageView.kf.setImage(
+                with: iconURL,
+                placeholder: UIImage(systemName: "globe"),
+                options: [
+                    .transition(.fade(0.3)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 60, height: 60)))
+                ]
             )
-        }
-        
-        if feed.unreadCount > 0 {
-            unreadCountLabel.isHidden = false
-            unreadCountLabel.text = "\(feed.unreadCount)"
-            let width = unreadCountLabel.intrinsicContentSize.width + 16
-            unreadCountLabel.widthAnchor.constraint(equalToConstant: max(width, 20)).isActive = true
         } else {
-            unreadCountLabel.isHidden = true
+            iconImageView.image = UIImage(systemName: "globe")
         }
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        iconImageView.sd_cancelCurrentImageLoad()
-        iconImageView.image = UIImage(systemName: "newspaper")
-        unreadCountLabel.isHidden = true
+        iconImageView.kf.cancelDownloadTask()
+        iconImageView.image = nil
+        titleLabel.text = nil
     }
 } 

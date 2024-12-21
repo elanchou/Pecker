@@ -1,93 +1,84 @@
 PODS:
-  - ActivityIndicatorView (1.1.1)
   - Down (0.11.0)
-  - ExyteChat (2.0.6):
-    - ActivityIndicatorView
-    - ExyteMediaPicker
-    - ExytePopupView
-    - FloatingButton
-    - SwiftUIIntrospect
-  - ExyteMediaPicker (2.2.3)
-  - ExytePopupView (3.1.2):
-    - SwiftUIIntrospect
   - FeedKit (9.1.2)
-  - FloatingButton (1.3.0)
-  - InputBarAccessoryView (5.5.0):
-    - InputBarAccessoryView/Core (= 5.5.0)
-  - InputBarAccessoryView/Core (5.5.0)
   - JXSegmentedView (1.4.1)
+  - Kingfisher (8.1.3)
   - LookinServer (1.2.8):
     - LookinServer/Core (= 1.2.8)
   - LookinServer/Core (1.2.8)
   - lottie-ios (4.5.0)
-  - MessageKit (3.8.0):
-    - InputBarAccessoryView (~> 5.5.0)
   - Realm (10.54.1):
     - Realm/Headers (= 10.54.1)
   - Realm/Headers (10.54.1)
   - RealmSwift (10.54.1):
     - Realm (= 10.54.1)
-  - SDWebImage (5.20.0):
-    - SDWebImage/Core (= 5.20.0)
-  - SDWebImage/Core (5.20.0)
   - SnapKit (5.7.1)
+  - SwiftAudioEx (1.1.0)
+  - SwiftDate (7.0.0)
+  - SwiftGen (6.6.3)
+  - SwiftLint (0.57.1)
   - SwiftSoup (2.7.6)
-  - SwiftUIIntrospect (1.3.0)
+  - SwiftSpeech (0.9.3)
+  - SwiftUIX (0.0.3)
+  - SwiftyJSON (5.0.2)
 
 DEPENDENCIES:
   - Down
-  - ExyteChat
   - FeedKit
   - JXSegmentedView
+  - Kingfisher
   - LookinServer
   - lottie-ios
-  - MessageKit
   - RealmSwift (~> 10)
-  - SDWebImage
   - SnapKit
+  - SwiftAudioEx
+  - SwiftDate
+  - SwiftGen
+  - SwiftLint
   - SwiftSoup
+  - SwiftSpeech
+  - SwiftUIX
+  - SwiftyJSON
 
 SPEC REPOS:
   trunk:
-    - ActivityIndicatorView
     - Down
-    - ExyteChat
-    - ExyteMediaPicker
-    - ExytePopupView
     - FeedKit
-    - FloatingButton
-    - InputBarAccessoryView
     - JXSegmentedView
+    - Kingfisher
     - LookinServer
     - lottie-ios
-    - MessageKit
     - Realm
     - RealmSwift
-    - SDWebImage
     - SnapKit
+    - SwiftAudioEx
+    - SwiftDate
+    - SwiftGen
+    - SwiftLint
     - SwiftSoup
-    - SwiftUIIntrospect
+    - SwiftSpeech
+    - SwiftUIX
+    - SwiftyJSON
 
 SPEC CHECKSUMS:
-  ActivityIndicatorView: f14ac8e200a344fe992577807998b0c8562bd964
   Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
-  ExyteChat: 95057a41273b7c5fc4716cefb299a57a218410a5
-  ExyteMediaPicker: b4a63218f34e93060afb3c0a41b0f898048728cb
-  ExytePopupView: f6405d001821bdeaa0b4cb5dce9a082c53956075
   FeedKit: 71653273ab08e618cd6fd1301ca08fc02dca6a9e
-  FloatingButton: 86f862465b950e053279b3c2ccbfee7f823688bf
-  InputBarAccessoryView: 1d7b0a672b36e370f01f264b3907ef39d03328e3
   JXSegmentedView: cd73555ce2134d1656db2cb383ba9c2f36fb5078
+  Kingfisher: f2af9028b16baf9dc6c07c570072bc41cbf009ef
   LookinServer: 1b2b61c6402ae29fa22182d48f5cd067b4e99e80
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
-  MessageKit: a1ba0c69ebead94029867853eb44dd05b9b3f453
   Realm: 7c70fc7ae6ebfb635b29bc05ac1a6c5eeeb3c572
   RealmSwift: 12797d5849c90f37eafad8f44b4dadb8e558a806
-  SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
   SnapKit: d612e99e678a2d3b95bf60b0705ed0a35c03484a
+  SwiftAudioEx: f6aa653770f3a0d3851edaf8d834a30aee4a7646
+  SwiftDate: bbc26e26fc8c0c33fbee8c140c5e8a68293a148a
+  SwiftGen: 4993cbf71cbc4886f775e26f8d5c3a1188ec9f99
+  SwiftLint: 92196976e597b9afec5dbe374810103e6c1d9d7c
   SwiftSoup: 9ec2526c76ebc3fe5d3157c82b40b45a27eeb82d
-  SwiftUIIntrospect: fee9aa07293ee280373a591e1824e8ddc869ba5d
+  SwiftSpeech: f49b1dc8d841295ed3fd2e91233a607f45bfa529
+  SwiftUIX: 3348c2b1eec70c3edfe039fdf1388af2b0155b2b
+  SwiftyJSON: f5b1bf1cd8dd53cd25887ac0eabcfd92301c6a5a
 
-PODFILE CHECKSUM: 1af2d2698119b919861016fdf1a34e24071f8ecc
+PODFILE CHECKSUM: d1ab0aa9365538b84bd89f2bcd1d5e6876fde180
 
 COCOAPODS: 1.16.2

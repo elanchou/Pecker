@@ -1,7 +1,7 @@
 import UIKit
 import AVFoundation
-import SDWebImage
 import SnapKit
+import Kingfisher
 
 class PodcastCell: UICollectionViewCell {
     // MARK: - Properties
@@ -169,7 +169,16 @@ class PodcastCell: UICollectionViewCell {
         // 设置封面图片
         if let imageURL = content.imageURLs.first,
            let url = URL(string: imageURL) {
-            coverImageView.sd_setImage(with: url)
+            coverImageView.kf.setImage(
+                with: url,
+                placeholder: UIImage(systemName: "music.note"),
+                options: [
+                    .transition(.fade(0.3)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 120, height: 120)))
+                ]
+            )
+        } else {
+            coverImageView.image = UIImage(systemName: "music.note")
         }
         
         // 设置音频
@@ -260,6 +269,12 @@ class PodcastCell: UICollectionViewCell {
             audioPlayer.removeTimeObserver(observer)
         }
         content?.isPlaying = false
+        coverImageView.kf.cancelDownloadTask()
+        coverImageView.image = nil
+        titleLabel.text = nil
+        dateLabel.text = nil
+        durationLabel.text = nil
+        progressSlider.value = 0
     }
     
     // MARK: - Gestures
