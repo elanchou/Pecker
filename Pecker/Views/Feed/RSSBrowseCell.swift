@@ -1,37 +1,42 @@
 import UIKit
-import SnapKit
 import Kingfisher
 
-class RSSBrowseCell: UICollectionViewCell {
+class RSSBrowseCell: UITableViewCell {
     // MARK: - UI Components
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 16
+        view.backgroundColor = .secondarySystemGroupedBackground
+        view.layer.cornerRadius = 12
         view.clipsToBounds = true
         return view
     }()
     
-    private let imageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFill
-        iv.clipsToBounds = true
-        iv.backgroundColor = .tertiarySystemBackground
-        return iv
+    private let coverImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 8
+        return imageView
     }()
     
-    private let iconView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        iv.clipsToBounds = true
-        iv.layer.cornerRadius = 12
-        iv.backgroundColor = .systemBackground
-        return iv
+    private let iconContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemGray5
+        view.layer.cornerRadius = 20
+        view.clipsToBounds = true
+        return view
+    }()
+    
+    private let iconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
+        return imageView
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
+        label.font = .systemFont(ofSize: 17, weight: .semibold)
         label.textColor = .label
         label.numberOfLines = 2
         return label
@@ -48,73 +53,16 @@ class RSSBrowseCell: UICollectionViewCell {
     private let categoryLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .systemBlue
-        label.numberOfLines = 1
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.layer.cornerRadius = 8
+        label.clipsToBounds = true
         return label
     }()
-    
-    private let subscribersLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 12)
-        label.textColor = .tertiaryLabel
-        label.numberOfLines = 1
-        return label
-    }()
-    
-    private let topicsStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .horizontal
-        sv.spacing = 4
-        sv.distribution = .fillProportionally
-        return sv
-    }()
-    
-    private let recommendedBadge: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGreen
-        view.layer.cornerRadius = 2
-        view.isHidden = true
-        return view
-    }()
-    
-    private let recommendedLabel: UILabel = {
-        let label = UILabel()
-        label.text = "推荐"
-        label.font = .systemFont(ofSize: 10, weight: .medium)
-        label.textColor = .white
-        label.isHidden = true
-        return label
-    }()
-    
-    // MARK: - PaddingLabel
-    private class PaddingLabel: UILabel {
-        var padding: UIEdgeInsets
-        
-        init(padding: UIEdgeInsets = .zero) {
-            self.padding = padding
-            super.init(frame: .zero)
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func drawText(in rect: CGRect) {
-            super.drawText(in: rect.inset(by: padding))
-        }
-        
-        override var intrinsicContentSize: CGSize {
-            let size = super.intrinsicContentSize
-            return CGSize(
-                width: size.width + padding.left + padding.right,
-                height: size.height + padding.top + padding.bottom
-            )
-        }
-    }
     
     // MARK: - Initialization
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
     }
     
@@ -124,150 +72,189 @@ class RSSBrowseCell: UICollectionViewCell {
     
     // MARK: - UI Setup
     private func setupUI() {
+        backgroundColor = .clear
+        selectionStyle = .none
+        
         contentView.addSubview(containerView)
+        containerView.addSubview(coverImageView)
+        containerView.addSubview(iconContainer)
+        iconContainer.addSubview(iconImageView)
+        containerView.addSubview(titleLabel)
+        containerView.addSubview(descriptionLabel)
+        containerView.addSubview(categoryLabel)
         
-        [imageView, iconView, titleLabel, descriptionLabel, categoryLabel, 
-         subscribersLabel, topicsStackView, recommendedBadge, recommendedLabel].forEach {
-            containerView.addSubview($0)
-        }
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        coverImageView.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        categoryLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        containerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(8)
-        }
+        NSLayoutConstraint.activate([
+            // Container View
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            
+            // Cover Image View
+            coverImageView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            coverImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            coverImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            coverImageView.heightAnchor.constraint(equalToConstant: 120),
+            
+            // Icon Container
+            iconContainer.topAnchor.constraint(equalTo: coverImageView.bottomAnchor, constant: -20),
+            iconContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
+            iconContainer.widthAnchor.constraint(equalToConstant: 40),
+            iconContainer.heightAnchor.constraint(equalToConstant: 40),
+            
+            // Icon Image View
+            iconImageView.topAnchor.constraint(equalTo: iconContainer.topAnchor, constant: 8),
+            iconImageView.leadingAnchor.constraint(equalTo: iconContainer.leadingAnchor, constant: 8),
+            iconImageView.trailingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: -8),
+            iconImageView.bottomAnchor.constraint(equalTo: iconContainer.bottomAnchor, constant: -8),
+            
+            // Title Label
+            titleLabel.topAnchor.constraint(equalTo: coverImageView.bottomAnchor, constant: 32),
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
+            
+            // Description Label
+            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            descriptionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            
+            // Category Label
+            categoryLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 12),
+            categoryLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            categoryLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16)
+        ])
         
-        imageView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.height.equalTo(120)
-        }
-        
-        iconView.snp.makeConstraints { make in
-            make.width.height.equalTo(24)
-            make.leading.equalToSuperview().offset(12)
-            make.top.equalTo(imageView.snp.bottom).offset(-12)
-        }
-        
-        titleLabel.snp.makeConstraints { make in
-            make.top.equalTo(iconView)
-            make.leading.equalTo(iconView.snp.trailing).offset(8)
-            make.trailing.equalToSuperview().offset(-12)
-        }
-        
-        descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.leading.equalTo(titleLabel)
-            make.trailing.equalToSuperview().offset(-12)
-        }
-        
-        topicsStackView.snp.makeConstraints { make in
-            make.top.equalTo(descriptionLabel.snp.bottom).offset(8)
-            make.leading.equalTo(titleLabel)
-            make.trailing.equalToSuperview().offset(-12)
-            make.height.equalTo(20)
-        }
-        
-        categoryLabel.snp.makeConstraints { make in
-            make.top.equalTo(topicsStackView.snp.bottom).offset(8)
-            make.leading.equalTo(titleLabel)
-            make.bottom.equalToSuperview().offset(-12)
-        }
-        
-        subscribersLabel.snp.makeConstraints { make in
-            make.centerY.equalTo(categoryLabel)
-            make.trailing.equalToSuperview().offset(-12)
-        }
-        
-        recommendedBadge.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().offset(12)
-            make.width.equalTo(40)
-            make.height.equalTo(20)
-        }
-        
-        recommendedLabel.snp.makeConstraints { make in
-            make.center.equalTo(recommendedBadge)
-        }
+        // Add shadow to container view
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        containerView.layer.shadowRadius = 8
+        containerView.layer.shadowOpacity = 0.1
+        containerView.layer.masksToBounds = false
+    }
+    
+    // MARK: - Selection
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        UIView.animate(
+            withDuration: 0.2,
+            delay: 0,
+            options: [.beginFromCurrentState, .allowUserInteraction],
+            animations: {
+                self.containerView.transform = highlighted ? CGAffineTransform(scaleX: 0.98, y: 0.98) : .identity
+                self.containerView.layer.shadowOpacity = highlighted ? 0.2 : 0.1
+            }
+        )
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        UIView.animate(
+            withDuration: 0.2,
+            delay: 0,
+            options: [.beginFromCurrentState, .allowUserInteraction],
+            animations: {
+                self.containerView.transform = selected ? CGAffineTransform(scaleX: 0.98, y: 0.98) : .identity
+                self.containerView.layer.shadowOpacity = selected ? 0.2 : 0.1
+            }
+        )
     }
     
     // MARK: - Configuration
-    func configure(with feed: RSSDirectoryService.RSSFeed) {
+    func configure(with feed: RSSDirectoryService.Feed, category: RSSDirectoryService.RSSCategory) {
         titleLabel.text = feed.title
         descriptionLabel.text = feed.description
-        categoryLabel.text = feed.category
-        
-        if let subscribers = feed.subscribers {
-            subscribersLabel.text = formatSubscriberCount(subscribers)
-        } else {
-            subscribersLabel.text = nil
-        }
-        
-        // 设置图片
-        if let imageUrl = feed.imageUrl {
-            imageView.kf.setImage(
-                with: URL(string: imageUrl),
-                placeholder: UIImage(systemName: "photo"),
-                options: [
-                    .transition(.fade(0.3)),
-                    .processor(DownsamplingImageProcessor(size: CGSize(width: 300, height: 300)))
-                ]
-            )
-        }
+        categoryLabel.text = category.name
         
         // 设置图标
-        if let iconUrl = feed.iconUrl {
-            iconView.kf.setImage(
-                with: URL(string: iconUrl),
-                placeholder: UIImage(systemName: "globe"),
+        if let iconURL = feed.iconURL {
+            iconImageView.kf.setImage(
+                with: URL(string: iconURL),
+                placeholder: nil,
                 options: [
-                    .transition(.fade(0.3)),
-                    .processor(DownsamplingImageProcessor(size: CGSize(width: 48, height: 48)))
+                    .transition(.fade(0.2)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 40, height: 40))),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage
                 ]
             )
         }
         
-        // 设置话题标签
-        topicsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        feed.topics?.prefix(3).forEach { topic in
-            let label = createTopicLabel(text: topic)
-            topicsStackView.addArrangedSubview(label)
+        // 设置背景图片
+        if category.type == .country, let flagURL = category.flagURL {
+            coverImageView.kf.setImage(
+                with: URL(string: flagURL),
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 400, height: 200))),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage
+                ]
+            ) { [weak self] result in
+                if case .success(let imageResult) = result {
+                    // 从国旗图片提取主色调作为背景色
+                    let color = imageResult.image.averageColor?.withAlphaComponent(0.2)
+                    self?.coverImageView.backgroundColor = color
+                }
+            }
+        } else if let categoryIconURL = category.iconURL {
+            coverImageView.kf.setImage(
+                with: URL(string: categoryIconURL),
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 400, height: 200))),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage
+                ]
+            )
         }
-        
-        // 设置推荐标记
-        recommendedBadge.isHidden = !(feed.isRecommended ?? false)
-        recommendedLabel.isHidden = !(feed.isRecommended ?? false)
-    }
-    
-    private func createTopicLabel(text: String) -> UILabel {
-        let label = PaddingLabel(padding: UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
-        label.text = text
-        label.font = .systemFont(ofSize: 10, weight: .medium)
-        label.textColor = .secondaryLabel
-        label.backgroundColor = .tertiarySystemBackground
-        label.layer.cornerRadius = 10
-        label.clipsToBounds = true
-        label.textAlignment = .center
-        return label
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        imageView.kf.cancelDownloadTask()
-        iconView.kf.cancelDownloadTask()
-        imageView.image = nil
-        iconView.image = nil
-        titleLabel.text = nil
-        descriptionLabel.text = nil
-        categoryLabel.text = nil
-        subscribersLabel.text = nil
-        topicsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        recommendedBadge.isHidden = true
-        recommendedLabel.isHidden = true
+        coverImageView.kf.cancelDownloadTask()
+        coverImageView.image = nil
+        iconImageView.kf.cancelDownloadTask()
+        iconImageView.image = nil
+        coverImageView.backgroundColor = nil
     }
-    
-    private func formatSubscriberCount(_ count: Int) -> String {
-        if count >= 10000 {
-            let k = Double(count) / 1000.0
-            return String(format: "%.1fk 订阅", k)
-        } else {
-            return "\(count) 订阅"
-        }
+}
+
+// MARK: - UIImage Extension
+extension UIImage {
+    var averageColor: UIColor? {
+        guard let inputImage = CIImage(image: self) else { return nil }
+        let extentVector = CIVector(x: inputImage.extent.origin.x,
+                                  y: inputImage.extent.origin.y,
+                                  z: inputImage.extent.size.width,
+                                  w: inputImage.extent.size.height)
+
+        guard let filter = CIFilter(name: "CIAreaAverage",
+                                  parameters: [kCIInputImageKey: inputImage,
+                                             kCIInputExtentKey: extentVector]) else { return nil }
+        guard let outputImage = filter.outputImage else { return nil }
+
+        var bitmap = [UInt8](repeating: 0, count: 4)
+        let context = CIContext(options: [.workingColorSpace: kCFNull as Any])
+        context.render(outputImage,
+                      toBitmap: &bitmap,
+                      rowBytes: 4,
+                      bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
+                      format: .RGBA8,
+                      colorSpace: nil)
+
+        return UIColor(red: CGFloat(bitmap[0]) / 255,
+                      green: CGFloat(bitmap[1]) / 255,
+                      blue: CGFloat(bitmap[2]) / 255,
+                      alpha: CGFloat(bitmap[3]) / 255)
     }
 } 

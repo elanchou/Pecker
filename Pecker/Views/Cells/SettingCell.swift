@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import SnapKit
 
 struct Setting {
     let icon: String
@@ -14,50 +13,22 @@ struct Setting {
     let title: String
     let subtitle: String?
     let action: (() -> Void)?
-    
-    init(
-        icon: String,
-        iconBackgroundColor: UIColor,
-        title: String,
-        subtitle: String? = nil,
-        action: (() -> Void)? = nil
-    ) {
-        self.icon = icon
-        self.iconBackgroundColor = iconBackgroundColor
-        self.title = title
-        self.subtitle = subtitle
-        self.action = action
-    }
 }
 
 class SettingCell: UITableViewCell {
-    // MARK: - Properties
-    private let tapFeedback = UISelectionFeedbackGenerator()
-    
-    // MARK: - UI Elements
+    // MARK: - UI Components
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .clear
-        view.layer.cornerRadius = 10
-        
-        // 添加微妙的内阴影效果
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = .zero
-        view.layer.shadowOpacity = 0.05
-        view.layer.shadowRadius = 3
+        view.backgroundColor = .secondarySystemGroupedBackground
+        view.layer.cornerRadius = 12
+        view.layer.masksToBounds = true
         return view
     }()
     
     private let iconContainer: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 6
-        
-        // 添加内部渐变
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.cornerRadius = 6
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        view.layer.addSublayer(gradientLayer)
+        view.layer.cornerRadius = 8
+        view.layer.masksToBounds = true
         return view
     }()
     
@@ -68,44 +39,22 @@ class SettingCell: UITableViewCell {
         return imageView
     }()
     
-    private let titleStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.spacing = 8
-        return stack
-    }()
-    
-    private let textStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 2
-        return stack
-    }()
-    
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .medium)
+        label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = .label
         return label
     }()
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
+        label.font = .systemFont(ofSize: 14)
         label.textColor = .secondaryLabel
+        label.numberOfLines = 0
         return label
     }()
     
-    private let accessoryStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 4
-        stack.alignment = .center
-        return stack
-    }()
-    
-    // MARK: - Init & Setup
+    // MARK: - Initialization
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
@@ -115,77 +64,73 @@ class SettingCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - UI Setup
     private func setupUI() {
         backgroundColor = .clear
         selectionStyle = .none
         
         contentView.addSubview(containerView)
-        containerView.addSubview(titleStackView)
-        
-        titleStackView.addArrangedSubview(iconContainer)
+        containerView.addSubview(iconContainer)
         iconContainer.addSubview(iconImageView)
+        containerView.addSubview(titleLabel)
+        containerView.addSubview(subtitleLabel)
         
-        titleStackView.addArrangedSubview(textStackView)
-        textStackView.addArrangedSubview(titleLabel)
-        textStackView.addArrangedSubview(subtitleLabel)
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        iconContainer.translatesAutoresizingMaskIntoConstraints = false
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        titleStackView.addArrangedSubview(accessoryStackView)
+        NSLayoutConstraint.activate([
+            // Container View
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 6),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -6),
+            
+            // Icon Container
+            iconContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            iconContainer.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            iconContainer.widthAnchor.constraint(equalToConstant: 32),
+            iconContainer.heightAnchor.constraint(equalToConstant: 32),
+            
+            // Icon Image View
+            iconImageView.centerXAnchor.constraint(equalTo: iconContainer.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: iconContainer.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 20),
+            iconImageView.heightAnchor.constraint(equalToConstant: 20),
+            
+            // Title Label
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            
+            // Subtitle Label
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            subtitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            subtitleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12)
+        ])
         
-        // 布局约束
-        containerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 0, bottom: 4, right: 0))
-            make.height.equalTo(54) // 降低高度
-        }
-        
-        titleStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        iconContainer.snp.makeConstraints { make in
-            make.size.equalTo(28) // 减小图标尺寸
-        }
-        
-        iconImageView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(16)
-        }
+        // Add shadow to container view
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        containerView.layer.shadowRadius = 4
+        containerView.layer.shadowOpacity = 0.1
     }
     
     // MARK: - Configuration
     func configure(with setting: Setting) {
-        iconContainer.backgroundColor = setting.iconBackgroundColor
-        
-        // 设置渐变色
-        if let gradientLayer = iconContainer.layer.sublayers?.first as? CAGradientLayer {
-            gradientLayer.frame = iconContainer.bounds
-            gradientLayer.colors = [
-                setting.iconBackgroundColor.withAlphaComponent(1).cgColor,
-                setting.iconBackgroundColor.withAlphaComponent(0.8).cgColor
-            ]
-        }
-        
         iconImageView.image = UIImage(systemName: setting.icon)
+        iconContainer.backgroundColor = setting.iconBackgroundColor
         titleLabel.text = setting.title
         subtitleLabel.text = setting.subtitle
         subtitleLabel.isHidden = setting.subtitle == nil
-        
-        // 根据是否有副标题调整布局
-        textStackView.spacing = setting.subtitle == nil ? 0 : 2
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        accessoryType = .none
         accessoryView = nil
-        accessoryStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // 更新渐变层frame
-        if let gradientLayer = iconContainer.layer.sublayers?.first as? CAGradientLayer {
-            gradientLayer.frame = iconContainer.bounds
-        }
+        accessoryType = .none
     }
 }

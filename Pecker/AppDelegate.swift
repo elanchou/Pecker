@@ -13,6 +13,14 @@ import Kingfisher
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // 设置默认语言
+        if UserDefaults.standard.string(forKey: "app_language") == nil {
+            // 获取系统语言
+            let preferredLanguage = Locale.preferredLanguages.first ?? "en"
+            let language: Language = preferredLanguage.contains("zh") ? .simplifiedChinese : .english
+            LocalizationManager.shared.setLanguage(language)
+        }
+        
         setupAppearance()
         // 配置 Realm
         let config = Realm.Configuration(

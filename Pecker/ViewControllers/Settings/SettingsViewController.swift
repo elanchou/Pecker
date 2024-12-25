@@ -4,7 +4,9 @@ import CloudKit
 class SettingsViewController: BaseViewController {
     // MARK: - Properties
     private let tableView: UITableView = {
-        let table = UITableView(frame: .zero, style: .insetGrouped)
+        let table = UITableView(frame: .zero, style: .plain)
+        table.backgroundColor = .systemGroupedBackground
+        table.separatorStyle = .none
         return table
     }()
     
@@ -14,7 +16,7 @@ class SettingsViewController: BaseViewController {
         set { UserDefaults.standard.set(newValue, forKey: "iCloudSync") }
     }
     
-    private var syncStatus: String = "正在检查..." {
+    private var syncStatus: String = LocalizedString("loading") {
         didSet {
             if let indexPath = getIndexPath(for: .syncStatus) {
                 tableView.reloadRows(at: [indexPath], with: .none)
@@ -25,24 +27,20 @@ class SettingsViewController: BaseViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // 添加表格动画
-        tableView.alpha = 0
-        tableView.transform = CGAffineTransform(translationX: 0, y: 20)
-        
-        UIView.animate(withDuration: 0.5, delay: 0.1, usingSpringWithDamping: 0.8, initialSpringVelocity: 0) {
-            self.tableView.alpha = 1
-            self.tableView.transform = .identity
-        }
-        
         setupUI()
         setupSections()
         checkSyncStatus()
+        
+        // 监听语言变化
+        NotificationCenter.default.addObserver(self,
+                                            selector: #selector(languageDidChange),
+                                            name: Notification.Name("LanguageDidChange"),
+                                            object: nil)
     }
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "设置"
+        title = LocalizedString("tab.settings")
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -60,16 +58,16 @@ class SettingsViewController: BaseViewController {
     
     private func setupSections() {
         sections = [
-            ("iCloud 同步", [
+            (LocalizedString("settings.icloud"), [
                 .iCloudSync,
                 .syncStatus
             ]),
-            ("每日总结", [
+            (LocalizedString("settings.today_summary"), [
                 .todaySummaryEnabled,
                 .todaySummaryUpdateTime,
                 .todaySummaryFrequency
             ]),
-            ("关于", [
+            (LocalizedString("settings.about"), [
                 .version,
             ]),
             ("", [
@@ -98,20 +96,26 @@ class SettingsViewController: BaseViewController {
                 
                 switch status {
                 case .available:
-                    self?.syncStatus = "已连接"
+                    self?.syncStatus = LocalizedString("settings.icloud.connected")
                 case .noAccount:
-                    self?.syncStatus = "未登录 iCloud"
+                    self?.syncStatus = LocalizedString("settings.icloud.no_account")
                 case .restricted:
-                    self?.syncStatus = "受限"
+                    self?.syncStatus = LocalizedString("settings.icloud.restricted")
                 case .couldNotDetermine:
-                    self?.syncStatus = "无法确定状态"
+                    self?.syncStatus = LocalizedString("settings.icloud.unknown")
                 case .temporarilyUnavailable:
-                    self?.syncStatus = "暂时不可用"
+                    self?.syncStatus = LocalizedString("settings.icloud.unavailable")
                 @unknown default:
-                    self?.syncStatus = "未知状态"
+                    self?.syncStatus = LocalizedString("settings.icloud.unknown")
                 }
             }
         }
+    }
+    
+    @objc private func languageDidChange() {
+        title = LocalizedString("tab.settings")
+        setupSections()
+        tableView.reloadData()
     }
 }
 
@@ -126,7 +130,7 @@ extension SettingsViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return sections[section].title
+        return sections[section].title.isEmpty ? nil : sections[section].title
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -138,7 +142,7 @@ extension SettingsViewController: UITableViewDataSource {
             cell.configure(with: Setting(
                 icon: "icloud",
                 iconBackgroundColor: .systemBlue,
-                title: "启用 iCloud 同步",
+                title: LocalizedString("settings.icloud.enable"),
                 subtitle: nil,
                 action: nil
             ))
@@ -151,43 +155,16 @@ extension SettingsViewController: UITableViewDataSource {
             cell.configure(with: Setting(
                 icon: "arrow.triangle.2.circlepath",
                 iconBackgroundColor: .systemGreen,
-                title: "同步状态",
+                title: LocalizedString("settings.icloud.status"),
                 subtitle: syncStatus,
-                action: nil
-            ))
-            
-        case .version:
-            cell.configure(with: Setting(
-                icon: "info.circle",
-                iconBackgroundColor: .systemYellow,
-                title: "版本",
-                subtitle: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
-                action: nil
-            ))
-            
-        case .buildVersion:
-            cell.configure(with: Setting(
-                icon: "info.circle",
-                iconBackgroundColor: .systemYellow,
-                title: "构建版本",
-                subtitle: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1",
-                action: nil
-            ))
-            
-        case .copyright:
-            cell.configure(with: Setting(
-                icon: "heart.fill",
-                iconBackgroundColor: .systemRed,
-                title: "© 2024 ElanChou. All rights reserved.",
-                subtitle: nil,
                 action: nil
             ))
             
         case .todaySummaryEnabled:
             cell.configure(with: Setting(
-                icon: "calendar.badge.clock",
-                iconBackgroundColor: .systemOrange,
-                title: "启用每日总结",
+                icon: "newspaper",
+                iconBackgroundColor: .systemIndigo,
+                title: LocalizedString("settings.today_summary.enabled"),
                 subtitle: nil,
                 action: nil
             ))
@@ -199,22 +176,48 @@ extension SettingsViewController: UITableViewDataSource {
         case .todaySummaryUpdateTime:
             cell.configure(with: Setting(
                 icon: "clock",
-                iconBackgroundColor: .systemTeal,
-                title: "更新时间",
-                subtitle: "\(TodaySummaryManager.shared.updateTime):00",
+                iconBackgroundColor: .systemOrange,
+                title: LocalizedString("settings.today_summary.update_time"),
+                subtitle: String(format: "%02d:00", TodaySummaryManager.shared.updateTime),
                 action: nil
             ))
-            cell.accessoryType = .disclosureIndicator
             
         case .todaySummaryFrequency:
             cell.configure(with: Setting(
-                icon: "clock",
-                iconBackgroundColor: .systemTeal,
-                title: "显示频率",
-                subtitle: "\(TodaySummaryManager.shared.showFrequency) 小时",
+                icon: "timer",
+                iconBackgroundColor: .systemPurple,
+                title: LocalizedString("settings.today_summary.frequency"),
+                subtitle: "\(TodaySummaryManager.shared.showFrequency) " + LocalizedString("settings.today_summary.hours"),
                 action: nil
             ))
-            cell.accessoryType = .disclosureIndicator
+            
+        case .version:
+            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+            cell.configure(with: Setting(
+                icon: "info.circle",
+                iconBackgroundColor: .systemGray,
+                title: LocalizedString("settings.version"),
+                subtitle: version,
+                action: nil
+            ))
+            
+        case .copyright:
+            cell.configure(with: Setting(
+                icon: "c.circle",
+                iconBackgroundColor: .systemGray2,
+                title: "© 2024 Pecker",
+                subtitle: nil,
+                action: nil
+            ))
+        case .buildVersion:
+            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+            cell.configure(with: Setting(
+                icon: "info.circle",
+                iconBackgroundColor: .systemGray,
+                title: LocalizedString("settings.version"),
+                subtitle: version,
+                action: nil
+            ))
         }
         
         return cell
@@ -223,6 +226,31 @@ extension SettingsViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 extension SettingsViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return sections[section].title.isEmpty ? 0 : 40
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard !sections[section].title.isEmpty else { return nil }
+        
+        let headerView = UIView()
+        headerView.backgroundColor = .clear
+        
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.text = sections[section].title
+        
+        headerView.addSubview(label)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
+            label.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -8)
+        ])
+        
+        return headerView
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -238,7 +266,11 @@ extension SettingsViewController: UITableViewDelegate {
     }
     
     private func showTimePickerAlert() {
-        let alert = UIAlertController(title: "更新时间", message: "选择每日更新时间", preferredStyle: .actionSheet)
+        let alert = UIAlertController(
+            title: LocalizedString("settings.today_summary.update_time"),
+            message: LocalizedString("settings.today_summary.update_time.message"),
+            preferredStyle: .actionSheet
+        )
         
         for hour in 0...23 {
             let action = UIAlertAction(title: String(format: "%02d:00", hour), style: .default) { [weak self] _ in
@@ -248,23 +280,30 @@ extension SettingsViewController: UITableViewDelegate {
             alert.addAction(action)
         }
         
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: LocalizedString("cancel"), style: .cancel))
         present(alert, animated: true)
     }
     
     private func showFrequencyPickerAlert() {
-        let alert = UIAlertController(title: "显示频率", message: "选择显示间隔时间", preferredStyle: .actionSheet)
+        let alert = UIAlertController(
+            title: LocalizedString("settings.today_summary.frequency"),
+            message: LocalizedString("settings.today_summary.frequency.message"),
+            preferredStyle: .actionSheet
+        )
         
         let frequencies = [6, 12, 24, 48, 72]
         for hours in frequencies {
-            let action = UIAlertAction(title: "\(hours) 小时", style: .default) { [weak self] _ in
+            let action = UIAlertAction(
+                title: "\(hours) " + LocalizedString("settings.today_summary.hours"),
+                style: .default
+            ) { [weak self] _ in
                 TodaySummaryManager.shared.showFrequency = hours
                 self?.tableView.reloadData()
             }
             alert.addAction(action)
         }
         
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: LocalizedString("cancel"), style: .cancel))
         present(alert, animated: true)
     }
     

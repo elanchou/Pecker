@@ -25,6 +25,7 @@ class FeedListViewController: BaseViewController {
         table.delegate = self
         table.dataSource = self
         table.refreshControl = refreshControl
+        table.separatorStyle = .none
         return table
     }()
     

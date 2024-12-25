@@ -15,12 +15,11 @@ class PodcastCell: UICollectionViewCell {
     private let contentStackView = UIStackView()
     
     private let coverImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.backgroundColor = .secondarySystemBackground
-        imageView.layer.cornerRadius = 8
-        return imageView
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.cornerRadius = 8
+        return iv
     }()
     
     private let titleLabel: UILabel = {
@@ -315,7 +314,7 @@ extension PodcastCell: UIContextMenuInteractionDelegate {
             let toggleFavorite = UIAction(
                 title: content.isFavorite ? "取消收藏" : "收藏",
                 image: UIImage(systemName: content.isFavorite ? "star.fill" : "star")
-            ) { [weak self] _ in
+            ) { _ in
                 Task {
                     await content.toggleFavorite()
                 }

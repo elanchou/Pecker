@@ -21,6 +21,7 @@ target 'Pecker' do
   pod 'SwiftUIX'
   pod 'SwiftSpeech'
   pod 'SwiftAudioEx'
+  pod 'XMLCoder'
   
   pod 'LookinServer', :configurations => ['Debug']
 end

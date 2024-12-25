@@ -1,359 +1,219 @@
 import Foundation
+import FeedKit
 
 actor RSSDirectoryService {
     static let shared = RSSDirectoryService()
+    private let jsonURL = "https://raw.githubusercontent.com/elanchou/awesome-rss-feeds/refs/heads/master/rss_feeds.json"
+    private static let countryFlagBaseURL = "https://flagcdn.com/w80"
     
-    private let feedlyBaseURL = "https://api.feedly.com/v3"
-    private let feedCatBaseURL = "https://api.feedcat.net/api/v1"
-    private let networkManager = NetworkManager.shared
-    private let logger = Logger(subsystem: "com.elanchou.pecker", category: "rss")
+    enum RSSCategoryType: String, Codable {
+        case category
+        case country
+    }
     
-    // MARK: - Models
-    struct RSSFeed: Codable, Hashable {
-        let id: String
-        let title: String
-        let url: String
-        let description: String?
-        let imageUrl: String?
-        let iconUrl: String?
-        let category: String?
-        let language: String?
-        let subscribers: Int?
-        let topics: [String]?
-        let lastUpdated: Date?
-        let website: String?
-        let isRecommended: Bool?
-        let score: Double?
+    struct RSSCategory: Codable, Identifiable, Equatable {
+        let name: String
+        let iconURL: String?
+        let withCategoryURL: String?
+        let withoutCategoryURL: String?
+        
+        var id: String {
+            return name
+        }
+        
+        var type: RSSCategoryType {
+            return .country
+        }
+        
+        var flagURL: String? {
+            if type == .country {
+                return "\(RSSDirectoryService.countryFlagBaseURL)/\(id).png"
+            }
+            return nil
+        }
         
         enum CodingKeys: String, CodingKey {
-            case id, title, url, description, imageUrl, iconUrl, category
-            case language, subscribers, topics, lastUpdated, website
-            case isRecommended = "recommended"
-            case score
-        }
-        
-        // MARK: - Hashable
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-        }
-        
-        static func == (lhs: RSSFeed, rhs: RSSFeed) -> Bool {
-            return lhs.id == rhs.id
+            case name = "name"
+            case iconURL = "icon_url"
+            case withCategoryURL = "with_category"
+            case withoutCategoryURL = "without_category"
         }
     }
     
-    struct RSSCategory: Codable, Hashable {
-        let id: String
-        let name: String
-        let description: String?
-        let feedCount: Int
-        let iconName: String
-        let color: String
-        
-        static func == (lhs: RSSCategory, rhs: RSSCategory) -> Bool {
-            return lhs.id == rhs.id
-        }
-        
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-        }
-    }
-    
-    struct FeedlyCollection: Codable {
-        let id: String
-        let label: String
-        let description: String?
-        let feeds: [FeedlyFeed]
-    }
-    
-    struct FeedlyFeed: Codable {
+    struct Feed: Codable, Identifiable {
         let id: String
         let title: String
-        let website: String?
-        let subscribers: Int
-        let velocity: Double
-        let iconUrl: String?
-        let visualUrl: String?
+        let description: String?
+        let category: String?
+        let iconURL: String?
+        let feedURL: String
+        let websiteURL: String?
         let language: String?
-        let topics: [String]?
     }
     
-    struct FeedCatCategory: Codable {
-        let id: String
-        let name: String
-        let feeds: [FeedCatFeed]
-    }
-    
-    struct FeedCatFeed: Codable {
-        let id: String
-        let title: String
-        let url: String
-        let description: String?
-        let icon: String?
-        let subscribers: Int
-        let language: String
-    }
-    
-    // MARK: - Public Methods
-    func getCategories() async throws -> [RSSCategory] {
-        return [
-            RSSCategory(id: "tech", name: "科技", description: "科技新闻和评论", feedCount: 100, iconName: "cpu", color: "#007AFF"),
-            RSSCategory(id: "business", name: "商业", description: "商业新闻和分析", feedCount: 80, iconName: "chart.line.uptrend.xyaxis", color: "#34C759"),
-            RSSCategory(id: "culture", name: "文化", description: "文化艺术", feedCount: 60, iconName: "books.vertical", color: "#FF9500"),
-            RSSCategory(id: "reading", name: "阅读", description: "书评和阅读", feedCount: 50, iconName: "book", color: "#AF52DE"),
-            RSSCategory(id: "programming", name: "编程", description: "编程技术", feedCount: 70, iconName: "chevron.left.forwardslash.chevron.right", color: "#FF2D55"),
-            RSSCategory(id: "design", name: "设计", description: "设计相关", feedCount: 40, iconName: "paintbrush", color: "#5856D6"),
-            RSSCategory(id: "lifestyle", name: "生活方式", description: "生活方式和兴趣爱好", feedCount: 90, iconName: "heart", color: "#FF3B30"),
-            RSSCategory(id: "news", name: "新闻", description: "新闻资讯", feedCount: 120, iconName: "newspaper", color: "#007AFF"),
-            RSSCategory(id: "podcast", name: "播客", description: "播客内容", feedCount: 65, iconName: "mic", color: "#FF9500"),
-            RSSCategory(id: "photography", name: "摄影", description: "摄影艺术", feedCount: 45, iconName: "camera", color: "#5856D6"),
-            RSSCategory(id: "gaming", name: "游戏", description: "游戏资讯", feedCount: 55, iconName: "gamecontroller", color: "#FF2D55"),
-            RSSCategory(id: "movie", name: "影视", description: "电影电视", feedCount: 75, iconName: "film", color: "#AF52DE")
-        ]
-    }
-    
-    func getPopularFeeds() async throws -> [RSSFeed] {
-        // 并发获取 Feedly 和 FeedCat 的热门源
-        async let feedlyFeeds = getFeedlyPopularFeeds()
-        async let feedCatFeeds = getFeedCatPopularFeeds()
+    struct RSSData: Codable {
+        let categories: [RSSCategory]
+        let countries: [RSSCategory]
+        let feeds: [Feed]?
         
-        let (feedly, feedCat) = try await (feedlyFeeds, feedCatFeeds)
-        
-        // 合并结果并去重
-        var uniqueFeeds = Set<RSSFeed>()
-        uniqueFeeds.formUnion(feedly)
-        uniqueFeeds.formUnion(feedCat)
-        
-        // 按订阅数排序
-        return Array(uniqueFeeds).sorted { ($0.subscribers ?? 0) > ($1.subscribers ?? 0) }
-    }
-    
-    func getFeedsByCategory(_ category: RSSCategory) async throws -> [RSSFeed] {
-        // 并发获取两个平台的分类源
-        async let feedlyFeeds = getFeedlyFeedsByCategory(category.id)
-        async let feedCatFeeds = getFeedCatFeedsByCategory(category.id)
-        
-        let (feedly, feedCat) = try await (feedlyFeeds, feedCatFeeds)
-        
-        // 合并结果并去重
-        var uniqueFeeds = Set<RSSFeed>()
-        uniqueFeeds.formUnion(feedly)
-        uniqueFeeds.formUnion(feedCat)
-        
-        // 按订阅数排序
-        return Array(uniqueFeeds).sorted { ($0.subscribers ?? 0) > ($1.subscribers ?? 0) }
-    }
-    
-    func searchFeeds(_ query: String) async throws -> [RSSFeed] {
-        // 并发搜索两个平台
-        async let feedlyResults = searchFeedlyFeeds(query)
-        async let feedCatResults = searchFeedCatFeeds(query)
-        
-        let (feedly, feedCat) = try await (feedlyResults, feedCatResults)
-        
-        // 合并结果并去重
-        var uniqueFeeds = Set<RSSFeed>()
-        uniqueFeeds.formUnion(feedly)
-        uniqueFeeds.formUnion(feedCat)
-        
-        // 按相关度和订阅数排序
-        return Array(uniqueFeeds).sorted { feed1, feed2 in
-            let score1 = (feed1.score ?? 0) * Double(feed1.subscribers ?? 0)
-            let score2 = (feed2.score ?? 0) * Double(feed2.subscribers ?? 0)
-            return score1 > score2
+        enum CodingKeys: String, CodingKey {
+            case categories = "categories"
+            case countries = "countries"
+            case feeds
         }
     }
     
-    // MARK: - Feedly API
-    private func getFeedlyPopularFeeds() async throws -> [RSSFeed] {
-        logger.info("获取 Feedly 热门订阅源")
-        let endpoint = "/recommendations/topics/科技,新闻,文化"
-        let headers = ["accept": "application/json"]
+    private var cachedData: RSSData?
+    private var cachedFeeds: [String: [Feed]] = [:]
+    private var cachedRSS: [String: [Feed]] = [:]
+    
+    private init() {}
+    
+    private func fetchData() async throws -> RSSData {
+        if let cachedData = cachedData {
+            return cachedData
+        }
         
-        let collections: [FeedlyCollection] = try await networkManager.request(
-            endpoint,
-            baseURL: feedlyBaseURL,
-            headers: headers
-        )
+        guard let url = URL(string: jsonURL) else {
+            throw URLError(.badURL)
+        }
         
-        return collections.flatMap { collection in
-            collection.feeds.map { feed in
-                RSSFeed(
-                    id: feed.id,
-                    title: feed.title,
-                    url: feed.website ?? "",
-                    description: nil,
-                    imageUrl: feed.visualUrl,
-                    iconUrl: feed.iconUrl,
-                    category: collection.label,
-                    language: feed.language,
-                    subscribers: feed.subscribers,
-                    topics: feed.topics,
-                    lastUpdated: nil,
-                    website: feed.website,
-                    isRecommended: true,
-                    score: feed.velocity
-                )
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let rssData = try JSONDecoder().decode(RSSData.self, from: data)
+        cachedData = rssData
+        return rssData
+    }
+    
+    private func fetchOPMLFeeds(from urlString: String) async throws -> [Feed] {
+        if let cachedFeeds = cachedFeeds[urlString] {
+            return cachedFeeds
+        }
+        
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+        
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let parser = OPMLParser()
+        
+        guard let document = parser.parseOPML(data: data) else {
+            throw URLError(.cannotParseResponse)
+        }
+        
+        var feeds: [Feed] = []
+        
+        for outline in document.body.outlines {
+            outline.feeds.forEach { feed in
+                if let feed = createFeed(from: feed) {
+                    feeds.append(feed)
+                }
             }
         }
+        
+        cachedFeeds[urlString] = feeds
+        return feeds
     }
     
-    private func getFeedlyFeedsByCategory(_ category: String) async throws -> [RSSFeed] {
-        logger.info("获取 Feedly 分类订阅源: \(category)")
-        let endpoint = "/streams/contents"
-        let headers = ["accept": "application/json"]
-        let queryItems = [URLQueryItem(name: "streamId", value: "feed/\(category)")]
-        
-        let feeds: [FeedlyFeed] = try await networkManager.request(
-            endpoint,
-            baseURL: feedlyBaseURL,
-            headers: headers,
-            queryItems: queryItems
-        )
-        
-        return feeds.map { feed in
-            RSSFeed(
-                id: feed.id,
-                title: feed.title,
-                url: feed.website ?? "",
-                description: nil,
-                imageUrl: feed.visualUrl,
-                iconUrl: feed.iconUrl,
-                category: category,
-                language: feed.language,
-                subscribers: feed.subscribers,
-                topics: feed.topics,
-                lastUpdated: nil,
-                website: feed.website,
-                isRecommended: false,
-                score: feed.velocity
-            )
+    private func fetchRSSFeeds(from urlString: String) async throws -> [Feed] {
+        if let cachedRSS = cachedRSS[urlString] {
+            return cachedRSS
         }
+        
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+        
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let parser = FeedParser(data: data)
+        
+        guard case .success(let result) = parser.parse() else {
+            throw URLError(.cannotParseResponse)
+        }
+        
+        var feeds: [Feed] = []
+        
+        if let rssFeed = result.rssFeed {
+            for item in rssFeed.items ?? [] {
+                if let feed = createFeed(from: item, category: "RSS") {
+                    feeds.append(feed)
+                }
+            }
+        }
+        
+        cachedRSS[urlString] = feeds
+        return feeds
     }
     
-    private func searchFeedlyFeeds(_ query: String) async throws -> [RSSFeed] {
-        logger.info("搜索 Feedly 订阅源: \(query)")
-        let endpoint = "/search/feeds"
-        let headers = ["accept": "application/json"]
-        let queryItems = [
-            URLQueryItem(name: "q", value: query),
-            URLQueryItem(name: "locale", value: "zh-CN")
-        ]
-        
-        let feeds: [FeedlyFeed] = try await networkManager.request(
-            endpoint,
-            baseURL: feedlyBaseURL,
-            headers: headers,
-            queryItems: queryItems
-        )
-        
-        return feeds.map { feed in
-            RSSFeed(
-                id: feed.id,
-                title: feed.title,
-                url: feed.website ?? "",
-                description: nil,
-                imageUrl: feed.visualUrl,
-                iconUrl: feed.iconUrl,
-                category: nil,
-                language: feed.language,
-                subscribers: feed.subscribers,
-                topics: feed.topics,
-                lastUpdated: nil,
-                website: feed.website,
-                isRecommended: false,
-                score: feed.velocity
-            )
+    private func createFeed(from feed: OPMLFeed) -> Feed? {
+        guard let title = feed.title,
+              let feedURL = feed.xmlUrl else {
+            return nil
         }
+        
+        return Feed(
+            id: feedURL,
+            title: title,
+            description: feed.description,
+            category: feed.category,
+            iconURL: nil,
+            feedURL: feedURL,
+            websiteURL: feed.htmlUrl,
+            language: nil
+        )
     }
     
-    // MARK: - FeedCat API
-    private func getFeedCatPopularFeeds() async throws -> [RSSFeed] {
-        logger.info("获取 FeedCat 热门订阅源")
-        let endpoint = "/feeds/popular"
-        
-        let feeds: [FeedCatFeed] = try await networkManager.request(
-            endpoint,
-            baseURL: feedCatBaseURL
-        )
-        
-        return feeds.map { feed in
-            RSSFeed(
-                id: feed.id,
-                title: feed.title,
-                url: feed.url,
-                description: feed.description,
-                imageUrl: nil,
-                iconUrl: feed.icon,
-                category: nil,
-                language: feed.language,
-                subscribers: feed.subscribers,
-                topics: nil,
-                lastUpdated: nil,
-                website: nil,
-                isRecommended: false,
-                score: nil
-            )
+    private func createFeed(from item: RSSFeedItem, category: String) -> Feed? {
+        guard let feedURL = item.link else {
+            return nil
         }
+        
+        return Feed(
+            id: feedURL,
+            title: item.title ?? "Untitled",
+            description: item.description ?? "No description",
+            category: category,
+            iconURL: nil,
+            feedURL: feedURL,
+            websiteURL: item.link,
+            language: nil
+        )
     }
     
-    private func getFeedCatFeedsByCategory(_ category: String) async throws -> [RSSFeed] {
-        logger.info("获取 FeedCat 分类订阅源: \(category)")
-        let endpoint = "/categories/\(category)/feeds"
-        
-        let categoryData: FeedCatCategory = try await networkManager.request(
-            endpoint,
-            baseURL: feedCatBaseURL
-        )
-        
-        return categoryData.feeds.map { feed in
-            RSSFeed(
-                id: feed.id,
-                title: feed.title,
-                url: feed.url,
-                description: feed.description,
-                imageUrl: nil,
-                iconUrl: feed.icon,
-                category: categoryData.name,
-                language: feed.language,
-                subscribers: feed.subscribers,
-                topics: nil,
-                lastUpdated: nil,
-                website: nil,
-                isRecommended: false,
-                score: nil
-            )
-        }
+    func getCategories() async throws -> [RSSCategory] {
+        let data = try await fetchData()
+        return data.categories
     }
     
-    private func searchFeedCatFeeds(_ query: String) async throws -> [RSSFeed] {
-        logger.info("搜索 FeedCat 订阅源: \(query)")
-        let endpoint = "/search"
-        let queryItems = [URLQueryItem(name: "q", value: query)]
-        
-        let feeds: [FeedCatFeed] = try await networkManager.request(
-            endpoint,
-            baseURL: feedCatBaseURL,
-            queryItems: queryItems
-        )
-        
-        return feeds.map { feed in
-            RSSFeed(
-                id: feed.id,
-                title: feed.title,
-                url: feed.url,
-                description: feed.description,
-                imageUrl: nil,
-                iconUrl: feed.icon,
-                category: nil,
-                language: feed.language,
-                subscribers: feed.subscribers,
-                topics: nil,
-                lastUpdated: nil,
-                website: nil,
-                isRecommended: false,
-                score: nil
-            )
-        }
+    func getCountries() async throws -> [RSSCategory] {
+        let data = try await fetchData()
+        return data.countries
     }
-} 
+    
+    func getFeedsByCategory(_ category: RSSCategory) async throws -> [Feed] {
+        if let withCategoryURL = category.withCategoryURL {
+            return try await fetchOPMLFeeds(from: withCategoryURL)
+        } else if let withoutCategoryURL = category.withoutCategoryURL {
+            return try await fetchOPMLFeeds(from: withoutCategoryURL)
+        }
+        
+        let data = try await fetchData()
+        return data.feeds?.filter { feed in
+            switch category.type {
+            case .category:
+                return feed.category == category.id
+            case .country:
+                return feed.language?.hasPrefix(category.id) ?? false
+            }
+        } ?? []
+    }
+    
+    func getFeedsFromRSS(_ url: String) async throws -> [Feed] {
+        return try await fetchRSSFeeds(from: url)
+    }
+    
+    func clearCache() {
+        cachedData = nil
+        cachedFeeds.removeAll()
+        cachedRSS.removeAll()
+    }
+}

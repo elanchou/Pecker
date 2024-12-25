@@ -1,0 +1,61 @@
+// Common
+"ok" = "OK";
+"cancel" = "Cancel";
+"close" = "Close";
+"delete" = "Delete";
+"refresh" = "Refresh";
+"share" = "Share";
+"error" = "Error";
+"loading" = "Loading...";
+
+// Tab Bar
+"tab.home" = "Home";
+"tab.feeds" = "Feeds";
+"tab.rss" = "RSS";
+"tab.settings" = "Settings";
+
+// Home
+"home.today" = "Today";
+"home.unread" = "Unread";
+"home.favorites" = "Favorites";
+"home.articles" = "Articles";
+
+// Feed List
+"feed.add" = "Add Feed";
+"feed.add.placeholder" = "Enter RSS feed URL";
+"feed.add.error" = "Failed to add feed";
+"feed.delete.confirm" = "Are you sure you want to delete this feed?";
+"feed.empty" = "No feeds";
+"feed.empty.description" = "Add your first RSS feed to start reading";
+
+// RSS Browser
+"rss.discover" = "Discover RSS";
+"rss.categories" = "Categories";
+"rss.countries" = "Countries";
+"rss.add.success" = "Successfully added to subscriptions";
+
+// Settings
+"settings.icloud" = "iCloud Sync";
+"settings.appearance" = "Appearance";
+"settings.language" = "Language";
+"settings.notifications" = "Notifications";
+"settings.about" = "About";
+"settings.version" = "Version";
+"settings.today_summary" = "Today Summary";
+"settings.today_summary.enabled" = "Enable Today Summary";
+"settings.today_summary.update_time" = "Update Time";
+"settings.today_summary.frequency" = "Show Frequency";
+
+// Article
+"article.mark_read" = "Mark as Read";
+"article.mark_unread" = "Mark as Unread";
+"article.favorite" = "Add to Favorites";
+"article.unfavorite" = "Remove from Favorites";
+"article.font_size" = "Font Size";
+"article.font" = "Font";
+
+// AI
+"ai.analyze" = "AI Analysis";
+"ai.summary" = "AI Summary";
+"ai.loading" = "AI is thinking...";
+"ai.error" = "Failed to generate analysis"; 

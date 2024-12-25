@@ -1,243 +1,192 @@
 import UIKit
-import SnapKit
 
-class RSSBrowseViewController: BaseViewController {
+class RSSBrowseViewController: UIViewController {
     // MARK: - Properties
     private let rssService = RSSDirectoryService.shared
-    private var feeds: [RSSDirectoryService.RSSFeed] = []
+    private var feeds: [RSSDirectoryService.Feed] = []
     private var categories: [RSSDirectoryService.RSSCategory] = []
     private var selectedCategory: RSSDirectoryService.RSSCategory?
+    private var isLoading = false
+    private var error: Error?
     
-    private let searchController = UISearchController(searchResultsController: nil)
-    private let loadingView = LoadingBirdView()
+    // MARK: - UI Components
+    private let segmentedControl: UISegmentedControl = {
+        let items = ["Categories", "Countries"]
+        let control = UISegmentedControl(items: items)
+        control.selectedSegmentIndex = 0
+        control.backgroundColor = .secondarySystemBackground
+        return control
+    }()
     
-    private lazy var collectionView: UICollectionView = {
-        let layout = createLayout()
-        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        cv.backgroundColor = .clear
-        cv.delegate = self
-        cv.dataSource = self
-        cv.register(RSSBrowseCell.self, forCellWithReuseIdentifier: "RSSCell")
-        cv.register(
-            RSSHeaderView.self,
-            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-            withReuseIdentifier: "HeaderView"
-        )
-        return cv
+    private let headerView: RSSBrowseHeaderView = {
+        let view = RSSBrowseHeaderView()
+        return view
+    }()
+    
+    private let tableView: UITableView = {
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
+        tableView.showsVerticalScrollIndicator = false
+        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
+        return tableView
+    }()
+    
+    private let loadingIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.hidesWhenStopped = true
+        return indicator
     }()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupSearchController()
+        setupBindings()
         loadData()
     }
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "发现订阅源"
+        view.backgroundColor = .systemBackground
+        navigationItem.title = "RSS Feeds"
         
-        view.addSubview(collectionView)
-        view.addSubview(loadingView)
+        view.addSubview(segmentedControl)
+        view.addSubview(headerView)
+        view.addSubview(tableView)
+        view.addSubview(loadingIndicator)
         
-        collectionView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         
-        loadingView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(150)
-        }
+        NSLayoutConstraint.activate([
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            segmentedControl.heightAnchor.constraint(equalToConstant: 32),
+            
+            headerView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
+            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 44),
+            
+            tableView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        
+        tableView.register(RSSBrowseCell.self, forCellReuseIdentifier: "RSSBrowseCell")
+        tableView.delegate = self
+        tableView.dataSource = self
     }
     
-    private func setupSearchController() {
-        searchController.searchResultsUpdater = self
-        searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "搜索订阅源"
-        navigationItem.searchController = searchController
-        definesPresentationContext = true
+    private func setupBindings() {
+        segmentedControl.addTarget(self, action: #selector(segmentedControlValueChanged), for: .valueChanged)
+        headerView.onCategorySelected = { [weak self] category in
+            self?.selectedCategory = category
+            Task {
+                await self?.loadFeeds()
+            }
+        }
     }
     
     // MARK: - Data Loading
     private func loadData() {
-        loadingView.startLoading()
-        
         Task {
             do {
-                async let feedsTask = rssService.getPopularFeeds()
-                async let categoriesTask = rssService.getCategories()
+                isLoading = true
+                loadingIndicator.startAnimating()
                 
-                let (feeds, categories) = try await (feedsTask, categoriesTask)
-                
-                await MainActor.run {
-                    self.feeds = feeds
-                    self.categories = categories
-                    self.collectionView.reloadData()
-                    self.loadingView.stopLoading()
+                if segmentedControl.selectedSegmentIndex == 0 {
+                    categories = try await rssService.getCategories()
+                } else {
+                    categories = try await rssService.getCountries()
                 }
+                
+                headerView.configure(with: categories)
+                
+                if let firstCategory = categories.first {
+                    selectedCategory = firstCategory
+                    await loadFeeds()
+                }
+                
+                isLoading = false
+                loadingIndicator.stopAnimating()
             } catch {
-                await MainActor.run {
-                    self.loadingView.stopLoading()
-                    self.showError(error)
-                }
+                self.error = error
+                showError(error)
+                isLoading = false
+                loadingIndicator.stopAnimating()
             }
         }
     }
     
-    private func searchFeeds(_ query: String) {
-        guard !query.isEmpty else {
-            loadData()
-            return
-        }
+    private func loadFeeds() async {
+        guard let category = selectedCategory else { return }
         
-        loadingView.startLoading()
-        
-        Task {
-            do {
-                let results = try await rssService.searchFeeds(query)
-                await MainActor.run {
-                    self.feeds = results
-                    self.collectionView.reloadData()
-                    self.loadingView.stopLoading()
-                }
-            } catch {
-                await MainActor.run {
-                    self.loadingView.stopLoading()
-                    self.showError(error)
-                }
-            }
+        do {
+            isLoading = true
+            loadingIndicator.startAnimating()
+            
+            feeds = try await rssService.getFeedsByCategory(category)
+            tableView.reloadData()
+            
+            isLoading = false
+            loadingIndicator.stopAnimating()
+        } catch {
+            self.error = error
+            showError(error)
+            isLoading = false
+            loadingIndicator.stopAnimating()
         }
+    }
+    
+    // MARK: - Actions
+    @objc private func segmentedControlValueChanged() {
+        loadData()
     }
     
     private func showError(_ error: Error) {
         let alert = UIAlertController(
-            title: "错误",
+            title: "Error",
             message: error.localizedDescription,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
-    }
-    
-    // MARK: - Layout
-    private func createLayout() -> UICollectionViewLayout {
-        let layout = UICollectionViewCompositionalLayout { section, env -> NSCollectionLayoutSection? in
-            // Item
-            let itemSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(0.5),
-                heightDimension: .fractionalHeight(1.0)
-            )
-            let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            item.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-            
-            // Group
-            let groupSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(200)
-            )
-            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-            
-            // Section
-            let section = NSCollectionLayoutSection(group: group)
-            section.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 8, bottom: 16, trailing: 8)
-            
-            // Header
-            let headerSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(50)
-            )
-            let header = NSCollectionLayoutBoundarySupplementaryItem(
-                layoutSize: headerSize,
-                elementKind: UICollectionView.elementKindSectionHeader,
-                alignment: .top
-            )
-            section.boundarySupplementaryItems = [header]
-            
-            return section
-        }
-        return layout
     }
 }
 
-// MARK: - UICollectionViewDataSource
-extension RSSBrowseViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+// MARK: - UITableViewDataSource
+extension RSSBrowseViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return feeds.count
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RSSCell", for: indexPath) as! RSSBrowseCell
-        let feed = feeds[indexPath.item]
-        cell.configure(with: feed)
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "RSSBrowseCell", for: indexPath) as! RSSBrowseCell
+        let feed = feeds[indexPath.row]
+        if let category = selectedCategory {
+            cell.configure(with: feed, category: category)
+        }
         return cell
     }
-    
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        let header = collectionView.dequeueReusableSupplementaryView(
-            ofKind: kind,
-            withReuseIdentifier: "HeaderView",
-            for: indexPath
-        ) as! RSSHeaderView
-        
-        header.configure(with: categories) { [weak self] category in
-            self?.selectedCategory = category
-            self?.loadFeedsByCategory(category)
-        }
-        
-        return header
-    }
 }
 
-// MARK: - UICollectionViewDelegate
-extension RSSBrowseViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let feed = feeds[indexPath.item]
-        
-        Task {
-            do {
-                let newFeed = Feed(title: feed.title, url: feed.url, type: .article)
-                try await RealmManager.shared.addNewFeed(newFeed)
-                dismiss(animated: true)
-            } catch {
-                showError(error)
-            }
-        }
-    }
-}
-
-// MARK: - UISearchResultsUpdating
-extension RSSBrowseViewController: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        guard let query = searchController.searchBar.text else { return }
-        NSObject.cancelPreviousPerformRequests(withTarget: self)
-        perform(#selector(delayedSearch), with: query, afterDelay: 0.5)
+// MARK: - UITableViewDelegate
+extension RSSBrowseViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 280
     }
     
-    @objc private func delayedSearch(_ query: String) {
-        searchFeeds(query)
-    }
-}
-
-// MARK: - Category Loading
-extension RSSBrowseViewController {
-    private func loadFeedsByCategory(_ category: RSSDirectoryService.RSSCategory) {
-        loadingView.startLoading()
-        
-        Task {
-            do {
-                let feeds = try await rssService.getFeedsByCategory(category)
-                await MainActor.run {
-                    self.feeds = feeds
-                    self.collectionView.reloadData()
-                    self.loadingView.stopLoading()
-                }
-            } catch {
-                await MainActor.run {
-                    self.loadingView.stopLoading()
-                    self.showError(error)
-                }
-            }
-        }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        // TODO: Handle feed selection
     }
 } 

@@ -1,0 +1,61 @@
+// Common
+"ok" = "确定";
+"cancel" = "取消";
+"close" = "关闭";
+"delete" = "删除";
+"refresh" = "刷新";
+"share" = "分享";
+"error" = "错误";
+"loading" = "加载中...";
+
+// Tab Bar
+"tab.home" = "首页";
+"tab.feeds" = "订阅";
+"tab.rss" = "发现";
+"tab.settings" = "设置";
+
+// Home
+"home.today" = "今日";
+"home.unread" = "未读";
+"home.favorites" = "收藏";
+"home.articles" = "文章";
+
+// Feed List
+"feed.add" = "添加订阅";
+"feed.add.placeholder" = "输入RSS订阅地址";
+"feed.add.error" = "添加订阅失败";
+"feed.delete.confirm" = "确定要删除这个订阅吗？";
+"feed.empty" = "暂无订阅";
+"feed.empty.description" = "添加你的第一个RSS订阅开始阅读";
+
+// RSS Browser
+"rss.discover" = "发现RSS";
+"rss.categories" = "分类";
+"rss.countries" = "国家/地区";
+"rss.add.success" = "已成功添加到订阅";
+
+// Settings
+"settings.icloud" = "iCloud同步";
+"settings.appearance" = "外观";
+"settings.language" = "语言";
+"settings.notifications" = "通知";
+"settings.about" = "关于";
+"settings.version" = "版本";
+"settings.today_summary" = "今日摘要";
+"settings.today_summary.enabled" = "启用今日摘要";
+"settings.today_summary.update_time" = "更新时间";
+"settings.today_summary.frequency" = "显示频率";
+
+// Article
+"article.mark_read" = "标记为已读";
+"article.mark_unread" = "标记为未读";
+"article.favorite" = "添加到收藏";
+"article.unfavorite" = "取消收藏";
+"article.font_size" = "字体大小";
+"article.font" = "字体";
+
+// AI
+"ai.analyze" = "AI分析";
+"ai.summary" = "AI摘要";
+"ai.loading" = "AI思考中...";
+"ai.error" = "生成分析失败"; 
