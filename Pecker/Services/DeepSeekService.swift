@@ -1,9 +1,9 @@
 import Foundation
 
-class OpenAIService {
+class DeepSeekService {
     private let apiKey: String
-    private let baseURL = "https://api.openai.com/v1"
-    private let logger = Logger(subsystem: "com.elanchou.pecker", category: "openai")
+    private let baseURL = "https://api.deepseek.com/v1"
+    private let logger = Logger(subsystem: "com.elanchou.pecker", category: "deepseek")
     
     init(apiKey: String) {
         self.apiKey = apiKey
@@ -38,7 +38,7 @@ class OpenAIService {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
         let chatRequest = ChatRequest(
-            model: "gpt-3.5-turbo",
+            model: "deepseek-chat",
             messages: messages,
             temperature: 0.7,
             max_tokens: 2000

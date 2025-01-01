@@ -46,6 +46,16 @@
 "settings.today_summary.update_time" = "Update Time";
 "settings.today_summary.frequency" = "Show Frequency";
 
+// AI Settings
+"settings.ai" = "AI Settings";
+"settings.ai.provider" = "AI Provider";
+"settings.ai.openai" = "OpenAI";
+"settings.ai.deepseek" = "DeepSeek";
+"settings.ai.api_key" = "API Key";
+"settings.ai.api_key.message" = "Please enter API Key";
+"settings.ai.api_key.set" = "Set";
+"settings.ai.api_key.not_set" = "Not Set";
+
 // Article
 "article.mark_read" = "Mark as Read";
 "article.mark_unread" = "Mark as Unread";

@@ -67,6 +67,9 @@ class SettingsViewController: BaseViewController {
                 .todaySummaryUpdateTime,
                 .todaySummaryFrequency
             ]),
+            (LocalizedString("settings.ai"), [
+                .aiSettings
+            ]),
             (LocalizedString("settings.about"), [
                 .version,
             ]),
@@ -191,6 +194,16 @@ extension SettingsViewController: UITableViewDataSource {
                 action: nil
             ))
             
+        case .aiSettings:
+            cell.configure(with: Setting(
+                icon: "brain",
+                iconBackgroundColor: .systemPurple,
+                title: LocalizedString("settings.ai"),
+                subtitle: nil,
+                action: nil
+            ))
+            cell.accessoryType = .disclosureIndicator
+            
         case .version:
             let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
             cell.configure(with: Setting(
@@ -260,6 +273,9 @@ extension SettingsViewController: UITableViewDelegate {
             showTimePickerAlert()
         case .todaySummaryFrequency:
             showFrequencyPickerAlert()
+        case .aiSettings:
+            let aiSettingsVC = AISettingsViewController()
+            navigationController?.pushViewController(aiSettingsVC, animated: true)
         default:
             break
         }
@@ -330,4 +346,5 @@ enum SettingsRow: Equatable {
     case todaySummaryEnabled
     case todaySummaryUpdateTime
     case todaySummaryFrequency
+    case aiSettings
 } 

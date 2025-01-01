@@ -195,7 +195,7 @@ class AIConversationViewController: UIViewController {
         }
     }
     
-    func sendSummary(_ messages: [OpenAIService.ChatMessage]) async {
+    func sendSummary(_ messages: [AIService.ChatMessage]) async {
         do {
             isProcessing = true
             showLoading(true)

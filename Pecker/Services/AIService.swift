@@ -1,156 +1,130 @@
 import Foundation
 
 class AIService {
-    // MARK: - Properties
-    private let openAIService = OpenAIService()
-    private var messageHistory: [OpenAIService.ChatMessage] = []
+    private let openAIService: OpenAIService?
+    private let deepSeekService: DeepSeekService?
+    private let logger = Logger(subsystem: "com.elanchou.pecker", category: "ai")
     
-    // MARK: - Public Methods
-    func chat(_ text: String) async throws -> String {
-        let messages = createMessages(for: .normal, text: text)
-        return try await openAIService.sendMessage(messages)
-    }
-    
-    func chat(_ messages: [OpenAIService.ChatMessage]) async throws -> String {
-        return try await openAIService.sendMessage(messages)
-    }
-    
-    func continueChat(_ text: String) async throws -> String {
-        messageHistory.append(OpenAIService.ChatMessage(role: "user", content: text))
-        let response = try await openAIService.sendMessage(messageHistory)
-        messageHistory.append(OpenAIService.ChatMessage(role: "assistant", content: response))
-        return response
-    }
-    
-    func clearHistory() {
-        messageHistory.removeAll()
-    }
-    
-    func generateSummary(for type: AISummaryType) -> [OpenAIService.ChatMessage] {
-        let prompt = generatePrompt(for: type)
-        let messages = createMessages(for: type, text: prompt)
-        return messages
-    }
-    
-    // MARK: - Private Methods
-    private func createMessages(for type: AISummaryType, text: String) -> [OpenAIService.ChatMessage] {
-        let systemPrompt = getSystemPrompt(for: type)
-        return [
-            OpenAIService.ChatMessage(role: "system", content: systemPrompt),
-            OpenAIService.ChatMessage(role: "user", content: text)
-        ]
-    }
-    
-    private func getSystemPrompt(for type: AISummaryType) -> String {
-        switch type {
-        case .normal:
-            return "你是一个专业的助手，善于分析和总结内容。"
-        case .singleContent:
-            return "你是一个专业的内容分析师，擅长提取文章的核心观点和关键信息。请用简洁的语言进行总结，保持客观中立的语气。"
-        case .multipleContents:
-            return "你是一个专业的内容分析师，擅长分析多篇文章的共同主题和趋势。请找出文章间的关联性，并提供深入的见解。"
-        case .dailyDigest:
-            return "你是一个专业的内容分析师，擅长分析订阅源的内容特点和趋势。请提供深入的分析和阅读建议。"
+    init() {
+        // 从 UserDefaults 或其他配置中获取 API Key
+        if let openAIKey = UserDefaults.standard.string(forKey: "OpenAIKey") {
+            self.openAIService = OpenAIService(apiKey: openAIKey)
+        } else {
+            self.openAIService = nil
+        }
+        
+        if let deepSeekKey = UserDefaults.standard.string(forKey: "DeepSeekKey") {
+            self.deepSeekService = DeepSeekService(apiKey: deepSeekKey)
+        } else {
+            self.deepSeekService = nil
         }
     }
     
-    private func generatePrompt(for type: AISummaryType) -> String {
-        switch type {
-        case .singleContent(let content):
-            return generateSingleContentPrompt(content)
-        case .multipleContents(let contents):
-            return generateMultipleContentsPrompt(contents)
-        case .dailyDigest(let contents):
-            return generateFeedSummaryPrompt(contents)
-        case .normal:
-            return ""
+    struct ChatMessage: Codable {
+        let role: String
+        let content: String
+        
+        init(role: String = "user", content: String) {
+            self.role = role
+            self.content = content
         }
     }
     
-    private func generateSingleContentPrompt(_ content: Content) -> String {
-        let prompt = """
-        请对以下文章进行总结：
+    enum AIProvider: String, CaseIterable {
+        case openAI = "OpenAI"
+        case deepSeek = "DeepSeek"
         
-        链接: \(content.url)
-        
-        要求：
-        1. 提取文章的核心观点和关键信息
-        2. 保持客观中立的语气
-        3. 总结长度控制在600字以内
-        4. 用Markdown回复
-        """
-        return prompt
-    }
-    
-    private func generateMultipleContentsPrompt(_ contents: [Content]) -> String {
-        let contentUrls = contents.map { content in
-            """
-            - \(content.url)
-            """
-        }.joined(separator: "\n")
-        
-        let prompt = """
-        请对以下\(contents.count)篇文章进行整体分析和总结：
-        
-        链接: \(contentUrls)
-        
-        要求：
-        1. 找出这些文章的共同主题或关联
-        2. 总结主要观点和见解
-        3. 指出重要的趋势或模式
-        4. 总结长度控制在600字以内
-        """
-        return prompt
-    }
-    
-    private func generateFeedSummaryPrompt(_ contents: [Content]) -> String {
-        // 按订阅源分组
-        var feedContents: [Feed: [Content]] = [:]
-        contents.forEach { content in
-            if let feed = content.feed.first {
-                feedContents[feed, default: []].append(content)
+        static var `default`: AIProvider {
+            // 从 UserDefaults 获取默认提供商
+            if let provider = UserDefaults.standard.string(forKey: "DefaultAIProvider"),
+               let value = AIProvider(rawValue: provider) {
+                return value
             }
+            return .openAI
+        }
+    }
+    
+    func chat(_ prompt: String, provider: AIProvider? = nil) async throws -> String {
+        return try await chat([.init(role: "user", content: prompt)], provider: provider)
+    }
+    
+    func chat(_ messages: [ChatMessage], provider: AIProvider? = nil) async throws -> String {
+        let selectedProvider = provider ?? AIProvider.default
+        
+        switch selectedProvider {
+        case .openAI:
+            guard let service = openAIService else {
+                throw AIError.noAPIKey
+            }
+            return try await service.chat(messages)
+            
+        case .deepSeek:
+            guard let service = deepSeekService else {
+                throw AIError.noAPIKey
+            }
+            return try await service.chat(messages)
+        }
+    }
+    
+    func generateSummary(for content: ContentType) -> [ChatMessage] {
+        let systemMessage = ChatMessage(
+            role: "system",
+            content: "你是一个专业的内容分析师，擅长提取文章的核心观点和关键信息。请用简洁的语言进行总结，保持客观中立的语气。"
+        )
+        
+        let userMessage: ChatMessage
+        switch content {
+        case .singleContent(let article):
+            userMessage = ChatMessage(
+                role: "user",
+                content: """
+                请帮我总结这篇文章的主要内容，包括以下几个方面：
+                1. 文章的主要观点和结论
+                2. 重要的论据和数据支持
+                3. 作者的态度和立场
+                4. 对读者的启示和建议
+                
+                文章内容如下：
+                标题：\(article.title)
+                正文：\(article.body)
+                """
+            )
+            
+        case .multipleContents(let articles):
+            let articlesText = articles.map { "- \($0.title)" }.joined(separator: "\n")
+            userMessage = ChatMessage(
+                role: "user",
+                content: """
+                请帮我分析这组文章的共同主题和关联性，包括以下几个方面：
+                1. 各篇文章的核心观点
+                2. 文章之间的关联和差异
+                3. 整体趋势和启示
+                
+                文章列表：
+                \(articlesText)
+                
+                文章内容：
+                \(articles.map { "《\($0.title)》\n\($0.body)" }.joined(separator: "\n\n"))
+                """
+            )
         }
         
-        let summaries = feedContents.map { feed, contents in
-            """
-            订阅源：\(feed.title)
-            文章数：\(contents.count)
-            最新更新：\(formatDate(contents.map { $0.publishDate }.max() ?? Date()))
-            主要内容：\(contents.prefix(3).map { $0.title }.joined(separator: "、"))
-            """
-        }.joined(separator: "\n\n")
-        
-        let prompt = """
-        请对以下订阅源的内容进行整体分析和总结：
-        
-        \(summaries)
-        
-        要求：
-        1. 分析每个订阅源的内容特点和倾向
-        2. 找出热门话题和趋��
-        3. 提供阅读建议
-        4. 总结长度控制在500字以内
-        """
-        return prompt
+        return [systemMessage, userMessage]
     }
-}
-
-// MARK: - Helper
-private func formatDate(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .medium
-    formatter.timeStyle = .none
-    formatter.locale = Locale.current
-    return formatter.string(from: date)
-}
-
-// MARK: - Types
-extension AIService {
-    enum AISummaryType {
-        case normal
+    
+    enum ContentType {
         case singleContent(Content)
         case multipleContents([Content])
-        case dailyDigest([Content])
+    }
+    
+    enum AIError: LocalizedError {
+        case noAPIKey
+        
+        var errorDescription: String? {
+            switch self {
+            case .noAPIKey:
+                return "未设置 API Key，请在设置中配置"
+            }
+        }
     }
 } 

@@ -46,6 +46,16 @@
 "settings.today_summary.update_time" = "更新时间";
 "settings.today_summary.frequency" = "显示频率";
 
+// AI Settings
+"settings.ai" = "AI 设置";
+"settings.ai.provider" = "AI 提供商";
+"settings.ai.openai" = "OpenAI";
+"settings.ai.deepseek" = "DeepSeek";
+"settings.ai.api_key" = "API Key";
+"settings.ai.api_key.message" = "请输入 API Key";
+"settings.ai.api_key.set" = "已设置";
+"settings.ai.api_key.not_set" = "未设置";
+
 // Article
 "article.mark_read" = "标记为已读";
 "article.mark_unread" = "标记为未读";

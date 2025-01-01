@@ -127,17 +127,18 @@ class CategoryCell: UICollectionViewCell {
         contentView.addSubview(titleLabel)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-        ])
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(contentView)
+            make.leading.equalTo(contentView).offset(16)
+            make.trailing.equalTo(contentView).offset(-16)
+            make.bottom.equalTo(contentView)
+        }
     }
     
     // MARK: - Configuration
     func configure(with category: RSSDirectoryService.RSSCategory) {
         titleLabel.text = category.name
+        titleLabel.sizeToFit()
     }
     
     override var isSelected: Bool {

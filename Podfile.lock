@@ -1,4 +1,5 @@
 PODS:
+  - AEXML (4.7.0)
   - Down (0.11.0)
   - FeedKit (9.1.2)
   - JXSegmentedView (1.4.1)
@@ -23,6 +24,7 @@ PODS:
   - SwiftyJSON (5.0.2)
 
 DEPENDENCIES:
+  - AEXML
   - Down
   - FeedKit
   - JXSegmentedView
@@ -42,6 +44,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - AEXML
     - Down
     - FeedKit
     - JXSegmentedView
@@ -61,6 +64,7 @@ SPEC REPOS:
     - SwiftyJSON
 
 SPEC CHECKSUMS:
+  AEXML: 5ff2a4695529348cda96b8b872cf73212ad050d7
   Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
   FeedKit: 71653273ab08e618cd6fd1301ca08fc02dca6a9e
   JXSegmentedView: cd73555ce2134d1656db2cb383ba9c2f36fb5078
@@ -79,6 +83,6 @@ SPEC CHECKSUMS:
   SwiftUIX: 3348c2b1eec70c3edfe039fdf1388af2b0155b2b
   SwiftyJSON: f5b1bf1cd8dd53cd25887ac0eabcfd92301c6a5a
 
-PODFILE CHECKSUM: d1ab0aa9365538b84bd89f2bcd1d5e6876fde180
+PODFILE CHECKSUM: 11bc9cf84b9059f81743e28f029cffab56ccccab
 
 COCOAPODS: 1.16.2

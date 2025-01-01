@@ -1,5 +1,6 @@
 import UIKit
 import Kingfisher
+import SnapKit
 
 class RSSBrowseCell: UITableViewCell {
     // MARK: - UI Components
@@ -7,22 +8,6 @@ class RSSBrowseCell: UITableViewCell {
         let view = UIView()
         view.backgroundColor = .secondarySystemGroupedBackground
         view.layer.cornerRadius = 12
-        view.clipsToBounds = true
-        return view
-    }()
-    
-    private let coverImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 8
-        return imageView
-    }()
-    
-    private let iconContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray5
-        view.layer.cornerRadius = 20
         view.clipsToBounds = true
         return view
     }()
@@ -36,9 +21,9 @@ class RSSBrowseCell: UITableViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .semibold)
+        label.font = .systemFont(ofSize: 16, weight: .semibold)
         label.textColor = .label
-        label.numberOfLines = 2
+        label.numberOfLines = 1
         return label
     }()
     
@@ -54,11 +39,22 @@ class RSSBrowseCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .secondaryLabel
+        label.backgroundColor = .tertiarySystemGroupedBackground
         label.textAlignment = .center
-        label.layer.cornerRadius = 8
+        label.layer.cornerRadius = 10
         label.clipsToBounds = true
         return label
     }()
+    
+    private let subscribeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
+        button.tintColor = .systemBlue
+        return button
+    }()
+    
+    var onSubscribe: ((RSSDirectoryService.Feed) -> Void)?
+    private var currentFeed: RSSDirectoryService.Feed?
     
     // MARK: - Initialization
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -76,71 +72,126 @@ class RSSBrowseCell: UITableViewCell {
         selectionStyle = .none
         
         contentView.addSubview(containerView)
-        containerView.addSubview(coverImageView)
-        containerView.addSubview(iconContainer)
-        iconContainer.addSubview(iconImageView)
+        containerView.addSubview(iconImageView)
         containerView.addSubview(titleLabel)
         containerView.addSubview(descriptionLabel)
         containerView.addSubview(categoryLabel)
+        containerView.addSubview(subscribeButton)
         
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        coverImageView.translatesAutoresizingMaskIntoConstraints = false
-        iconContainer.translatesAutoresizingMaskIntoConstraints = false
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-        categoryLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(6)
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalToSuperview().offset(-16)
+            make.bottom.equalToSuperview().offset(-6)
+        }
         
-        NSLayoutConstraint.activate([
-            // Container View
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            // Cover Image View
-            coverImageView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            coverImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            coverImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            coverImageView.heightAnchor.constraint(equalToConstant: 120),
-            
-            // Icon Container
-            iconContainer.topAnchor.constraint(equalTo: coverImageView.bottomAnchor, constant: -20),
-            iconContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            iconContainer.widthAnchor.constraint(equalToConstant: 40),
-            iconContainer.heightAnchor.constraint(equalToConstant: 40),
-            
-            // Icon Image View
-            iconImageView.topAnchor.constraint(equalTo: iconContainer.topAnchor, constant: 8),
-            iconImageView.leadingAnchor.constraint(equalTo: iconContainer.leadingAnchor, constant: 8),
-            iconImageView.trailingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: -8),
-            iconImageView.bottomAnchor.constraint(equalTo: iconContainer.bottomAnchor, constant: -8),
-            
-            // Title Label
-            titleLabel.topAnchor.constraint(equalTo: coverImageView.bottomAnchor, constant: 32),
-            titleLabel.leadingAnchor.constraint(equalTo: iconContainer.trailingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
-            
-            // Description Label
-            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            descriptionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            descriptionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
-            
-            // Category Label
-            categoryLabel.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 12),
-            categoryLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            categoryLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16)
-        ])
+        iconImageView.snp.makeConstraints { make in
+            make.top.equalTo(containerView).offset(20)
+            make.leading.equalTo(containerView).offset(20)
+            make.width.height.equalTo(40)
+        }
+        
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(iconImageView)
+            make.leading.equalTo(iconImageView.snp.trailing).offset(20)
+            make.trailing.equalTo(subscribeButton.snp.leading).offset(-12)
+        }
+        
+        descriptionLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(4)
+            make.leading.trailing.equalTo(titleLabel)
+        }
+        
+        categoryLabel.snp.makeConstraints { make in
+            make.top.greaterThanOrEqualTo(descriptionLabel.snp.bottom).offset(8)
+            make.leading.equalTo(titleLabel)
+            make.bottom.equalTo(containerView).offset(-12)
+            make.height.equalTo(20)
+        }
+        
+        subscribeButton.snp.makeConstraints { make in
+            make.centerY.equalTo(containerView)
+            make.trailing.equalTo(containerView).offset(-12)
+            make.width.height.equalTo(32)
+        }
         
         // Add shadow to container view
         containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        containerView.layer.shadowRadius = 8
-        containerView.layer.shadowOpacity = 0.1
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 1)
+        containerView.layer.shadowRadius = 6
+        containerView.layer.shadowOpacity = 0.05
         containerView.layer.masksToBounds = false
+        
+        // Add subtle border
+        containerView.layer.borderWidth = 0.5
+        containerView.layer.borderColor = UIColor.separator.cgColor
+        
+        // 添加订阅按钮点击事件
+        subscribeButton.addTarget(self, action: #selector(handleSubscribe), for: .touchUpInside)
     }
     
-    // MARK: - Selection
+    // MARK: - Actions
+    @objc private func handleSubscribe() {
+        guard let feed = currentFeed else { return }
+        onSubscribe?(feed)
+        
+        // 添加点击反馈动画
+        UIView.animate(withDuration: 0.2, animations: {
+            self.subscribeButton.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in
+            UIView.animate(withDuration: 0.2) {
+                self.subscribeButton.transform = .identity
+            }
+        }
+    }
+    
+    // MARK: - Configuration
+    func configure(with feed: RSSDirectoryService.Feed, category: RSSDirectoryService.RSSCategory) {
+        currentFeed = feed
+        titleLabel.text = feed.title
+        
+        // 设置描述文本，如果没有描述则隐藏
+        if let description = feed.description, !description.isEmpty {
+            descriptionLabel.text = description
+            descriptionLabel.isHidden = false
+        } else {
+            descriptionLabel.isHidden = true
+            // 如果没有描述，调整分类标签的位置
+            categoryLabel.snp.updateConstraints { make in
+                make.top.greaterThanOrEqualTo(descriptionLabel.snp.bottom).offset(4)
+            }
+        }
+        
+        // 设置分类标签
+        categoryLabel.text = "  \(category.name)  "
+        categoryLabel.sizeToFit()
+        
+        // 根据分类类型设置不同的样式
+        switch category.type {
+        case .country:
+            categoryLabel.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+            categoryLabel.textColor = .systemBlue
+        default:
+            categoryLabel.backgroundColor = UIColor.systemIndigo.withAlphaComponent(0.1)
+            categoryLabel.textColor = .systemIndigo
+        }
+        
+        // 设置图标
+        if let feedURL = URL(string: feed.feedURL) {
+            // 使用 Google Favicon API 获取高质量图标
+            let iconURL = "https://www.google.com/s2/favicons?sz=128&domain=\(feedURL.host ?? "")"
+            iconImageView.kf.setImage(
+                with: URL(string: iconURL),
+                options: [
+                    .transition(.fade(0.2)),
+                    .processor(DownsamplingImageProcessor(size: CGSize(width: 32, height: 32))),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage
+                ]
+            )
+        }
+    }
+    
     override func setHighlighted(_ highlighted: Bool, animated: Bool) {
         super.setHighlighted(highlighted, animated: animated)
         UIView.animate(
@@ -149,7 +200,7 @@ class RSSBrowseCell: UITableViewCell {
             options: [.beginFromCurrentState, .allowUserInteraction],
             animations: {
                 self.containerView.transform = highlighted ? CGAffineTransform(scaleX: 0.98, y: 0.98) : .identity
-                self.containerView.layer.shadowOpacity = highlighted ? 0.2 : 0.1
+                self.containerView.layer.shadowOpacity = highlighted ? 0.1 : 0.05
             }
         )
     }
@@ -162,70 +213,15 @@ class RSSBrowseCell: UITableViewCell {
             options: [.beginFromCurrentState, .allowUserInteraction],
             animations: {
                 self.containerView.transform = selected ? CGAffineTransform(scaleX: 0.98, y: 0.98) : .identity
-                self.containerView.layer.shadowOpacity = selected ? 0.2 : 0.1
+                self.containerView.layer.shadowOpacity = selected ? 0.1 : 0.05
             }
         )
     }
     
-    // MARK: - Configuration
-    func configure(with feed: RSSDirectoryService.Feed, category: RSSDirectoryService.RSSCategory) {
-        titleLabel.text = feed.title
-        descriptionLabel.text = feed.description
-        categoryLabel.text = category.name
-        
-        // 设置图标
-        if let iconURL = feed.iconURL {
-            iconImageView.kf.setImage(
-                with: URL(string: iconURL),
-                placeholder: nil,
-                options: [
-                    .transition(.fade(0.2)),
-                    .processor(DownsamplingImageProcessor(size: CGSize(width: 40, height: 40))),
-                    .scaleFactor(UIScreen.main.scale),
-                    .cacheOriginalImage
-                ]
-            )
-        }
-        
-        // 设置背景图片
-        if category.type == .country, let flagURL = category.flagURL {
-            coverImageView.kf.setImage(
-                with: URL(string: flagURL),
-                placeholder: nil,
-                options: [
-                    .transition(.fade(0.2)),
-                    .processor(DownsamplingImageProcessor(size: CGSize(width: 400, height: 200))),
-                    .scaleFactor(UIScreen.main.scale),
-                    .cacheOriginalImage
-                ]
-            ) { [weak self] result in
-                if case .success(let imageResult) = result {
-                    // 从国旗图片提取主色调作为背景色
-                    let color = imageResult.image.averageColor?.withAlphaComponent(0.2)
-                    self?.coverImageView.backgroundColor = color
-                }
-            }
-        } else if let categoryIconURL = category.iconURL {
-            coverImageView.kf.setImage(
-                with: URL(string: categoryIconURL),
-                placeholder: nil,
-                options: [
-                    .transition(.fade(0.2)),
-                    .processor(DownsamplingImageProcessor(size: CGSize(width: 400, height: 200))),
-                    .scaleFactor(UIScreen.main.scale),
-                    .cacheOriginalImage
-                ]
-            )
-        }
-    }
-    
     override func prepareForReuse() {
         super.prepareForReuse()
-        coverImageView.kf.cancelDownloadTask()
-        coverImageView.image = nil
         iconImageView.kf.cancelDownloadTask()
         iconImageView.image = nil
-        coverImageView.backgroundColor = nil
     }
 }
 

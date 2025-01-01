@@ -190,10 +190,10 @@ actor RSSDirectoryService {
     }
     
     func getFeedsByCategory(_ category: RSSCategory) async throws -> [Feed] {
-        if let withCategoryURL = category.withCategoryURL {
-            return try await fetchOPMLFeeds(from: withCategoryURL)
-        } else if let withoutCategoryURL = category.withoutCategoryURL {
-            return try await fetchOPMLFeeds(from: withoutCategoryURL)
+        if let withCategoryURL = category.withCategoryURL, let encodedUrl = withCategoryURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            return try await fetchOPMLFeeds(from: encodedUrl)
+        } else if let withoutCategoryURL = category.withoutCategoryURL, let encodedUrl = withoutCategoryURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)  {
+            return try await fetchOPMLFeeds(from: encodedUrl)
         }
         
         let data = try await fetchData()
