@@ -686,7 +686,7 @@ extension HomeViewController: JXSegmentedViewDelegate {
 
 // MARK: - SectionHeaderViewDelegate
 extension HomeViewController: SectionHeaderViewDelegate {
-    func sectionHeader(_ header: SectionHeaderView, didTapAIButtonWith contents: [Content]) {
+    func sectionHeader(_ header: SectionHeaderView, didLongPressWith contents: [Content]) {
         // 自动发送总结请求
         Task {
             let message = aiService.generateSummary(for: .multipleContents(contents))
@@ -697,4 +697,4 @@ extension HomeViewController: SectionHeaderViewDelegate {
             }))
         }
     }
-} 
+}

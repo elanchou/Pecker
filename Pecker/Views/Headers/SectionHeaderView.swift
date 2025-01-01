@@ -21,13 +21,6 @@ class SectionHeaderView: UICollectionReusableView {
         return label
     }()
     
-    private let aiButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "sparkles"), for: .normal)
-        button.tintColor = AppTheme.dark
-        return button
-    }()
-    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -44,7 +37,6 @@ class SectionHeaderView: UICollectionReusableView {
         
         addSubview(titleLabel)
         addSubview(countLabel)
-        addSubview(aiButton)
         
         titleLabel.snp.makeConstraints { make in
             make.left.equalToSuperview()
@@ -57,13 +49,9 @@ class SectionHeaderView: UICollectionReusableView {
             make.centerY.equalTo(titleLabel)
         }
         
-        aiButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
-            make.centerY.equalTo(titleLabel)
-            make.width.height.equalTo(28)
-        }
-        
-        aiButton.addTarget(self, action: #selector(aiButtonTapped), for: .touchUpInside)
+        let longPressGestureRecognizer = UILongPressGestureRecognizer()
+        longPressGestureRecognizer.addTarget(self, action: #selector(onLongPress))
+        self.addGestureRecognizer(longPressGestureRecognizer)
     }
     
     // MARK: - Configuration
@@ -71,18 +59,15 @@ class SectionHeaderView: UICollectionReusableView {
         titleLabel.text = title
         countLabel.text = "\(count) 篇文章"
         self.contents = contents
-        
-        // 如果没有内容，隐藏 AI 按钮
-        aiButton.isHidden = contents.isEmpty
     }
     
     // MARK: - Actions
-    @objc private func aiButtonTapped() {
-        delegate?.sectionHeader(self, didTapAIButtonWith: contents)
+    @objc private func onLongPress() {
+        delegate?.sectionHeader(self, didLongPressWith: contents)
     }
 }
 
 // MARK: - Delegate
 protocol SectionHeaderViewDelegate: AnyObject {
-    func sectionHeader(_ header: SectionHeaderView, didTapAIButtonWith contents: [Content])
+    func sectionHeader(_ header: SectionHeaderView, didLongPressWith contents: [Content])
 }

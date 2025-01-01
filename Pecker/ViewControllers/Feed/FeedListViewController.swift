@@ -435,7 +435,7 @@ extension FeedListViewController {
         }
         customizeAction(markReadAction,
                        icon: "checkmark",
-                       backgroundColor: UIColor(red: 0.20, green: 0.78, blue: 0.35, alpha: 1),
+                       backgroundColor: .systemGreen,
                        text: "已读")
         
         // 分享操作
@@ -449,7 +449,7 @@ extension FeedListViewController {
         }
         customizeAction(shareAction,
                        icon: "square.and.arrow.up",
-                       backgroundColor: UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1),
+                       backgroundColor: .systemBlue,
                        text: "分享")
         
         // 删除操作
@@ -463,7 +463,7 @@ extension FeedListViewController {
         }
         customizeAction(deleteAction,
                        icon: "trash",
-                       backgroundColor: UIColor(red: 1, green: 0.23, blue: 0.19, alpha: 1),
+                       backgroundColor: .systemRed,
                        text: "删除")
         
         // 配置滑动操作
@@ -473,23 +473,31 @@ extension FeedListViewController {
     }
     
     private func customizeAction(_ action: UIContextualAction, icon: String, backgroundColor: UIColor, text: String) {
-        // 创建自定义视图容器
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: 60, height: 60))
-        container.backgroundColor = backgroundColor
+        // 创建容器视图
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 72, height: 72))
+        container.backgroundColor = .clear
+        
+        // 创建圆形按钮背景
+        let circleView = UIView(frame: CGRect(x: 0, y: 0, width: 36, height: 36))
+        circleView.center = container.center
+        circleView.backgroundColor = backgroundColor.withAlphaComponent(0.1)
+        circleView.layer.cornerRadius = 18
+        container.addSubview(circleView)
         
         // 创建图标
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .medium)
         let imageView = UIImageView(image: UIImage(systemName: icon, withConfiguration: symbolConfig))
-        imageView.tintColor = .white
+        imageView.tintColor = backgroundColor
         imageView.contentMode = .scaleAspectFit
+        circleView.addSubview(imageView)
         
-        // 添加图标到容器
-        container.addSubview(imageView)
+        // 设置图标约束
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        
         NSLayoutConstraint.activate([
-            imageView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+            imageView.centerXAnchor.constraint(equalTo: circleView.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: circleView.centerYAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 16),
+            imageView.heightAnchor.constraint(equalToConstant: 16)
         ])
         
         // 将自定义视图转换为图片
@@ -499,7 +507,7 @@ extension FeedListViewController {
         }
         
         // 设置操作的背景色和图标
-        action.backgroundColor = backgroundColor
+        action.backgroundColor = .systemBackground
         action.image = image
     }
     

@@ -4,121 +4,54 @@ import CloudKit
 class SettingsViewController: BaseViewController {
     // MARK: - Properties
     private let tableView: UITableView = {
-        let table = UITableView(frame: .zero, style: .plain)
+        let table = UITableView(frame: .zero, style: .insetGrouped)
         table.backgroundColor = .systemGroupedBackground
         table.separatorStyle = .none
         return table
     }()
     
-    private var sections: [(title: String, rows: [SettingsRow])] = []
-    private var iCloudSyncEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: "iCloudSync") }
-        set { UserDefaults.standard.set(newValue, forKey: "iCloudSync") }
-    }
-    
-    private var syncStatus: String = LocalizedString("loading") {
-        didSet {
-            if let indexPath = getIndexPath(for: .syncStatus) {
-                tableView.reloadRows(at: [indexPath], with: .none)
-            }
-        }
-    }
+    private var sections: [SettingsSection] = [
+        SettingsSection(title: "通用", items: [
+            SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: "主题", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "bell", iconColor: .systemRed, title: "通知", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: "自动刷新", accessoryType: .toggle)
+        ]),
+        SettingsSection(title: "内容", items: [
+            SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: "阅读设置", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "square.stack.3d.up", iconColor: .systemOrange, title: "订阅源管理", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "arrow.up.arrow.down", iconColor: .systemPurple, title: "排序方式", accessoryType: .disclosureIndicator)
+        ]),
+        SettingsSection(title: "数据", items: [
+            SettingsItem(icon: "icloud", iconColor: .systemBlue, title: "iCloud 同步", accessoryType: .toggle),
+            SettingsItem(icon: "arrow.triangle.2.circlepath", iconColor: .systemGreen, title: "导入/导出", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "trash", iconColor: .systemRed, title: "清除缓存", accessoryType: .none)
+        ]),
+        SettingsSection(title: "关于", items: [
+            SettingsItem(icon: "star", iconColor: .systemYellow, title: "评分", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "envelope", iconColor: .systemBlue, title: "反馈", accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "info.circle", iconColor: .systemGray, title: "版本", detail: "1.0.0", accessoryType: .none)
+        ])
+    ]
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupSections()
-        checkSyncStatus()
-        
-        // 监听语言变化
-        NotificationCenter.default.addObserver(self,
-                                            selector: #selector(languageDidChange),
-                                            name: Notification.Name("LanguageDidChange"),
-                                            object: nil)
     }
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = LocalizedString("tab.settings")
+        title = "设置"
+        view.backgroundColor = .systemGroupedBackground
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(SettingCell.self, forCellReuseIdentifier: "SettingCell")
-        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.register(SettingsCell.self, forCellReuseIdentifier: "SettingsCell")
         
-        contentView.addSubview(tableView)
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-        ])
-    }
-    
-    private func setupSections() {
-        sections = [
-            (LocalizedString("settings.icloud"), [
-                .iCloudSync,
-                .syncStatus
-            ]),
-            (LocalizedString("settings.today_summary"), [
-                .todaySummaryEnabled,
-                .todaySummaryUpdateTime,
-                .todaySummaryFrequency
-            ]),
-            (LocalizedString("settings.ai"), [
-                .aiSettings
-            ]),
-            (LocalizedString("settings.about"), [
-                .version,
-            ]),
-            ("", [
-                .copyright
-            ]),
-        ]
-    }
-    
-    // MARK: - Helper Methods
-    private func getIndexPath(for row: SettingsRow) -> IndexPath? {
-        for (sectionIndex, section) in sections.enumerated() {
-            if let rowIndex = section.rows.firstIndex(of: row) {
-                return IndexPath(row: rowIndex, section: sectionIndex)
-            }
+        view.addSubview(tableView)
+        tableView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
-        return nil
-    }
-    
-    private func checkSyncStatus() {
-        CKContainer.default().accountStatus { [weak self] status, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    self?.syncStatus = "错误: \(error.localizedDescription)"
-                    return
-                }
-                
-                switch status {
-                case .available:
-                    self?.syncStatus = LocalizedString("settings.icloud.connected")
-                case .noAccount:
-                    self?.syncStatus = LocalizedString("settings.icloud.no_account")
-                case .restricted:
-                    self?.syncStatus = LocalizedString("settings.icloud.restricted")
-                case .couldNotDetermine:
-                    self?.syncStatus = LocalizedString("settings.icloud.unknown")
-                case .temporarilyUnavailable:
-                    self?.syncStatus = LocalizedString("settings.icloud.unavailable")
-                @unknown default:
-                    self?.syncStatus = LocalizedString("settings.icloud.unknown")
-                }
-            }
-        }
-    }
-    
-    @objc private func languageDidChange() {
-        title = LocalizedString("tab.settings")
-        setupSections()
-        tableView.reloadData()
     }
 }
 
@@ -129,222 +62,116 @@ extension SettingsViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return sections[section].rows.count
-    }
-    
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return sections[section].title.isEmpty ? nil : sections[section].title
+        return sections[section].items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SettingCell", for: indexPath) as! SettingCell
-        let row = sections[indexPath.section].rows[indexPath.row]
-        
-        switch row {
-        case .iCloudSync:
-            cell.configure(with: Setting(
-                icon: "icloud",
-                iconBackgroundColor: .systemBlue,
-                title: LocalizedString("settings.icloud.enable"),
-                subtitle: nil,
-                action: nil
-            ))
-            let toggle = UISwitch()
-            toggle.isOn = iCloudSyncEnabled
-            toggle.addTarget(self, action: #selector(iCloudSyncToggled), for: .valueChanged)
-            cell.accessoryView = toggle
-            
-        case .syncStatus:
-            cell.configure(with: Setting(
-                icon: "arrow.triangle.2.circlepath",
-                iconBackgroundColor: .systemGreen,
-                title: LocalizedString("settings.icloud.status"),
-                subtitle: syncStatus,
-                action: nil
-            ))
-            
-        case .todaySummaryEnabled:
-            cell.configure(with: Setting(
-                icon: "newspaper",
-                iconBackgroundColor: .systemIndigo,
-                title: LocalizedString("settings.today_summary.enabled"),
-                subtitle: nil,
-                action: nil
-            ))
-            let toggle = UISwitch()
-            toggle.isOn = TodaySummaryManager.shared.isEnabled
-            toggle.addTarget(self, action: #selector(todaySummaryToggled), for: .valueChanged)
-            cell.accessoryView = toggle
-            
-        case .todaySummaryUpdateTime:
-            cell.configure(with: Setting(
-                icon: "clock",
-                iconBackgroundColor: .systemOrange,
-                title: LocalizedString("settings.today_summary.update_time"),
-                subtitle: String(format: "%02d:00", TodaySummaryManager.shared.updateTime),
-                action: nil
-            ))
-            
-        case .todaySummaryFrequency:
-            cell.configure(with: Setting(
-                icon: "timer",
-                iconBackgroundColor: .systemPurple,
-                title: LocalizedString("settings.today_summary.frequency"),
-                subtitle: "\(TodaySummaryManager.shared.showFrequency) " + LocalizedString("settings.today_summary.hours"),
-                action: nil
-            ))
-            
-        case .aiSettings:
-            cell.configure(with: Setting(
-                icon: "brain",
-                iconBackgroundColor: .systemPurple,
-                title: LocalizedString("settings.ai"),
-                subtitle: nil,
-                action: nil
-            ))
-            cell.accessoryType = .disclosureIndicator
-            
-        case .version:
-            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            cell.configure(with: Setting(
-                icon: "info.circle",
-                iconBackgroundColor: .systemGray,
-                title: LocalizedString("settings.version"),
-                subtitle: version,
-                action: nil
-            ))
-            
-        case .copyright:
-            cell.configure(with: Setting(
-                icon: "c.circle",
-                iconBackgroundColor: .systemGray2,
-                title: "© 2024 Pecker",
-                subtitle: nil,
-                action: nil
-            ))
-        case .buildVersion:
-            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            cell.configure(with: Setting(
-                icon: "info.circle",
-                iconBackgroundColor: .systemGray,
-                title: LocalizedString("settings.version"),
-                subtitle: version,
-                action: nil
-            ))
-        }
-        
+        let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsCell", for: indexPath) as! SettingsCell
+        let item = sections[indexPath.section].items[indexPath.row]
+        cell.configure(with: item)
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return sections[section].title
     }
 }
 
 // MARK: - UITableViewDelegate
 extension SettingsViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return sections[section].title.isEmpty ? 0 : 40
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let item = sections[indexPath.section].items[indexPath.row]
+        handleSettingsTap(item)
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard !sections[section].title.isEmpty else { return nil }
-        
-        let headerView = UIView()
-        headerView.backgroundColor = .clear
-        
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .secondaryLabel
-        label.text = sections[section].title
-        
-        headerView.addSubview(label)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
-            label.bottomAnchor.constraint(equalTo: headerView.bottomAnchor, constant: -8)
-        ])
-        
-        return headerView
+        let header = SettingsHeaderView()
+        header.configure(with: sections[section].title)
+        return header
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        let row = sections[indexPath.section].rows[indexPath.row]
-        switch row {
-        case .todaySummaryUpdateTime:
-            showTimePickerAlert()
-        case .todaySummaryFrequency:
-            showFrequencyPickerAlert()
-        case .aiSettings:
-            let aiSettingsVC = AISettingsViewController()
-            navigationController?.pushViewController(aiSettingsVC, animated: true)
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 40
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 54
+    }
+}
+
+// MARK: - Settings Models
+struct SettingsSection {
+    let title: String
+    let items: [SettingsItem]
+}
+
+struct SettingsItem {
+    let icon: String
+    let iconColor: UIColor
+    let title: String
+    var detail: String?
+    let accessoryType: SettingsAccessoryType
+}
+
+enum SettingsAccessoryType {
+    case none
+    case disclosureIndicator
+    case toggle
+}
+
+// MARK: - Actions
+extension SettingsViewController {
+    private func handleSettingsTap(_ item: SettingsItem) {
+        switch item.title {
+        case "主题":
+            // 处理主题设置
+            break
+        case "通知":
+            // 处理通知设置
+            break
+        case "订阅源管理":
+            let feedListVC = FeedListViewController()
+            navigationController?.pushViewController(feedListVC, animated: true)
+        case "清除缓存":
+            showClearCacheAlert()
+        case "反馈":
+            openFeedbackMail()
+        case "评分":
+            openAppStore()
         default:
             break
         }
     }
     
-    private func showTimePickerAlert() {
+    private func showClearCacheAlert() {
         let alert = UIAlertController(
-            title: LocalizedString("settings.today_summary.update_time"),
-            message: LocalizedString("settings.today_summary.update_time.message"),
-            preferredStyle: .actionSheet
+            title: "清除缓存",
+            message: "确定要清除所有缓存数据吗？这不会删除你的订阅源。",
+            preferredStyle: .alert
         )
         
-        for hour in 0...23 {
-            let action = UIAlertAction(title: String(format: "%02d:00", hour), style: .default) { [weak self] _ in
-                TodaySummaryManager.shared.updateTime = hour
-                self?.tableView.reloadData()
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        alert.addAction(UIAlertAction(title: "清除", style: .destructive) { _ in
+            // 执行清除缓存操作
+            Task {
+                do {
+                    try await RealmManager.shared.clearCache()
+                    ToastView.success("缓存已清除")
+                } catch {
+                    ToastView.failure(error.localizedDescription)
+                }
             }
-            alert.addAction(action)
-        }
+        })
         
-        alert.addAction(UIAlertAction(title: LocalizedString("cancel"), style: .cancel))
         present(alert, animated: true)
     }
     
-    private func showFrequencyPickerAlert() {
-        let alert = UIAlertController(
-            title: LocalizedString("settings.today_summary.frequency"),
-            message: LocalizedString("settings.today_summary.frequency.message"),
-            preferredStyle: .actionSheet
-        )
-        
-        let frequencies = [6, 12, 24, 48, 72]
-        for hours in frequencies {
-            let action = UIAlertAction(
-                title: "\(hours) " + LocalizedString("settings.today_summary.hours"),
-                style: .default
-            ) { [weak self] _ in
-                TodaySummaryManager.shared.showFrequency = hours
-                self?.tableView.reloadData()
-            }
-            alert.addAction(action)
-        }
-        
-        alert.addAction(UIAlertAction(title: LocalizedString("cancel"), style: .cancel))
-        present(alert, animated: true)
+    private func openFeedbackMail() {
+        // 实现邮件反馈功能
     }
     
-    @objc private func todaySummaryToggled(_ sender: UISwitch) {
-        TodaySummaryManager.shared.isEnabled = sender.isOn
+    private func openAppStore() {
+        // 实现跳转 App Store 功能
     }
-}
-
-// MARK: - Actions
-extension SettingsViewController {
-    @objc private func iCloudSyncToggled(_ sender: UISwitch) {
-        iCloudSyncEnabled = sender.isOn
-        checkSyncStatus()
-    }
-}
-
-// MARK: - Settings Row Enum
-enum SettingsRow: Equatable {
-    case iCloudSync
-    case syncStatus
-    case version
-    case buildVersion
-    case copyright
-    case todaySummaryEnabled
-    case todaySummaryUpdateTime
-    case todaySummaryFrequency
-    case aiSettings
 } 

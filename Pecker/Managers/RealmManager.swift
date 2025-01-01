@@ -161,6 +161,21 @@ actor RealmManager {
     }
     
     @MainActor
+    func clearCache() async throws {
+        let realm = try await Realm()
+        try await realm.asyncWrite {
+            // 获取所有内容
+            let contents = realm.objects(Content.self)
+            
+            // 只删除已读的内容
+            let readContents = contents.filter("isRead == true")
+            
+            // 删除已读内容
+            realm.delete(readContents)
+        }
+    }
+    
+    @MainActor
     func getFeeds() -> Results<Feed>? {
         guard let realm = try? Realm() else { return nil }
         return realm.objects(Feed.self).filter("isDeleted == false")
