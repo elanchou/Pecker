@@ -3,7 +3,22 @@ import Foundation
 import RealmSwift
 
 actor RSSService {
+    static let shared = RSSService()
     private let queue = DispatchQueue(label: "com.elanchou.pecker.rss", qos: .userInitiated)
+    
+    @MainActor
+    func addNewFeed(url: String) async throws {
+        let feed = Feed()
+        feed.id = UUID().uuidString
+        feed.url = url
+        
+        // 先获取文章以验证订阅源有效
+        let contents = try await fetchFeed(url: url)
+        
+        // 如果成功获取文章，添加订阅源
+        try await RealmManager.shared.addFeed(feed)
+        try await RealmManager.shared.updateFeed(feed, with: contents)
+    }
     
     @MainActor
     func fetchFeed(url: String) async throws -> [Content] {
@@ -39,20 +54,6 @@ actor RSSService {
     @MainActor
     func updateFeed(_ feed: Feed) async throws {
         let contents = try await fetchFeed(url: feed.url)
-        try await RealmManager.shared.updateFeed(feed, with: contents)
-    }
-    
-    @MainActor
-    func addNewFeed(url: String) async throws {
-        let feed = Feed()
-        feed.id = UUID().uuidString
-        feed.url = url
-        
-        // 先获取文章以验证订阅源有效
-        let contents = try await fetchFeed(url: url)
-        
-        // 如果成功获取文章，添加订阅源
-        try await RealmManager.shared.addFeed(feed)
         try await RealmManager.shared.updateFeed(feed, with: contents)
     }
     

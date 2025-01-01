@@ -3,41 +3,51 @@ import FeedKit
 
 actor RSSDirectoryService {
     static let shared = RSSDirectoryService()
-    private let jsonURL = "https://raw.githubusercontent.com/elanchou/awesome-rss-feeds/refs/heads/master/rss_feeds.json"
-    private static let countryFlagBaseURL = "https://flagcdn.com/w80"
+    private let rsshubBaseURL = "https://rsshub.app"
     
     enum RSSCategoryType: String, Codable {
-        case category
-        case country
+        case social = "社交媒体"
+        case news = "新闻资讯"
+        case tech = "科技"
+        case finance = "金融"
+        case entertainment = "娱乐"
+        case life = "生活"
+        case reading = "阅读"
+        case other = "其他"
     }
     
     struct RSSCategory: Codable, Identifiable, Equatable {
+        let id: String
         let name: String
-        let iconURL: String?
-        let withCategoryURL: String?
-        let withoutCategoryURL: String?
+        let type: RSSCategoryType
+        let platforms: [RSSPlatform]
         
-        var id: String {
-            return name
+        static func == (lhs: RSSCategory, rhs: RSSCategory) -> Bool {
+            return lhs.id == rhs.id
         }
-        
-        var type: RSSCategoryType {
-            return .country
-        }
-        
-        var flagURL: String? {
-            if type == .country {
-                return "\(RSSDirectoryService.countryFlagBaseURL)/\(id).png"
-            }
-            return nil
-        }
-        
-        enum CodingKeys: String, CodingKey {
-            case name = "name"
-            case iconURL = "icon_url"
-            case withCategoryURL = "with_category"
-            case withoutCategoryURL = "without_category"
-        }
+    }
+    
+    struct RSSPlatform: Codable, Identifiable {
+        let id: String
+        let name: String
+        let icon: String
+        let baseURL: String
+        let paths: [RSSPath]
+    }
+    
+    struct RSSPath: Codable {
+        let path: String
+        let name: String
+        let description: String
+        let params: [RSSParam]
+        let example: String?
+    }
+    
+    struct RSSParam: Codable {
+        let name: String
+        let description: String
+        let required: Bool
+        let example: String?
     }
     
     struct Feed: Codable, Identifiable {
@@ -45,175 +55,168 @@ actor RSSDirectoryService {
         let title: String
         let description: String?
         let category: String?
-        let iconURL: String?
+        let platform: String
         let feedURL: String
         let websiteURL: String?
         let language: String?
     }
     
-    struct RSSData: Codable {
-        let categories: [RSSCategory]
-        let countries: [RSSCategory]
-        let feeds: [Feed]?
-        
-        enum CodingKeys: String, CodingKey {
-            case categories = "categories"
-            case countries = "countries"
-            case feeds
-        }
+    // 预定义的分类和平台
+    private let predefinedCategories: [RSSCategory] = [
+        RSSCategory(
+            id: "social",
+            name: "社交媒体",
+            type: .social,
+            platforms: [
+                RSSPlatform(
+                    id: "weibo",
+                    name: "微博",
+                    icon: "weibo",
+                    baseURL: "/weibo",
+                    paths: [
+                        RSSPath(
+                            path: "/user/:uid",
+                            name: "用户微博",
+                            description: "订阅用户发布的微博",
+                            params: [
+                                RSSParam(
+                                    name: "uid",
+                                    description: "用户 ID",
+                                    required: true,
+                                    example: "1195230310"
+                                )
+                            ],
+                            example: "/weibo/user/1195230310"
+                        )
+                    ]
+                ),
+                RSSPlatform(
+                    id: "zhihu",
+                    name: "知乎",
+                    icon: "zhihu",
+                    baseURL: "/zhihu",
+                    paths: [
+                        RSSPath(
+                            path: "/people/activities/:id",
+                            name: "用户动态",
+                            description: "订阅用户的知乎动态",
+                            params: [
+                                RSSParam(
+                                    name: "id",
+                                    description: "用户名",
+                                    required: true,
+                                    example: "people"
+                                )
+                            ],
+                            example: "/zhihu/people/activities/people"
+                        )
+                    ]
+                )
+            ]
+        ),
+        RSSCategory(
+            id: "tech",
+            name: "科技",
+            type: .tech,
+            platforms: [
+                RSSPlatform(
+                    id: "github",
+                    name: "GitHub",
+                    icon: "github",
+                    baseURL: "/github",
+                    paths: [
+                        RSSPath(
+                            path: "/repos/:user",
+                            name: "用户仓库",
+                            description: "订阅用户的 GitHub 仓库更新",
+                            params: [
+                                RSSParam(
+                                    name: "user",
+                                    description: "用户名",
+                                    required: true,
+                                    example: "microsoft"
+                                )
+                            ],
+                            example: "/github/repos/microsoft"
+                        )
+                    ]
+                )
+            ]
+        )
+    ]
+    
+    func getCategories() async -> [RSSCategory] {
+        return predefinedCategories
     }
     
-    private var cachedData: RSSData?
-    private var cachedFeeds: [String: [Feed]] = [:]
-    private var cachedRSS: [String: [Feed]] = [:]
+    func getPlatforms(for category: RSSCategory) async -> [RSSPlatform] {
+        return category.platforms
+    }
     
-    private init() {}
-    
-    private func fetchData() async throws -> RSSData {
-        if let cachedData = cachedData {
-            return cachedData
+    func generateFeedURL(platform: RSSPlatform, path: RSSPath, params: [String: String]) -> String {
+        var feedPath = path.path
+        for (key, value) in params {
+            feedPath = feedPath.replacingOccurrences(of: ":\(key)", with: value)
         }
-        
-        guard let url = URL(string: jsonURL) else {
+        return rsshubBaseURL + platform.baseURL + feedPath
+    }
+    
+    func validateFeed(_ url: String) async throws -> Feed {
+        guard let feedURL = URL(string: url) else {
             throw URLError(.badURL)
         }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
-        let rssData = try JSONDecoder().decode(RSSData.self, from: data)
-        cachedData = rssData
-        return rssData
-    }
-    
-    private func fetchOPMLFeeds(from urlString: String) async throws -> [Feed] {
-        if let cachedFeeds = cachedFeeds[urlString] {
-            return cachedFeeds
-        }
-        
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
-        let parser = OPMLParser()
-        
-        guard let document = parser.parseOPML(data: data) else {
-            throw URLError(.cannotParseResponse)
-        }
-        
-        var feeds: [Feed] = []
-        
-        for outline in document.body.outlines {
-            outline.feeds.forEach { feed in
-                if let feed = createFeed(from: feed) {
-                    feeds.append(feed)
-                }
-            }
-        }
-        
-        cachedFeeds[urlString] = feeds
-        return feeds
-    }
-    
-    private func fetchRSSFeeds(from urlString: String) async throws -> [Feed] {
-        if let cachedRSS = cachedRSS[urlString] {
-            return cachedRSS
-        }
-        
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, _) = try await URLSession.shared.data(from: feedURL)
         let parser = FeedParser(data: data)
+        let result = parser.parse()
         
-        guard case .success(let result) = parser.parse() else {
-            throw URLError(.cannotParseResponse)
-        }
-        
-        var feeds: [Feed] = []
-        
-        if let rssFeed = result.rssFeed {
-            for item in rssFeed.items ?? [] {
-                if let feed = createFeed(from: item, category: "RSS") {
-                    feeds.append(feed)
-                }
+        switch result {
+        case .success(let feed):
+            switch feed {
+            case .atom(let atomFeed):
+                return Feed(
+                    id: url,
+                    title: atomFeed.title ?? "未知标题",
+                    description: atomFeed.subtitle?.value,
+                    category: nil,
+                    platform: "RSSHub",
+                    feedURL: url,
+                    websiteURL: atomFeed.links?.first?.attributes?.href,
+                    language: nil
+                )
+                
+            case .rss(let rssFeed):
+                return Feed(
+                    id: url,
+                    title: rssFeed.title ?? "未知标题",
+                    description: rssFeed.description,
+                    category: nil,
+                    platform: "RSSHub",
+                    feedURL: url,
+                    websiteURL: rssFeed.link,
+                    language: rssFeed.language
+                )
+                
+            case .json(let jsonFeed):
+                return Feed(
+                    id: url,
+                    title: jsonFeed.title ?? "未知标题",
+                    description: jsonFeed.description,
+                    category: nil,
+                    platform: "RSSHub",
+                    feedURL: url,
+                    websiteURL: jsonFeed.homePageURL,
+                    language: nil
+                )
             }
+            
+        case .failure(let error):
+            throw error
         }
-        
-        cachedRSS[urlString] = feeds
-        return feeds
     }
     
-    private func createFeed(from feed: OPMLFeed) -> Feed? {
-        guard let title = feed.title,
-              let feedURL = feed.xmlUrl else {
-            return nil
-        }
-        
-        return Feed(
-            id: feedURL,
-            title: title,
-            description: feed.description,
-            category: feed.category,
-            iconURL: nil,
-            feedURL: feedURL,
-            websiteURL: feed.htmlUrl,
-            language: nil
-        )
-    }
-    
-    private func createFeed(from item: RSSFeedItem, category: String) -> Feed? {
-        guard let feedURL = item.link else {
-            return nil
-        }
-        
-        return Feed(
-            id: feedURL,
-            title: item.title ?? "Untitled",
-            description: item.description ?? "No description",
-            category: category,
-            iconURL: nil,
-            feedURL: feedURL,
-            websiteURL: item.link,
-            language: nil
-        )
-    }
-    
-    func getCategories() async throws -> [RSSCategory] {
-        let data = try await fetchData()
-        return data.categories
-    }
-    
-    func getCountries() async throws -> [RSSCategory] {
-        let data = try await fetchData()
-        return data.countries
-    }
-    
-    func getFeedsByCategory(_ category: RSSCategory) async throws -> [Feed] {
-        if let withCategoryURL = category.withCategoryURL, let encodedUrl = withCategoryURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-            return try await fetchOPMLFeeds(from: encodedUrl)
-        } else if let withoutCategoryURL = category.withoutCategoryURL, let encodedUrl = withoutCategoryURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)  {
-            return try await fetchOPMLFeeds(from: encodedUrl)
-        }
-        
-        let data = try await fetchData()
-        return data.feeds?.filter { feed in
-            switch category.type {
-            case .category:
-                return feed.category == category.id
-            case .country:
-                return feed.language?.hasPrefix(category.id) ?? false
-            }
-        } ?? []
-    }
-    
-    func getFeedsFromRSS(_ url: String) async throws -> [Feed] {
-        return try await fetchRSSFeeds(from: url)
-    }
-    
-    func clearCache() {
-        cachedData = nil
-        cachedFeeds.removeAll()
-        cachedRSS.removeAll()
+    func subscribe(_ feed: Feed) async throws {
+        // 调用 RSSService 添加订阅
+        try await RSSService.shared.addNewFeed(url: feed.feedURL)
     }
 }

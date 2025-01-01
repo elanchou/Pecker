@@ -115,9 +115,8 @@ class FeedCell: UITableViewCell {
         }
         
         websiteLabel.snp.makeConstraints { make in
-            make.top.equalTo(descriptionLabel.snp.bottom).offset(4)
             make.left.right.equalTo(titleLabel)
-            make.bottom.equalToSuperview().offset(-12)
+            make.bottom.equalTo(iconContainer)
         }
     }
     
@@ -133,7 +132,6 @@ class FeedCell: UITableViewCell {
             defaultIconLabel.isHidden = true
             iconImageView.kf.setImage(
                 with: URL(string: iconURL),
-                placeholder: nil,
                 options: [
                     .transition(.fade(0.2)),
                     .processor(DownsamplingImageProcessor(size: CGSize(width: 40, height: 40))),
@@ -152,10 +150,6 @@ class FeedCell: UITableViewCell {
         } else {
             showDefaultIcon(for: feed.title)
         }
-        
-        // 添加点击时的动画效果
-        let interaction = UIContextMenuInteraction(delegate: self)
-        containerView.addInteraction(interaction)
     }
     
     private func showDefaultIcon(for title: String) {
@@ -178,34 +172,3 @@ class FeedCell: UITableViewCell {
         websiteLabel.text = nil
     }
 }
-
-// MARK: - UIContextMenuInteractionDelegate
-extension FeedCell: UIContextMenuInteractionDelegate {
-    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
-            let subscribeAction = UIAction(
-                title: LocalizedString("feed.add"),
-                image: UIImage(systemName: "plus.circle.fill"),
-                attributes: []
-            ) { [weak self] _ in
-                // TODO: Handle subscribe action
-            }
-            
-            let shareAction = UIAction(
-                title: LocalizedString("share"),
-                image: UIImage(systemName: "square.and.arrow.up"),
-                attributes: []
-            ) { [weak self] _ in
-                // TODO: Handle share action
-            }
-            
-            return UIMenu(title: "", children: [subscribeAction, shareAction])
-        }
-    }
-    
-    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-        animator.addCompletion { [weak self] in
-            // TODO: Handle preview action
-        }
-    }
-} 

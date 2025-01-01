@@ -1,6 +1,5 @@
 import UIKit
 import RealmSwift
-import SnapKit
 
 class FeedListViewController: BaseViewController {
     // MARK: - Properties
@@ -127,6 +126,8 @@ class FeedListViewController: BaseViewController {
             make.centerY.equalToSuperview().offset(10)
             make.size.equalTo(60)
         }
+        
+        setupEmptyState()
     }
     
     // MARK: - Data Loading
@@ -155,7 +156,6 @@ class FeedListViewController: BaseViewController {
         }
     }
     
-    // MARK: - Actions
     @objc private func addFeed() {
         let vc = AddFeedViewController()
         let nav = UINavigationController(rootViewController: vc)
@@ -233,8 +233,7 @@ class FeedListViewController: BaseViewController {
         alert.addAction(UIAlertAction(title: "复制订阅链接", style: .default) { _ in
             UIPasteboard.general.string = feed.url
             // 复制成功的反馈
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
+            ToastView.success("已复制订阅链接")
         })
         
         // 删除订阅
@@ -256,11 +255,9 @@ class FeedListViewController: BaseViewController {
         Task {
             do {
                 try await RealmManager.shared.markAllContentsAsRead(in: feed)
-                // 成功的反馈
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
+                ToastView.success("已将所有文章标记为已读")
             } catch {
-                showError(error)
+                ToastView.failure(error.localizedDescription)
             }
         }
     }
@@ -269,11 +266,9 @@ class FeedListViewController: BaseViewController {
         Task {
             do {
                 try await RealmManager.shared.deleteFeed(feed)
-                // 成功的反馈
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
+                ToastView.success("已删除订阅源")
             } catch {
-                showError(error)
+                ToastView.failure(error.localizedDescription)
             }
         }
     }
@@ -367,41 +362,151 @@ extension FeedListViewController: UITableViewDataSource {
 // MARK: - UITableViewDelegate
 extension FeedListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "删除") { [weak self] _, _, completion in
-            if let feed = self?.feeds?[indexPath.row] {
-                feed.markAsDeleted()
-                completion(true)
-            } else {
-                completion(false)
-            }
-        }
-        deleteAction.image = UIImage(systemName: "trash")
-        
-        let refreshAction = UIContextualAction(style: .normal, title: "刷新") { [weak self] _, _, completion in
-            guard let feed = self?.feeds?[indexPath.row] else {
-                completion(false)
-                return
-            }
-            
-            Task {
-                do {
-                    try await self?.rssService.updateFeed(feed)
-                    completion(true)
-                } catch {
-                    await MainActor.run {
-                        self?.showError(error)
-                    }
-                    completion(false)
-                }
-            }
-        }
-        refreshAction.backgroundColor = .systemBlue
-        refreshAction.image = UIImage(systemName: "arrow.clockwise")
-        
-        return UISwipeActionsConfiguration(actions: [deleteAction, refreshAction])
+        return getSwipeActions(for: indexPath)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 72
     }
-} 
+}
+
+// MARK: - Swipe Actions Configuration
+extension FeedListViewController {
+    func onSwipeAction(_ action: FeedAction, feed: Feed) {
+        switch action {
+        case .delete:
+            // 显示删除确认对话框
+            let alert = UIAlertController(
+                title: "确认删除",
+                message: "确定要删除这个订阅源吗？这将同时删除所有相关的文章。",
+                preferredStyle: .alert
+            )
+            
+            alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+            alert.addAction(UIAlertAction(title: "删除", style: .destructive) { _ in
+                Task {
+                    do {
+                        try await RealmManager.shared.deleteFeed(feed)
+                        ToastView.success("已删除订阅源")
+                    } catch {
+                        ToastView.failure(error.localizedDescription)
+                    }
+                }
+            })
+            
+            present(alert, animated: true)
+            
+        case .share:
+            let activityVC = UIActivityViewController(
+                activityItems: [feed.url],
+                applicationActivities: nil
+            )
+            
+            // 在 iPad 上需要设置弹出位置
+            if let popoverController = activityVC.popoverPresentationController {
+                popoverController.sourceView = view
+                popoverController.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
+            }
+            
+            present(activityVC, animated: true)
+            
+        case .markAllRead:
+            Task {
+                do {
+                    try await RealmManager.shared.markAllContentsAsRead(in: feed)
+                    ToastView.success("已将所有文章标记为已读")
+                } catch {
+                    ToastView.failure(error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    func getSwipeActions(for indexPath: IndexPath) -> UISwipeActionsConfiguration {
+        // 标记已读操作
+        let markReadAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, completion in
+            guard let feed = self?.feeds?[indexPath.row] else {
+                completion(false)
+                return
+            }
+            self?.onSwipeAction(.markAllRead, feed: feed)
+            completion(true)
+        }
+        customizeAction(markReadAction,
+                       icon: "checkmark",
+                       backgroundColor: UIColor(red: 0.20, green: 0.78, blue: 0.35, alpha: 1),
+                       text: "已读")
+        
+        // 分享操作
+        let shareAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, completion in
+            guard let feed = self?.feeds?[indexPath.row] else {
+                completion(false)
+                return
+            }
+            self?.onSwipeAction(.share, feed: feed)
+            completion(true)
+        }
+        customizeAction(shareAction,
+                       icon: "square.and.arrow.up",
+                       backgroundColor: UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1),
+                       text: "分享")
+        
+        // 删除操作
+        let deleteAction = UIContextualAction(style: .destructive, title: nil) { [weak self] _, _, completion in
+            guard let feed = self?.feeds?[indexPath.row] else {
+                completion(false)
+                return
+            }
+            self?.onSwipeAction(.delete, feed: feed)
+            completion(true)
+        }
+        customizeAction(deleteAction,
+                       icon: "trash",
+                       backgroundColor: UIColor(red: 1, green: 0.23, blue: 0.19, alpha: 1),
+                       text: "删除")
+        
+        // 配置滑动操作
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction, shareAction, markReadAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
+    }
+    
+    private func customizeAction(_ action: UIContextualAction, icon: String, backgroundColor: UIColor, text: String) {
+        // 创建自定义视图容器
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 60, height: 60))
+        container.backgroundColor = backgroundColor
+        
+        // 创建图标
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let imageView = UIImageView(image: UIImage(systemName: icon, withConfiguration: symbolConfig))
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        
+        // 添加图标到容器
+        container.addSubview(imageView)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            imageView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+        
+        // 将自定义视图转换为图片
+        let renderer = UIGraphicsImageRenderer(size: container.bounds.size)
+        let image = renderer.image { _ in
+            container.drawHierarchy(in: container.bounds, afterScreenUpdates: true)
+        }
+        
+        // 设置操作的背景色和图标
+        action.backgroundColor = backgroundColor
+        action.image = image
+    }
+    
+    // MARK: - Feed Actions
+    enum FeedAction {
+        case markAllRead
+        case share
+        case delete
+    }
+}

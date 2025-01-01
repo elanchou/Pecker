@@ -29,10 +29,24 @@
 "feed.empty.description" = "添加你的第一个RSS订阅开始阅读";
 
 // RSS Browser
-"rss.discover" = "发现RSS";
+"rss.discover" = "发现";
+"rss.custom" = "自定义";
+"rss.search.placeholder" = "搜索 RSS 源";
+"rss.platforms" = "个平台";
+"rss.feeds" = "个订阅源";
+"rss.feed.type" = "订阅类型";
+"rss.params" = "参数设置";
+"rss.params.required" = "请填写所有必需的参数";
+"rss.subscribe" = "添加订阅";
+"rss.add.success" = "订阅添加成功";
+"success" = "成功";
+"rss.featured" = "精选内容";
 "rss.categories" = "分类";
-"rss.countries" = "国家/地区";
-"rss.add.success" = "已成功添加到订阅";
+"rss.articles" = "文章";
+"rss.podcasts" = "播客";
+"rss.videos" = "视频";
+"rss.social" = "社交媒体";
+"more" = "更多";
 
 // Settings
 "settings.icloud" = "iCloud同步";

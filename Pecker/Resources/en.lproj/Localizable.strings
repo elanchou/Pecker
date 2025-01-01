@@ -29,10 +29,21 @@
 "feed.empty.description" = "Add your first RSS feed to start reading";
 
 // RSS Browser
-"rss.discover" = "Discover RSS";
+"rss.discover" = "Discover";
+"rss.custom" = "Custom";
+"rss.search.placeholder" = "Search RSS feeds";
+"rss.platforms" = "platforms";
+"rss.feeds" = "feeds";
+"rss.feed.type" = "Feed Type";
+"rss.params" = "Parameters";
+"rss.params.required" = "Please fill in all required parameters";
+"rss.subscribe" = "Subscribe";
+"rss.add.success" = "Successfully subscribed";
+"success" = "Success";
+
+// Categories
 "rss.categories" = "Categories";
 "rss.countries" = "Countries";
-"rss.add.success" = "Successfully added to subscriptions";
 
 // Settings
 "settings.icloud" = "iCloud Sync";
@@ -68,4 +79,12 @@
 "ai.analyze" = "AI Analysis";
 "ai.summary" = "AI Summary";
 "ai.loading" = "AI is thinking...";
-"ai.error" = "Failed to generate analysis"; 
+"ai.error" = "Failed to generate analysis";
+
+"rss.featured" = "Featured";
+"rss.categories" = "Categories";
+"rss.articles" = "Articles";
+"rss.podcasts" = "Podcasts";
+"rss.videos" = "Videos";
+"rss.social" = "Social Media";
+"more" = "More"; 

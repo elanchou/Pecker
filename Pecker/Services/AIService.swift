@@ -6,6 +6,7 @@ class AIService {
     private let logger = Logger(subsystem: "com.elanchou.pecker", category: "ai")
     
     init() {
+        UserDefaults.standard.set("sk-b4b43f17497a413698ec24afa481b59c", forKey: "DeepSeekKey")
         // 从 UserDefaults 或其他配置中获取 API Key
         if let openAIKey = UserDefaults.standard.string(forKey: "OpenAIKey") {
             self.openAIService = OpenAIService(apiKey: openAIKey)
@@ -40,7 +41,7 @@ class AIService {
                let value = AIProvider(rawValue: provider) {
                 return value
             }
-            return .openAI
+            return .deepSeek
         }
     }
     
