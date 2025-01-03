@@ -182,11 +182,11 @@ actor RealmManager {
     }
 
     @MainActor
-    func getFeeds(priorityId: String? = nil) -> Results<Feed>? {
+    func getFeeds(id: String? = nil) -> Results<Feed>? {
         guard let realm = try? Realm() else { return nil }
         var feeds = realm.objects(Feed.self).filter("isDeleted == false")
-        if let priorityId = priorityId {
-            feeds = feeds.filter("priorityId == %@", priorityId)
+        if let id = id {
+            feeds = feeds.filter("id == %@", id)
         }
         return feeds
     }

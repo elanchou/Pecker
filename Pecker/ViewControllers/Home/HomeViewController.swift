@@ -464,8 +464,8 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
                 // 使用 withThrowingTaskGroup 并行更新所有订阅源
                 try await withThrowingTaskGroup(of: Void.self) { group in
                     for feed in feeds {
-                        group.addTask {
-                            if let feedsResults = await RealmManager.shared.getFeeds(priorityId: feed.id) {
+                        group.addTask { @MainActor in
+                            if let feedsResults = RealmManager.shared.getFeeds(id: feed.id) {
                                 if let currentFeed = feedsResults.first {
                                     try await rssService.updateFeed(currentFeed)
                                 }
