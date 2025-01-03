@@ -1,18 +1,35 @@
 import UIKit
+import Kingfisher
 import RealmSwift
 import JXSegmentedView
 import SnapKit
 import Lottie
 
-class HomeViewController: BaseViewController {
+class HomeViewController: BaseViewController, UIPopoverPresentationControllerDelegate {
     // MARK: - Properties
     private var contents: Results<Content>?
     private var notificationToken: NotificationToken?
     private var currentGrouping: ContentGrouping = .byDate {
         didSet {
-            updateUI()
+            if oldValue != currentGrouping {
+                updateUI(animated: true)
+            }
         }
     }
+    private var currentFeed: Feed?
+    
+    // 缓存相关
+    private var sectionCache: [ContentGrouping: [(String, [Content])]] = [:]
+    private var heightCache: [IndexPath: CGFloat] = [:]
+    private var imageCache = NSCache<NSString, UIImage>()
+    private var prefetchDataSource: UICollectionViewDataSourcePrefetching?
+    private var isUpdating = false
+    
+    // 分页相关
+    private let pageSize = 20
+    private var currentPage = 0
+    private var hasMoreData = true
+    private var isLoadingMore = false
     
     private let segmentedDataSource = JXSegmentedTitleDataSource()
     private let segmentedView = JXSegmentedView()
@@ -108,16 +125,32 @@ class HomeViewController: BaseViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-//        navigationItem.rightBarButtonItems = [searchButton]
         setupUI()
+        setupCollectionView()
+        setupFeedSelection()
+        setupPrefetching()
         loadData()
         
-        // 设置 collectionView 背景色
-        collectionView.backgroundColor = .systemBackground
+        // 监听订阅源选择
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleFeedSelection(_:)),
+            name: NSNotification.Name("SelectedFeedChanged"),
+            object: nil
+        )
+        
+        // 监听内存警告
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryWarning),
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
     }
     
     deinit {
         notificationToken?.invalidate()
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - UI Setup
@@ -148,6 +181,10 @@ class HomeViewController: BaseViewController {
             make.top.equalTo(segmentedView.snp.bottom)
             make.leading.trailing.bottom.equalToSuperview()
         }
+        
+        // 设置 collectionView 的内容边距
+        collectionView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
+        collectionView.contentInsetAdjustmentBehavior = .never
         
         loadingView.snp.makeConstraints { make in
             make.center.equalToSuperview()
@@ -208,114 +245,161 @@ class HomeViewController: BaseViewController {
     }
     
     private func setupEmptyState() {
+        // 先将 emptyStateView 添加到父视图
         view.addSubview(emptyStateView)
-        emptyStateView.addSubview(emptyImageView)
-        emptyStateView.addSubview(emptyTitleLabel)
-        emptyStateView.addSubview(emptyDescriptionLabel)
-        emptyStateView.addSubview(addFeedButton)
         
+        // 设置 emptyStateView 的约束
         emptyStateView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.width.equalToSuperview().multipliedBy(0.8)
         }
         
+        // 播放动画并添加子视图
+        emptyImageView.play()
+        emptyStateView.addSubview(emptyImageView)
+        emptyStateView.addSubview(emptyTitleLabel)
+        emptyStateView.addSubview(emptyDescriptionLabel)
+        emptyStateView.addSubview(addFeedButton)
+        
         emptyImageView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.centerX.equalToSuperview()
-            make.size.equalTo(100)
+            make.size.equalTo(120)
         }
         
         emptyTitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(emptyImageView.snp.bottom).offset(20)
+            make.top.equalTo(emptyImageView.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
         }
         
         emptyDescriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(emptyTitleLabel.snp.bottom).offset(8)
+            make.top.equalTo(emptyTitleLabel.snp.bottom).offset(12)
             make.leading.trailing.equalToSuperview()
         }
         
         addFeedButton.snp.makeConstraints { make in
             make.top.equalTo(emptyDescriptionLabel.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
-            make.width.equalTo(140)
-            make.height.equalTo(40)
+            make.width.equalTo(160)
+            make.height.equalTo(44)
             make.bottom.equalToSuperview()
         }
         
         addFeedButton.addTarget(self, action: #selector(addFeedTapped), for: .touchUpInside)
-    }
-    
-    private func removeEmptyState() {
-        emptyStateView.removeFromSuperview()
+        
+        // 默认隐藏空状态视图
+        emptyStateView.isHidden = true
     }
     
     private func updateEmptyState() {
         let isEmpty = sections.isEmpty
-        if isEmpty {
-            if (emptyStateView.superview == nil) {
-                setupEmptyState()
-            }
-        } else {
-            if (emptyStateView.superview != nil) {
-                removeEmptyState()
+        
+        // 如果状态没有改变，不执行动画
+        guard emptyStateView.isHidden == isEmpty else { return }
+        
+        UIView.animate(withDuration: 0.2) {
+            self.emptyStateView.alpha = isEmpty ? 1 : 0
+            self.collectionView.alpha = isEmpty ? 0 : 1
+        } completion: { _ in
+            self.emptyStateView.isHidden = !isEmpty
+            self.collectionView.isHidden = isEmpty
+            
+            if isEmpty {
+                self.emptyImageView.play()
+            } else {
+                self.emptyImageView.stop()
             }
         }
-        emptyStateView.isHidden = !isEmpty
     }
     
     // MARK: - Data Loading
-    private func loadData() {
-        do {
-            let realm = try Realm()
-            contents = realm.objects(Content.self).filter("isDeleted == false")
-            
-            notificationToken = contents?.observe { [weak self] changes in
-                guard let self = self else { return }
-                switch changes {
-                case .initial:
-                    self.updateUI()
-                case .update:
-                    self.updateUI()
-                case .error(let error):
-                    print("Error: \(error)")
-                }
-            }
-            
-            updateUI()
-        } catch {
-            showError(error)
+    @MainActor
+    private func loadData(forceRefresh: Bool = false) {
+        guard !isUpdating else { return }
+        isUpdating = true
+        
+        // 如果有缓存且不是强制刷新，直接使用缓存
+        if !forceRefresh, let cachedSections = sectionCache[currentGrouping] {
+            sections = cachedSections
+            updateUI(animated: false)
+            isUpdating = false
+            return
         }
+        
+        contents = RealmManager.shared.getContents(filter: "isDeleted == false")
+        
+        notificationToken = contents?.observe { [weak self] changes in
+            guard let self = self else { return }
+            switch changes {
+            case .initial:
+                self.updateUI(animated: false)
+            case .update:
+                self.updateUI(animated: true)
+            case .error(let error):
+                print("Error: \(error)")
+            }
+            self.isUpdating = false
+        }
+        
+        updateUI(animated: false)
     }
     
-    private func updateUI() {
-        // 获取基础数据
+    private func updateUI(animated: Bool) {
         guard let baseContents = contents else { return }
-        var filteredContents = baseContents.filter("isDeleted == false")
         
-        // 应用分组过滤
-        switch currentGrouping {
-        case .favorites:
-            filteredContents = filteredContents.filter("isFavorite == true")
-        case .unread:
-            filteredContents = filteredContents.filter("isRead == false")
-        default:
-            break
+        // 在后台线程处理数据前，先将 Realm 结果转换为普通数组
+        let frozenContents = Array(baseContents.freeze())
+        
+        // 在后台线程处理数据
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            
+            // 根据条件过滤数据
+            var filteredContents = frozenContents.filter { !$0.isDeleted }
+            
+            // 应用分组过滤
+            switch await self.currentGrouping {
+            case .favorites:
+                filteredContents = filteredContents.filter { $0.isFavorite }
+            case .unread:
+                filteredContents = filteredContents.filter { !$0.isRead }
+            default:
+                break
+            }
+            
+            // 根据分组方式组织数据
+            let newSections: [(String, [Content])]
+            switch await self.currentGrouping {
+            case .byDate:
+                newSections = await self.groupContentsByDate(filteredContents)
+            case .byFeed:
+                newSections = await self.groupContentsByFeed(filteredContents)
+            case .favorites, .unread:
+                newSections = [("", filteredContents)]
+            }
+            
+            
+            
+            // 在主线程更新 UI
+            await MainActor.run {
+                self.sectionCache[self.currentGrouping] = newSections
+                self.sections = newSections
+                
+                if animated {
+                    UIView.transition(with: self.collectionView,
+                                    duration: 0.2,
+                                    options: .transitionCrossDissolve) {
+                        self.collectionView.reloadData()
+                    }
+                } else {
+                    UIView.performWithoutAnimation {
+                        self.collectionView.reloadData()
+                    }
+                }
+                
+                self.updateEmptyState()
+            }
         }
-        
-        // 根据分组方式组织数据
-        switch currentGrouping {
-        case .byDate:
-            sections = groupContentsByDate(Array(filteredContents))
-        case .byFeed:
-            sections = groupContentsByFeed(Array(filteredContents))
-        case .favorites, .unread:
-            sections = [("", Array(filteredContents))]
-        }
-        
-        // 更新 UI
-        collectionView.reloadData()
-        updateEmptyState()
     }
     
     // 添加一个属性来储组后的数据
@@ -346,23 +430,21 @@ class HomeViewController: BaseViewController {
     }
     
     private func groupContentsByFeed(_ contents: [Content]) -> [(String, [Content])] {
-        var feedGroups: [Feed: [Content]] = [:]
+        var feedGroups: [String: [Content]] = [:]
         
         for content in contents {
             if let feed = content.feed.first {
-                feedGroups[feed, default: []].append(content)
+                feedGroups[feed.title, default: []].append(content)
             }
         }
         
-        return feedGroups.map { (feed, contents) in
-            (feed.title, contents.sorted { $0.publishDate > $1.publishDate })
+        return feedGroups.map { (title, contents) in
+            (title, contents.sorted { $0.publishDate > $1.publishDate })
         }.sorted { $0.0 < $1.0 }
     }
     
     // MARK: - Actions
     @objc private func refreshData() {
-        // Lottie动画
-        refreshLoadingView.startLoading()
         // 触感反馈
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         if #available(iOS 17.5, *) {
@@ -371,29 +453,38 @@ class HomeViewController: BaseViewController {
             generator.impactOccurred()
         }
         
+        // 开始加载动画
+        refreshLoadingView.startLoading()
+        
         Task { @MainActor in
             do {
-                let realm = try await Realm()
-                let feeds = Array(realm.objects(Feed.self).filter("isDeleted == false"))
+                let feeds = RealmManager.shared.getFeeds()?.toArray() ?? []
                 let rssService = RSSService()
                 
-                for feed in feeds {
-                    if let currentFeed = realm.object(ofType: Feed.self, forPrimaryKey: feed.id) {
-                        try await rssService.updateFeed(currentFeed)
+                // 使用 withThrowingTaskGroup 并行更新所有订阅源
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    for feed in feeds {
+                        group.addTask {
+                            if let feedsResults = await RealmManager.shared.getFeeds(priorityId: feed.id) {
+                                if let currentFeed = feedsResults.first {
+                                    try await rssService.updateFeed(currentFeed)
+                                }
+                            }
+                        }
                     }
+                    try await group.waitForAll()
                 }
                 
-                await MainActor.run {
-                    refreshLoadingView.stopLoading { [weak self] in
-                        self?.refreshControl.endRefreshing()
-                    }
+                // 停止刷新动画
+                refreshLoadingView.stopLoading { [weak self] in
+                    self?.refreshControl.endRefreshing()
                 }
+                
             } catch {
-                await MainActor.run {
-                    refreshLoadingView.stopLoading { [weak self] in
-                        self?.refreshControl.endRefreshing()
-                        self?.showError(error)
-                    }
+                // 停止刷新动画并显示错误
+                refreshLoadingView.stopLoading { [weak self] in
+                    self?.refreshControl.endRefreshing()
+                    self?.showError(error)
                 }
             }
         }
@@ -434,12 +525,141 @@ class HomeViewController: BaseViewController {
                 refreshLoadingView.alpha = progress
             }
         }
+        
+        // 检查是否需要加载更多
+        let threshold: CGFloat = 100.0
+        let contentHeight = scrollView.contentSize.height
+        let scrollViewHeight = scrollView.bounds.height
+        let currentOffset = scrollView.contentOffset.y
+        
+        if currentOffset > contentHeight - scrollViewHeight - threshold {
+            loadMoreIfNeeded()
+        }
     }
     
     @objc private func addFeedTapped() {
         let addFeedVC = AddFeedViewController()
         let nav = UINavigationController(rootViewController: addFeedVC)
         present(nav, animated: true)
+    }
+    
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        if gesture.state == .began {
+            let point = gesture.location(in: collectionView)
+            if let indexPath = collectionView.indexPathForItem(at: point),
+               let cell = collectionView.cellForItem(at: indexPath) {
+                
+                // 添加触感反馈
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
+                
+                // 添加弹出动画
+                UIView.animate(withDuration: 0.2, animations: {
+                    cell.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+                }) { _ in
+                    UIView.animate(withDuration: 0.2) {
+                        cell.transform = .identity
+                    }
+                }
+                
+                // 处理长按事件
+                let content = sections[indexPath.section].1[indexPath.item]
+                if let articleCell = cell as? ArticleCell {
+                    articleCell.onLongPress?(content)
+                }
+            }
+        }
+    }
+    
+    @objc private func handleFeedSelection(_ notification: Notification) {
+        guard let feed = notification.userInfo?["feed"] as? Feed else { return }
+        
+        // 更新当前选中的订阅源
+        currentFeed = feed
+        
+        // 更新数据
+        guard let baseContents = contents else { return }
+        let filteredContents = baseContents.filter("feed.id == %@ AND isDeleted == false", feed.id)
+        sections = [("", Array(filteredContents))]
+        
+        // 更新 UI
+        collectionView.reloadData()
+        updateEmptyState()
+        
+        // 滚动到顶部
+        if !sections.isEmpty {
+            collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: true)
+        }
+    }
+    
+    // MARK: - Memory Management
+    @objc private func handleMemoryWarning() {
+        // 清理缓存
+        heightCache.removeAll()
+        imageCache.removeAllObjects()
+        
+        // 只保留当前分组的缓存
+        let currentSections = sectionCache[currentGrouping]
+        sectionCache.removeAll()
+        if let sections = currentSections {
+            sectionCache[currentGrouping] = sections
+        }
+    }
+    
+    // MARK: - Prefetching
+    private func setupPrefetching() {
+        prefetchDataSource = self
+        collectionView.prefetchDataSource = prefetchDataSource
+    }
+    
+    // MARK: - Pagination
+    private func loadMoreIfNeeded() {
+        guard hasMoreData && !isLoadingMore else { return }
+        isLoadingMore = true
+        
+        // 模拟加载更多数据
+        currentPage += 1
+        
+        // TODO: 实现实际的分页加载逻辑
+        
+        isLoadingMore = false
+    }
+}
+
+// MARK: - Helpers
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension Results {
+    func toArray() -> [Element] {
+        return compactMap { $0 }
+    }
+}
+
+extension HomeViewController: UICollectionViewDataSourcePrefetching {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        // 预加载图片
+        for indexPath in indexPaths {
+            if let content = sections[indexPath.section].1[safe: indexPath.item],
+               let imageURL = content.imageURLs.first,
+               let url = URL(string: imageURL) {
+                ImagePrefetcher(urls: [url]).start()
+            }
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
+        // 取消预加载
+        for indexPath in indexPaths {
+            if let content = sections[indexPath.section].1[safe: indexPath.item],
+               let imageURL = content.imageURLs.first,
+               let url = URL(string: imageURL) {
+                ImagePrefetcher(urls: [url]).stop()
+            }
+        }
     }
 }
 
@@ -551,7 +771,7 @@ private enum ContentGrouping: Int {
 // MARK: - Layout
 private extension HomeViewController {
     func createLayout() -> UICollectionViewLayout {
-        let layout = UICollectionViewCompositionalLayout { section, env -> NSCollectionLayoutSection? in
+        let layout = UICollectionViewCompositionalLayout { sectionIndex, env -> NSCollectionLayoutSection? in
             let itemSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
                 heightDimension: .estimated(130)
@@ -566,23 +786,109 @@ private extension HomeViewController {
             
             let section = NSCollectionLayoutSection(group: group)
             section.interGroupSpacing = 16
-            section.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
             
-            // 添加 header
+            // 根据是否是第一个 section 调整间距
+            if sectionIndex == 0 {
+                section.contentInsets = NSDirectionalEdgeInsets(
+                    top: 64,
+                    leading: 20,
+                    bottom: 24,
+                    trailing: 20
+                )
+            } else {
+                section.contentInsets = NSDirectionalEdgeInsets(
+                    top: 32,
+                    leading: 20,
+                    bottom: 24,
+                    trailing: 20
+                )
+            }
+            
             let headerSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(88)
+                heightDimension: .estimated(44)
             )
             let header = NSCollectionLayoutBoundarySupplementaryItem(
                 layoutSize: headerSize,
                 elementKind: UICollectionView.elementKindSectionHeader,
                 alignment: .top
             )
-            section.boundarySupplementaryItems = [header]
             
+            // 根据是否是第一个 section 调整 header 的内边距
+            if sectionIndex == 0 {
+                header.contentInsets = NSDirectionalEdgeInsets(
+                    top: 0,
+                    leading: 0,
+                    bottom: 12,
+                    trailing: 0
+                )
+            } else {
+                header.contentInsets = NSDirectionalEdgeInsets(
+                    top: 0,
+                    leading: 0,
+                    bottom: 12,
+                    trailing: 0
+                )
+            }
+            
+            section.boundarySupplementaryItems = [header]
             return section
         }
         return layout
+    }
+    
+    // MARK: - Quick Navigation
+    private func setupQuickNavigation() {
+        // 添加右侧快速定位视图
+        let quickNavView = QuickNavigationView()
+        view.addSubview(quickNavView)
+        
+        quickNavView.snp.makeConstraints { make in
+            make.right.equalToSuperview()
+            make.centerY.equalToSuperview()
+            make.width.equalTo(30)
+            make.height.equalTo(300)
+        }
+        
+        // 更新快速定位数据
+        quickNavView.dates = sections.map { $0.0 }
+        quickNavView.onDateSelected = { [weak self] index in
+            guard let self = self else { return }
+            let indexPath = IndexPath(item: 0, section: index)
+            self.collectionView.scrollToItem(at: indexPath, at: .top, animated: true)
+        }
+    }
+    
+    // MARK: - Feed Selection
+    private func setupFeedSelection() {
+        // 添加订阅源选择按钮
+        let feedSelectionButton = UIButton(type: .system)
+        feedSelectionButton.setImage(UIImage(systemName: "list.bullet"), for: .normal)
+        feedSelectionButton.addTarget(self, action: #selector(showFeedSelection), for: .touchUpInside)
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: feedSelectionButton)
+    }
+    
+    @objc private func showFeedSelection() {
+        let feedSelectionVC = FeedSelectionViewController()
+        feedSelectionVC.modalPresentationStyle = .popover
+        feedSelectionVC.preferredContentSize = CGSize(width: 250, height: 400)
+        
+        if let popover = feedSelectionVC.popoverPresentationController {
+            popover.barButtonItem = navigationItem.rightBarButtonItem
+            popover.permittedArrowDirections = .up
+            popover.delegate = self
+        }
+        
+        present(feedSelectionVC, animated: true)
+    }
+    
+    // MARK: - Cell Interaction
+    private func setupCellInteraction() {
+        // 添加长按手势
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        longPress.minimumPressDuration = 0.2 // 减少长按时间以提高响应速度
+        collectionView.addGestureRecognizer(longPress)
     }
 }
 
@@ -686,7 +992,7 @@ extension HomeViewController: JXSegmentedViewDelegate {
 
 // MARK: - SectionHeaderViewDelegate
 extension HomeViewController: SectionHeaderViewDelegate {
-    func sectionHeader(_ header: SectionHeaderView, didLongPressWith contents: [Content]) {
+    func sectionHeader(_ header: SectionHeaderView, didLongPressWithContents contents: [Content]) {
         // 自动发送总结请求
         Task {
             let message = aiService.generateSummary(for: .multipleContents(contents))

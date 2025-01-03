@@ -3,10 +3,16 @@ import SnapKit
 
 class SectionHeaderView: UICollectionReusableView {
     // MARK: - Properties
-    weak var delegate: SectionHeaderViewDelegate?
     private var contents: [Content] = []
+    weak var delegate: SectionHeaderViewDelegate?
     
-    // MARK: - UI Elements
+    // MARK: - UI Components
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 28, weight: .bold)
@@ -16,15 +22,24 @@ class SectionHeaderView: UICollectionReusableView {
     
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
-        label.textColor = .tertiaryLabel
+        label.font = .systemFont(ofSize: 15)
+        label.textColor = .secondaryLabel
         return label
     }()
     
-    // MARK: - Init
+    private let stackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .lastBaseline
+        return stack
+    }()
+    
+    // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
+        setupGestures()
     }
     
     required init?(coder: NSCoder) {
@@ -35,39 +50,65 @@ class SectionHeaderView: UICollectionReusableView {
     private func setupUI() {
         backgroundColor = .clear
         
-        addSubview(titleLabel)
-        addSubview(countLabel)
+        addSubview(containerView)
+        containerView.addSubview(stackView)
+        stackView.addArrangedSubview(titleLabel)
+        stackView.addArrangedSubview(countLabel)
         
-        titleLabel.snp.makeConstraints { make in
-            make.left.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-18)
-            make.width.lessThanOrEqualToSuperview().offset(-80)
+        containerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
         
-        countLabel.snp.makeConstraints { make in
-            make.left.equalTo(titleLabel.snp.right).offset(12)
-            make.centerY.equalTo(titleLabel)
+        stackView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.lessThanOrEqualToSuperview().offset(-20)
+            make.bottom.equalToSuperview()
         }
-        
-        let longPressGestureRecognizer = UILongPressGestureRecognizer()
-        longPressGestureRecognizer.addTarget(self, action: #selector(onLongPress))
-        self.addGestureRecognizer(longPressGestureRecognizer)
+    }
+    
+    private func setupGestures() {
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        longPress.minimumPressDuration = 0.3
+        addGestureRecognizer(longPress)
     }
     
     // MARK: - Configuration
-    func configure(title: String, count: Int, contents: [Content] = []) {
+    func configure(title: String, count: Int, contents: [Content]) {
         titleLabel.text = title
-        countLabel.text = "\(count) 篇文章"
+        countLabel.text = "\(count)篇"
         self.contents = contents
+        
+        // 根据是否有标题调整布局
+        if title.isEmpty {
+            stackView.isHidden = true
+        } else {
+            stackView.isHidden = false
+        }
     }
     
     // MARK: - Actions
-    @objc private func onLongPress() {
-        delegate?.sectionHeader(self, didLongPressWith: contents)
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        if gesture.state == .began {
+            // 添加触感反馈
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            
+            // 添加动画效果
+            UIView.animate(withDuration: 0.2, animations: {
+                self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+                self.alpha = 0.8
+            }) { _ in
+                UIView.animate(withDuration: 0.2) {
+                    self.transform = .identity
+                    self.alpha = 1.0
+                }
+            }
+            
+            delegate?.sectionHeader(self, didLongPressWithContents: contents)
+        }
     }
 }
 
-// MARK: - Delegate
 protocol SectionHeaderViewDelegate: AnyObject {
-    func sectionHeader(_ header: SectionHeaderView, didLongPressWith contents: [Content])
+    func sectionHeader(_ header: SectionHeaderView, didLongPressWithContents contents: [Content])
 }

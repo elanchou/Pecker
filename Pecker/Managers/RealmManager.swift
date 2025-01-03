@@ -180,6 +180,26 @@ actor RealmManager {
         guard let realm = try? Realm() else { return nil }
         return realm.objects(Feed.self).filter("isDeleted == false")
     }
+
+    @MainActor
+    func getFeeds(priorityId: String? = nil) -> Results<Feed>? {
+        guard let realm = try? Realm() else { return nil }
+        var feeds = realm.objects(Feed.self).filter("isDeleted == false")
+        if let priorityId = priorityId {
+            feeds = feeds.filter("priorityId == %@", priorityId)
+        }
+        return feeds
+    }
+    
+    @MainActor
+    func getFeeds(filter: String? = nil) -> Results<Feed>? {
+        guard let realm = try? Realm() else { return nil }
+        var feeds = realm.objects(Feed.self).filter("isDeleted == false")
+        if let filter = filter {
+            feeds = feeds.filter(filter)
+        }
+        return feeds
+    }
     
     @MainActor
     func getContent(byId id: String) -> Content? {

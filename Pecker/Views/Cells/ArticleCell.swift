@@ -299,31 +299,35 @@ class ArticleCell: UICollectionViewCell {
         // 添加长按手势
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         contentView.addGestureRecognizer(longPress)
-        
-        // 添加上下文菜单
-//        let interaction = UIContextMenuInteraction(delegate: self)
-//        contentView.addInteraction(interaction)
     }
     
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-        if gesture.state == .began {
-            // 触感反馈
+        switch gesture.state {
+        case .began:
+            // 添加触感反馈
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
             
-            // 添加动画效果
-            UIView.animate(withDuration: 0.1, animations: {
+            // 添加按下效果
+            UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseInOut) {
                 self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            }) { _ in
-                UIView.animate(withDuration: 0.1) {
-                    self.transform = .identity
-                }
+                self.alpha = 0.8
             }
             
             // 调用回调
             if let article = article {
                 onLongPress?(article)
             }
+            
+        case .ended, .cancelled:
+            // 恢复cell状态
+            UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseInOut) {
+                self.transform = .identity
+                self.alpha = 1.0
+            }
+            
+        default:
+            break
         }
     }
     
