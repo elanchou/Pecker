@@ -76,15 +76,6 @@ class FeedListViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // 添加表格动画
-        tableView.alpha = 0
-        tableView.transform = CGAffineTransform(translationX: 0, y: 20)
-        
-        UIView.animate(withDuration: 0.5, delay: 0.1, usingSpringWithDamping: 0.8, initialSpringVelocity: 0) {
-            self.tableView.alpha = 1
-            self.tableView.transform = .identity
-        }
-        
         setupUI()
         observeFeeds()
     }

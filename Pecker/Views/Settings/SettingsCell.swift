@@ -2,6 +2,9 @@ import UIKit
 import SnapKit
 
 class SettingsCell: UITableViewCell {
+    // MARK: - Properties
+    var switchValueChanged: ((Bool) -> Void)?
+    
     // MARK: - UI Components
     private let iconContainer: UIView = {
         let view = UIView()
@@ -33,6 +36,7 @@ class SettingsCell: UITableViewCell {
     
     private let settingsSwitch: UISwitch = {
         let toggle = UISwitch()
+        toggle.onTintColor = .systemBlue
         return toggle
     }()
     
@@ -48,17 +52,14 @@ class SettingsCell: UITableViewCell {
     
     // MARK: - UI Setup
     private func setupUI() {
-        backgroundColor = .secondarySystemGroupedBackground
-        layer.cornerRadius = 10
-        clipsToBounds = true
-        
         contentView.addSubview(iconContainer)
         iconContainer.addSubview(iconImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(detailLabel)
+        contentView.addSubview(settingsSwitch)
         
         iconContainer.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.left.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
             make.size.equalTo(32)
         }
@@ -69,43 +70,59 @@ class SettingsCell: UITableViewCell {
         }
         
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalTo(iconContainer.snp.trailing).offset(12)
+            make.left.equalTo(iconContainer.snp.right).offset(12)
             make.centerY.equalToSuperview()
         }
         
         detailLabel.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
+            make.right.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
-            make.leading.greaterThanOrEqualTo(titleLabel.snp.trailing).offset(8)
         }
+        
+        settingsSwitch.snp.makeConstraints { make in
+            make.right.equalToSuperview().offset(-16)
+            make.centerY.equalToSuperview()
+        }
+        
+        settingsSwitch.addTarget(self, action: #selector(switchChanged), for: .valueChanged)
     }
     
     // MARK: - Configuration
     func configure(with item: SettingsItem) {
+        iconImageView.image = UIImage(systemName: item.icon)
+        iconContainer.backgroundColor = item.iconColor.withAlphaComponent(0.2)
+        iconImageView.tintColor = item.iconColor
         titleLabel.text = item.title
         detailLabel.text = item.detail
-        
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        iconImageView.image = UIImage(systemName: item.icon, withConfiguration: symbolConfig)
-        iconContainer.backgroundColor = item.iconColor.withAlphaComponent(0.15)
-        iconImageView.tintColor = item.iconColor
         
         switch item.accessoryType {
         case .none:
             accessoryType = .none
-            accessoryView = nil
+            settingsSwitch.isHidden = true
+            detailLabel.isHidden = item.detail == nil
         case .disclosureIndicator:
             accessoryType = .disclosureIndicator
-            accessoryView = nil
+            settingsSwitch.isHidden = true
+            detailLabel.isHidden = item.detail == nil
         case .toggle:
             accessoryType = .none
-            accessoryView = settingsSwitch
+            settingsSwitch.isHidden = false
+            detailLabel.isHidden = true
+            settingsSwitch.isOn = item.isOn
         }
     }
     
+    // MARK: - Actions
+    @objc private func switchChanged(_ sender: UISwitch) {
+        switchValueChanged?(sender.isOn)
+    }
+    
+    // MARK: - Reuse
     override func prepareForReuse() {
         super.prepareForReuse()
+        switchValueChanged = nil
         accessoryType = .none
-        accessoryView = nil
+        settingsSwitch.isHidden = true
+        detailLabel.isHidden = true
     }
 } 

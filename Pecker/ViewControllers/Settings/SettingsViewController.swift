@@ -13,8 +13,8 @@ class SettingsViewController: BaseViewController {
     private var sections: [SettingsSection] = [
         SettingsSection(title: "通用", items: [
             SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: "主题", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "bell", iconColor: .systemRed, title: "通知", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: "自动刷新", accessoryType: .toggle)
+            SettingsItem(icon: "bell", iconColor: .systemRed, title: "通知", accessoryType: .toggle, isOn: SettingsManager.shared.areNotificationsEnabled),
+            SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: "自动刷新", accessoryType: .toggle, isOn: SettingsManager.shared.isAutoRefreshEnabled)
         ]),
         SettingsSection(title: "内容", items: [
             SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: "阅读设置", accessoryType: .disclosureIndicator),
@@ -22,14 +22,14 @@ class SettingsViewController: BaseViewController {
             SettingsItem(icon: "arrow.up.arrow.down", iconColor: .systemPurple, title: "排序方式", accessoryType: .disclosureIndicator)
         ]),
         SettingsSection(title: "数据", items: [
-            SettingsItem(icon: "icloud", iconColor: .systemBlue, title: "iCloud 同步", accessoryType: .toggle),
+            SettingsItem(icon: "icloud", iconColor: .systemBlue, title: "iCloud 同步", accessoryType: .toggle, isOn: SettingsManager.shared.isICloudSyncEnabled),
             SettingsItem(icon: "arrow.triangle.2.circlepath", iconColor: .systemGreen, title: "导入/导出", accessoryType: .disclosureIndicator),
             SettingsItem(icon: "trash", iconColor: .systemRed, title: "清除缓存", accessoryType: .none)
         ]),
         SettingsSection(title: "关于", items: [
             SettingsItem(icon: "star", iconColor: .systemYellow, title: "评分", accessoryType: .disclosureIndicator),
             SettingsItem(icon: "envelope", iconColor: .systemBlue, title: "反馈", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "info.circle", iconColor: .systemGray, title: "版本", detail: "1.0.0", accessoryType: .none)
+            SettingsItem(icon: "info.circle", iconColor: .systemGray, title: "版本", detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0", accessoryType: .none)
         ])
     ]
     
@@ -37,6 +37,7 @@ class SettingsViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        updateToggleStates()
     }
     
     // MARK: - UI Setup
@@ -51,6 +52,23 @@ class SettingsViewController: BaseViewController {
         view.addSubview(tableView)
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+    }
+    
+    private func updateToggleStates() {
+        // 更新开关状态
+        let settings = SettingsManager.shared
+        
+        if let notificationIndex = sections[0].items.firstIndex(where: { $0.title == "通知" }) {
+            sections[0].items[notificationIndex].isOn = settings.areNotificationsEnabled
+        }
+        
+        if let autoRefreshIndex = sections[0].items.firstIndex(where: { $0.title == "自动刷新" }) {
+            sections[0].items[autoRefreshIndex].isOn = settings.isAutoRefreshEnabled
+        }
+        
+        if let iCloudIndex = sections[2].items.firstIndex(where: { $0.title == "iCloud 同步" }) {
+            sections[2].items[iCloudIndex].isOn = settings.isICloudSyncEnabled
         }
     }
 }
@@ -69,11 +87,14 @@ extension SettingsViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsCell", for: indexPath) as! SettingsCell
         let item = sections[indexPath.section].items[indexPath.row]
         cell.configure(with: item)
+        
+        if item.accessoryType == .toggle {
+            cell.switchValueChanged = { [weak self] isOn in
+                self?.handleToggleChange(for: item, isOn: isOn)
+            }
+        }
+        
         return cell
-    }
-    
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return sections[section].title
     }
 }
 
@@ -100,39 +121,21 @@ extension SettingsViewController: UITableViewDelegate {
     }
 }
 
-// MARK: - Settings Models
-struct SettingsSection {
-    let title: String
-    let items: [SettingsItem]
-}
-
-struct SettingsItem {
-    let icon: String
-    let iconColor: UIColor
-    let title: String
-    var detail: String?
-    let accessoryType: SettingsAccessoryType
-}
-
-enum SettingsAccessoryType {
-    case none
-    case disclosureIndicator
-    case toggle
-}
-
 // MARK: - Actions
 extension SettingsViewController {
     private func handleSettingsTap(_ item: SettingsItem) {
         switch item.title {
         case "主题":
-            // 处理主题设置
-            break
-        case "通知":
-            // 处理通知设置
-            break
+            showThemeSettings()
+        case "阅读设置":
+            showReadingSettings()
         case "订阅源管理":
             let feedListVC = FeedListViewController()
             navigationController?.pushViewController(feedListVC, animated: true)
+        case "排序方式":
+            showSortOptions()
+        case "导入/导出":
+            showImportExportOptions()
         case "清除缓存":
             showClearCacheAlert()
         case "反馈":
@@ -144,6 +147,83 @@ extension SettingsViewController {
         }
     }
     
+    private func handleToggleChange(for item: SettingsItem, isOn: Bool) {
+        let settings = SettingsManager.shared
+        
+        switch item.title {
+        case "通知":
+            settings.areNotificationsEnabled = isOn
+        case "自动刷新":
+            settings.isAutoRefreshEnabled = isOn
+        case "iCloud 同步":
+            settings.isICloudSyncEnabled = isOn
+        default:
+            break
+        }
+    }
+    
+    private func showThemeSettings() {
+        let alert = UIAlertController(title: "选择主题", message: nil, preferredStyle: .actionSheet)
+        
+        let themes: [(String, SettingsManager.Theme)] = [
+            ("跟随系统", .system),
+            ("浅色", .light),
+            ("深色", .dark)
+        ]
+        
+        for (title, theme) in themes {
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+                SettingsManager.shared.currentTheme = theme
+                self?.tableView.reloadData()
+            })
+        }
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func showReadingSettings() {
+        let readingVC = ReadingSettingsViewController()
+        navigationController?.pushViewController(readingVC, animated: true)
+    }
+    
+    private func showSortOptions() {
+        let alert = UIAlertController(title: "排序方式", message: nil, preferredStyle: .actionSheet)
+        
+        let sortOptions: [(String, SettingsManager.SortOrder)] = [
+            ("最新在前", .dateDesc),
+            ("最早在前", .dateAsc),
+            ("按标题", .titleAsc),
+            ("未读优先", .unreadFirst)
+        ]
+        
+        for (title, order) in sortOptions {
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+                SettingsManager.shared.sortOrder = order
+                self?.tableView.reloadData()
+                NotificationCenter.default.post(name: NSNotification.Name("SortOrderChanged"), object: nil)
+            })
+        }
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func showImportExportOptions() {
+        let alert = UIAlertController(title: "导入/导出", message: nil, preferredStyle: .actionSheet)
+        
+        alert.addAction(UIAlertAction(title: "导出数据", style: .default) { [weak self] _ in
+            self?.exportData()
+        })
+        
+        alert.addAction(UIAlertAction(title: "导入数据", style: .default) { [weak self] _ in
+            self?.importData()
+        })
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        present(alert, animated: true)
+    }
+    
     private func showClearCacheAlert() {
         let alert = UIAlertController(
             title: "清除缓存",
@@ -152,11 +232,10 @@ extension SettingsViewController {
         )
         
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清除", style: .destructive) { _ in
-            // 执行清除缓存操作
-            Task {
+        alert.addAction(UIAlertAction(title: "清除", style: .destructive) { [weak self] _ in
+            Task { [weak self] in
                 do {
-                    try await RealmManager.shared.clearCache()
+                    try await SettingsManager.shared.clearCache()
                     ToastView.success("缓存已清除")
                 } catch {
                     ToastView.failure(error.localizedDescription)
@@ -167,11 +246,80 @@ extension SettingsViewController {
         present(alert, animated: true)
     }
     
+    private func exportData() {
+        Task {
+            do {
+                let url = try await SettingsManager.shared.exportData()
+                let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                present(activityVC, animated: true)
+            } catch {
+                ToastView.failure("导出失败：\(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func importData() {
+        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.json])
+        documentPicker.delegate = self
+        documentPicker.allowsMultipleSelection = false
+        present(documentPicker, animated: true)
+    }
+    
     private func openFeedbackMail() {
-        // 实现邮件反馈功能
+        if let url = URL(string: "mailto:feedback@example.com") {
+            UIApplication.shared.open(url)
+        }
     }
     
     private func openAppStore() {
-        // 实现跳转 App Store 功能
+        if let url = URL(string: "itms-apps://itunes.apple.com/app/idYOUR_APP_ID") {
+            UIApplication.shared.open(url)
+        }
     }
-} 
+}
+
+// MARK: - UIDocumentPickerDelegate
+extension SettingsViewController: UIDocumentPickerDelegate {
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first else { return }
+        
+        Task {
+            do {
+                try await SettingsManager.shared.importData(from: url)
+                ToastView.success("导入成功")
+            } catch {
+                ToastView.failure("导入失败：\(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+// MARK: - Settings Models
+struct SettingsSection {
+    let title: String
+    var items: [SettingsItem]
+}
+
+struct SettingsItem {
+    let icon: String
+    let iconColor: UIColor
+    let title: String
+    var detail: String?
+    let accessoryType: SettingsAccessoryType
+    var isOn: Bool = false
+    
+    init(icon: String, iconColor: UIColor, title: String, detail: String? = nil, accessoryType: SettingsAccessoryType, isOn: Bool = false) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.detail = detail
+        self.accessoryType = accessoryType
+        self.isOn = isOn
+    }
+}
+
+enum SettingsAccessoryType {
+    case none
+    case disclosureIndicator
+    case toggle
+}
