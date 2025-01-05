@@ -36,7 +36,13 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     private let indicatorLineView = JXSegmentedIndicatorLineView()
     
     private lazy var collectionView: UICollectionView = {
-        let layout = createLayout()
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 16
+        layout.minimumInteritemSpacing = 0
+        layout.sectionInset = UIEdgeInsets(top: 24, left: 20, bottom: 24, right: 20)
+        layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 44)
+        
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .systemBackground
         cv.delegate = self
@@ -722,12 +728,12 @@ extension HomeViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 120)
+        return CGSize(width: collectionView.frame.width, height: 60)
     }
 }
 
 // MARK: - UICollectionViewDelegate
-extension HomeViewController: UICollectionViewDelegate {
+extension HomeViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         Task {
             // 获取文章 ID
@@ -746,6 +752,11 @@ extension HomeViewController: UICollectionViewDelegate {
                 }
             }
         }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = collectionView.bounds.width - 40 // 左右各20的边距
+        return CGSize(width: width, height: 120)
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -768,76 +779,8 @@ private enum ContentGrouping: Int {
     case unread = 3
 }
 
-// MARK: - Layout
+// MARK: - Quick Navigation
 private extension HomeViewController {
-    func createLayout() -> UICollectionViewLayout {
-        let layout = UICollectionViewCompositionalLayout { sectionIndex, env -> NSCollectionLayoutSection? in
-            let itemSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1),
-                heightDimension: .estimated(130)
-            )
-            let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            
-            let groupSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1),
-                heightDimension: .estimated(130)
-            )
-            let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
-            
-            let section = NSCollectionLayoutSection(group: group)
-            section.interGroupSpacing = 16
-            
-            // 根据是否是第一个 section 调整间距
-            if sectionIndex == 0 {
-                section.contentInsets = NSDirectionalEdgeInsets(
-                    top: 64,
-                    leading: 20,
-                    bottom: 24,
-                    trailing: 20
-                )
-            } else {
-                section.contentInsets = NSDirectionalEdgeInsets(
-                    top: 32,
-                    leading: 20,
-                    bottom: 24,
-                    trailing: 20
-                )
-            }
-            
-            let headerSize = NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1),
-                heightDimension: .estimated(44)
-            )
-            let header = NSCollectionLayoutBoundarySupplementaryItem(
-                layoutSize: headerSize,
-                elementKind: UICollectionView.elementKindSectionHeader,
-                alignment: .top
-            )
-            
-            // 根据是否是第一个 section 调整 header 的内边距
-            if sectionIndex == 0 {
-                header.contentInsets = NSDirectionalEdgeInsets(
-                    top: 0,
-                    leading: 0,
-                    bottom: 12,
-                    trailing: 0
-                )
-            } else {
-                header.contentInsets = NSDirectionalEdgeInsets(
-                    top: 0,
-                    leading: 0,
-                    bottom: 12,
-                    trailing: 0
-                )
-            }
-            
-            section.boundarySupplementaryItems = [header]
-            return section
-        }
-        return layout
-    }
-    
-    // MARK: - Quick Navigation
     private func setupQuickNavigation() {
         // 添加右侧快速定位视图
         let quickNavView = QuickNavigationView()
