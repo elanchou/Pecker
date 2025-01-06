@@ -14,6 +14,11 @@ class BaseViewController: UIViewController {
         setupGestures()
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateContentInsets()
+    }
+    
     // MARK: - UI Setup
     private func setupBaseUI() {
         view.backgroundColor = .systemBackground.withAlphaComponent(0.8)
@@ -81,5 +86,53 @@ class BaseViewController: UIViewController {
         default:
             break
         }
+    }
+    
+    private func updateContentInsets() {
+        // 获取 TabBar 的高度
+        let tabBarHeight = tabBarController?.tabBar.frame.height ?? 0
+        
+        // 为不同类型的滚动视图设置底部内边距
+        view.subviews.forEach { subview in
+            if let scrollView = subview as? UIScrollView {
+                var insets = scrollView.contentInset
+                insets.bottom = tabBarHeight
+                scrollView.contentInset = insets
+                
+                // 同时更新滚动指示器的内边距
+                scrollView.scrollIndicatorInsets = insets
+            } else if let collectionView = subview as? UICollectionView {
+                var insets = collectionView.contentInset
+                insets.bottom = tabBarHeight
+                collectionView.contentInset = insets
+                
+                collectionView.scrollIndicatorInsets = insets
+            } else if let tableView = subview as? UITableView {
+                var insets = tableView.contentInset
+                insets.bottom = tabBarHeight
+                tableView.contentInset = insets
+                
+                tableView.scrollIndicatorInsets = insets
+            }
+        }
+    }
+    
+    // 递归查找所有滚动视图
+    private func findScrollViews(in view: UIView) -> [UIScrollView] {
+        var scrollViews: [UIScrollView] = []
+        
+        for subview in view.subviews {
+            if let scrollView = subview as? UIScrollView {
+                scrollViews.append(scrollView)
+            }
+            scrollViews.append(contentsOf: findScrollViews(in: subview))
+        }
+        
+        return scrollViews
+    }
+    
+    // 提供一个方法让子类可以手动更新内边距
+    func updateScrollViewInsets() {
+        updateContentInsets()
     }
 } 

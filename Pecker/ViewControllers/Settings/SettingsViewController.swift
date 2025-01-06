@@ -272,7 +272,7 @@ extension SettingsViewController {
     }
     
     private func openAppStore() {
-        if let url = URL(string: "itms-apps://itunes.apple.com/app/idYOUR_APP_ID") {
+        if let url = URL(string: "itms-apps://itunes.apple.com/app/id6739542190") {
             UIApplication.shared.open(url)
         }
     }
