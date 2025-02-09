@@ -3,10 +3,12 @@ import Foundation
 class AIService {
     private let openAIService: OpenAIService?
     private let deepSeekService: DeepSeekService?
+    private let volcService: VolcService?
     private let logger = Logger(subsystem: "com.elanchou.pecker", category: "ai")
     
     init() {
         UserDefaults.standard.set("sk-b4b43f17497a413698ec24afa481b59c", forKey: "DeepSeekKey")
+        UserDefaults.standard.set("ba077694-b76e-4921-81d0-62fbfe588af7", forKey: "VolcKey")
         // 从 UserDefaults 或其他配置中获取 API Key
         if let openAIKey = UserDefaults.standard.string(forKey: "OpenAIKey") {
             self.openAIService = OpenAIService(apiKey: openAIKey)
@@ -18,6 +20,12 @@ class AIService {
             self.deepSeekService = DeepSeekService(apiKey: deepSeekKey)
         } else {
             self.deepSeekService = nil
+        }
+        
+        if let volcKey = UserDefaults.standard.string(forKey: "VolcKey") {
+            self.volcService = VolcService(apiKey: volcKey)
+        } else {
+            self.volcService = nil
         }
     }
     
@@ -34,6 +42,7 @@ class AIService {
     enum AIProvider: String, CaseIterable {
         case openAI = "OpenAI"
         case deepSeek = "DeepSeek"
+        case volc = "Volc"
         
         static var `default`: AIProvider {
             // 从 UserDefaults 获取默认提供商
@@ -41,7 +50,7 @@ class AIService {
                let value = AIProvider(rawValue: provider) {
                 return value
             }
-            return .deepSeek
+            return .volc
         }
     }
     
@@ -64,13 +73,19 @@ class AIService {
                 throw AIError.noAPIKey
             }
             return try await service.chat(messages)
+        case .volc:
+            guard let service = volcService else {
+                throw AIError.noAPIKey
+            }
+            return try await service.chat(messages)
         }
     }
     
     func generateSummary(for content: ContentType) -> [ChatMessage] {
+        let language = LocalizationManager.shared.currentLanguage == .english ? "英文": "中文"
         let systemMessage = ChatMessage(
             role: "system",
-            content: "你是一个专业的内容分析师，擅长提取文章的核心观点和关键信息。请用简洁的语言进行总结，保持客观中立的语气。"
+            content: "你是一个专业的内容分析师，擅长提取文章的核心观点和关键信息。请用简洁的语言进行总结，保持客观中立的语气。使用\(language)回复"
         )
         
         let userMessage: ChatMessage
@@ -84,6 +99,7 @@ class AIService {
                 2. 重要的论据和数据支持
                 3. 作者的态度和立场
                 4. 对读者的启示和建议
+                使用\(language)回复
                 
                 文章内容如下：
                 标题：\(article.title)
@@ -100,6 +116,7 @@ class AIService {
                 1. 各篇文章的核心观点
                 2. 文章之间的关联和差异
                 3. 整体趋势和启示
+                使用\(language)回复
                 
                 文章列表：
                 \(articlesText)
