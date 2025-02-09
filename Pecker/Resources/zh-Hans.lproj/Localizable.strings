@@ -83,6 +83,7 @@
 "Language" = "语言";
 "Notifications" = "通知";
 "Auto Refresh" = "自动刷新";
+"Install Models" = "安装本地大模型";
 "Content" = "内容";
 "Reading Settings" = "阅读设置";
 "Feed Management" = "订阅管理";

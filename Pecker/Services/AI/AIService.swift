@@ -4,6 +4,7 @@ class AIService {
     private let openAIService: OpenAIService?
     private let deepSeekService: DeepSeekService?
     private let volcService: VolcService?
+    private var llmService: LLMService?
     private let logger = Logger(subsystem: "com.elanchou.pecker", category: "ai")
     
     init() {
@@ -27,6 +28,10 @@ class AIService {
         } else {
             self.volcService = nil
         }
+        
+        Task {
+            self.llmService = await LLMService()
+        }
     }
     
     struct ChatMessage: Codable {
@@ -43,6 +48,7 @@ class AIService {
         case openAI = "OpenAI"
         case deepSeek = "DeepSeek"
         case volc = "Volc"
+        case llm = "LLM"
         
         static var `default`: AIProvider {
             // 从 UserDefaults 获取默认提供商
@@ -50,7 +56,7 @@ class AIService {
                let value = AIProvider(rawValue: provider) {
                 return value
             }
-            return .volc
+            return .llm
         }
     }
     
@@ -75,6 +81,11 @@ class AIService {
             return try await service.chat(messages)
         case .volc:
             guard let service = volcService else {
+                throw AIError.noAPIKey
+            }
+            return try await service.chat(messages)
+        case .llm:
+            guard let service = llmService else {
                 throw AIError.noAPIKey
             }
             return try await service.chat(messages)

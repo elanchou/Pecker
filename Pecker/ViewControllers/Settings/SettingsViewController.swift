@@ -17,6 +17,9 @@ class SettingsViewController: BaseViewController {
             SettingsItem(icon: "bell", iconColor: .systemRed, title: L("Notifications"), accessoryType: .toggle, isOn: SettingsManager.shared.areNotificationsEnabled),
             SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: L("Auto Refresh"), accessoryType: .toggle, isOn: SettingsManager.shared.isAutoRefreshEnabled)
         ]),
+        SettingsSection(title: L("LLM"), items: [
+            SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: L("Install Models"), accessoryType: .disclosureIndicator),
+        ]),
         SettingsSection(title: L("Content"), items: [
             SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: L("Reading Settings"), accessoryType: .disclosureIndicator),
             SettingsItem(icon: "square.stack.3d.up", iconColor: .systemOrange, title: L("Feed Management"), accessoryType: .disclosureIndicator),
@@ -130,6 +133,9 @@ extension SettingsViewController {
             showThemeSettings()
         case L("Language"):
             showLanguageSettings()
+        case L("Install Models"):
+            let llmInstallVC = LLMModelDownloadViewController()
+            navigationController?.present(llmInstallVC, animated: true)
         case L("Reading Settings"):
             showReadingSettings()
         case L("Feed Management"):
@@ -223,6 +229,9 @@ extension SettingsViewController {
                 SettingsItem(icon: "globe", iconColor: .systemTeal, title: L("Language"), accessoryType: .disclosureIndicator),
                 SettingsItem(icon: "bell", iconColor: .systemRed, title: L("Notifications"), accessoryType: .toggle, isOn: SettingsManager.shared.areNotificationsEnabled),
                 SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: L("Auto Refresh"), accessoryType: .toggle, isOn: SettingsManager.shared.isAutoRefreshEnabled)
+            ]),
+            SettingsSection(title: L("LLM"), items: [
+                SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: L("Install Models"), accessoryType: .disclosureIndicator),
             ]),
             SettingsSection(title: L("Content"), items: [
                 SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: L("Reading Settings"), accessoryType: .disclosureIndicator),

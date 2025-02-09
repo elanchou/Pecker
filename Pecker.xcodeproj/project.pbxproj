@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */; };
+		EE4A16AE2D58F419001ADC2B /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16AD2D58F419001ADC2B /* MLXLLM */; };
+		EE4A16B02D58F419001ADC2B /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16AF2D58F419001ADC2B /* MLXLMCommon */; };
+		EE4A16B22D58F419001ADC2B /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B12D58F419001ADC2B /* MLXMNIST */; };
+		EE4A16B42D58F419001ADC2B /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B32D58F419001ADC2B /* MLXVLM */; };
+		EE4A16B62D58F419001ADC2B /* StableDiffusion in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B52D58F419001ADC2B /* StableDiffusion */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -66,6 +71,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE4A16B42D58F419001ADC2B /* MLXVLM in Frameworks */,
+				EE4A16B62D58F419001ADC2B /* StableDiffusion in Frameworks */,
+				EE4A16B22D58F419001ADC2B /* MLXMNIST in Frameworks */,
+				EE4A16AE2D58F419001ADC2B /* MLXLLM in Frameworks */,
+				EE4A16B02D58F419001ADC2B /* MLXLMCommon in Frameworks */,
 				3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -132,6 +142,11 @@
 			);
 			name = Pecker;
 			packageProductDependencies = (
+				EE4A16AD2D58F419001ADC2B /* MLXLLM */,
+				EE4A16AF2D58F419001ADC2B /* MLXLMCommon */,
+				EE4A16B12D58F419001ADC2B /* MLXMNIST */,
+				EE4A16B32D58F419001ADC2B /* MLXVLM */,
+				EE4A16B52D58F419001ADC2B /* StableDiffusion */,
 			);
 			productName = Pecker;
 			productReference = EE0249C62CFCA1AD00CA6901 /* Pecker.app */;
@@ -164,6 +179,7 @@
 			mainGroup = EE0249BD2CFCA1AD00CA6901;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EE0249C72CFCA1AD00CA6901 /* Products */;
@@ -262,7 +278,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -305,7 +321,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -466,6 +482,45 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.21.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EE4A16AD2D58F419001ADC2B /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLLM;
+		};
+		EE4A16AF2D58F419001ADC2B /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLMCommon;
+		};
+		EE4A16B12D58F419001ADC2B /* MLXMNIST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXMNIST;
+		};
+		EE4A16B32D58F419001ADC2B /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXVLM;
+		};
+		EE4A16B52D58F419001ADC2B /* StableDiffusion */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = StableDiffusion;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EE0249BE2CFCA1AD00CA6901 /* Project object */;
 }
