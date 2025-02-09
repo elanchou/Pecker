@@ -58,6 +58,14 @@
 "Or" = "Or";
 "To Discover" = "Browse Recommended Feeds";
 
+// AI
+"Good morning" = "Good morning";
+"Good afternoon" = "Good afternoon";
+"Good evening" = "Good evening";
+"It's late" = "It's late";
+"Is there anything I can help you with?" = "Is there anything I can help you with?";
+
+
 // Article
 "Mark as Read" = "Mark as Read";
 "Mark as Unread" = "Mark as Unread";

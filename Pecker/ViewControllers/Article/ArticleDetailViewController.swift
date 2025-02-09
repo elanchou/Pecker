@@ -441,7 +441,7 @@ class ArticleDetailViewController: BaseViewController {
             self.present(activityVC, animated: true)
         })
         
-        actionSheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        actionSheet.addAction(UIAlertAction(title: L("Cancel"), style: .cancel))
         
         present(actionSheet, animated: true)
     }

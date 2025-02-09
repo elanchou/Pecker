@@ -58,6 +58,14 @@
 "Or" = "或者";
 "To Discover" = "浏览推荐订阅源";
 
+// AI
+"Good morning" = "Good morning";
+"Good afternoon" = "Good afternoon";
+"Good evening" = "Good evening";
+"It's late" = "It's late";
+"Is there anything I can help you with?" = "Is there anything I can help you with?";
+
+
 // Article
 "Mark as Read" = "标记为已读";
 "Mark as Unread" = "标记为未读";

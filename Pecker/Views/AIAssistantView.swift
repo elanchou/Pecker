@@ -497,26 +497,27 @@ class AIAssistantView: UIView {
     private func updateWelcomeMessage() {
         let hour = Calendar.current.component(.hour, from: Date())
         
-        let (message, image) = getWelcomeContent(for: hour)
-        welcomeLabel.text = message
+        let (messageKey, image) = getWelcomeContent(for: hour)
+        welcomeLabel.text = L(messageKey)
         welcomeImageView.image = UIImage(systemName: image)
-        welcomeSubtitleLabel.text = "有什么我可以帮你的吗？"
+        welcomeSubtitleLabel.text = L("Is there anything I can help you with?")
     }
-    
-    private func getWelcomeContent(for hour: Int) -> (message: String, image: String) {
+
+    private func getWelcomeContent(for hour: Int) -> (messageKey: String, image: String) {
         switch hour {
         case 5..<12:
-            return ("早安", "sun.max.fill")
+            return ("Good morning", "sun.max.fill")
         case 12..<14:
-            return ("午安", "sun.min.fill")
+            return ("Good afternoon", "sun.min.fill")
         case 14..<18:
-            return ("下午好", "sun.and.horizon.fill")
+            return ("Good afternoon", "sun.and.horizon.fill")
         case 18..<22:
-            return ("晚上好", "moon.stars.fill")
+            return ("Good evening", "moon.stars.fill")
         default:
-            return ("夜深了", "moon.zzz.fill")
+            return ("It's late", "moon.zzz.fill")
         }
     }
+
 }
 
 // MARK: - UITableViewDataSource
