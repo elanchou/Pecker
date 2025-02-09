@@ -1,85 +1,121 @@
 // Common
-"ok" = "确定";
-"cancel" = "取消";
-"close" = "关闭";
-"delete" = "删除";
-"refresh" = "刷新";
-"share" = "分享";
-"error" = "错误";
-"loading" = "加载中...";
+"OK" = "确定";
+"Cancel" = "取消";
+"Done" = "完成";
+"Edit" = "编辑";
+"Delete" = "删除";
+"Share" = "分享";
+"Save" = "保存";
+"Close" = "关闭";
+"Loading" = "加载中...";
+"Error" = "错误";
+"Success" = "成功";
+"Warning" = "警告";
 
 // Tab Bar
-"tab.home" = "首页";
-"tab.feeds" = "订阅";
-"tab.rss" = "发现";
-"tab.settings" = "设置";
+"Home" = "首页";
+"Feeds" = "订阅";
+"Discover" = "发现";
+"Settings" = "设置";
 
 // Home
-"home.today" = "今日";
-"home.unread" = "未读";
-"home.favorites" = "收藏";
-"home.articles" = "文章";
+"Today" = "今天";
+"Yesterday" = "昨天";
+"Earlier" = "更早";
+"No Content" = "暂无内容";
+"Pull to Refresh" = "下拉刷新";
+"Release to Refresh" = "松开刷新";
+"Refreshing" = "正在刷新...";
+"Last Updated" = "最后更新：";
+"By Date" = "按时间";
+"By Source" = "按订阅源";
+"Favorites" = "收藏";
+"Unread" = "未读";
+"Feeds Count" = "篇";
 
-// Feed List
-"feed.add" = "添加订阅";
-"feed.add.placeholder" = "输入RSS订阅地址";
-"feed.add.error" = "添加订阅失败";
-"feed.delete.confirm" = "确定要删除这个订阅吗？";
-"feed.empty" = "暂无订阅";
-"feed.empty.description" = "添加你的第一个RSS订阅开始阅读";
+// Feed
+"Add Feed" = "添加订阅";
+"Edit Feed" = "编辑订阅";
+"Delete Feed" = "删除订阅";
+"Feed URL" = "订阅地址";
+"Feed Name" = "订阅名称";
+"Category" = "分类";
+"Add Category" = "添加分类";
+"New Category" = "新建分类";
+"Enter Category Name" = "输入分类名称";
+"Delete Category" = "删除分类";
+"Move to Category" = "移动到分类";
+"No Feeds" = "暂无订阅";
+"Add your first feed" = "添加你的第一个订阅";
+"Invalid Feed URL" = "无效的订阅地址";
+"Duplicate Feed" = "重复的订阅";
+"Delete Feed Confirmation" = "确定要删除这个订阅吗？";
+"Delete Category Confirmation" = "确定要删除这个分类吗？这将同时删除分类中的所有订阅。";
 
-// RSS Browser
-"rss.discover" = "发现";
-"rss.custom" = "自定义";
-"rss.search.placeholder" = "搜索 RSS 源";
-"rss.platforms" = "个平台";
-"rss.feeds" = "个订阅源";
-"rss.feed.type" = "订阅类型";
-"rss.params" = "参数设置";
-"rss.params.required" = "请填写所有必需的参数";
-"rss.subscribe" = "添加订阅";
-"rss.add.success" = "订阅添加成功";
-"success" = "成功";
-"rss.featured" = "精选内容";
-"rss.categories" = "分类";
-"rss.articles" = "文章";
-"rss.podcasts" = "播客";
-"rss.videos" = "视频";
-"rss.social" = "社交媒体";
-"more" = "更多";
-
-// Settings
-"settings.icloud" = "iCloud同步";
-"settings.appearance" = "外观";
-"settings.language" = "语言";
-"settings.notifications" = "通知";
-"settings.about" = "关于";
-"settings.version" = "版本";
-"settings.today_summary" = "今日摘要";
-"settings.today_summary.enabled" = "启用今日摘要";
-"settings.today_summary.update_time" = "更新时间";
-"settings.today_summary.frequency" = "显示频率";
-
-// AI Settings
-"settings.ai" = "AI 设置";
-"settings.ai.provider" = "AI 提供商";
-"settings.ai.openai" = "OpenAI";
-"settings.ai.deepseek" = "DeepSeek";
-"settings.ai.api_key" = "API Key";
-"settings.ai.api_key.message" = "请输入 API Key";
-"settings.ai.api_key.set" = "已设置";
-"settings.ai.api_key.not_set" = "未设置";
+// Add Feed
+"Add New Subscription" = "添加新的订阅源";
+"Add New Subscription Subtitle" = "输入网站的 RSS 订阅地址，或者从推荐列表中选择";
+"Or" = "或者";
+"To Discover" = "浏览推荐订阅源";
 
 // Article
-"article.mark_read" = "标记为已读";
-"article.mark_unread" = "标记为未读";
-"article.favorite" = "添加到收藏";
-"article.unfavorite" = "取消收藏";
-"article.font_size" = "字体大小";
-"article.font" = "字体";
+"Mark as Read" = "标记为已读";
+"Mark as Unread" = "标记为未读";
+"Add to Favorites" = "添加到收藏";
+"Remove from Favorites" = "从收藏中移除";
+"Copy Link" = "复制链接";
+"Open in Browser" = "在浏览器中打开";
+"Share Article" = "分享文章";
+"No Articles" = "暂无文章";
+"Link Copied" = "链接已复制";
 
-// AI
-"ai.analyze" = "AI分析";
-"ai.summary" = "AI摘要";
-"ai.loading" = "AI思考中...";
-"ai.error" = "生成分析失败"; 
+// Settings
+"General" = "通用";
+"Theme" = "主题";
+"Language" = "语言";
+"Notifications" = "通知";
+"Auto Refresh" = "自动刷新";
+"Content" = "内容";
+"Reading Settings" = "阅读设置";
+"Feed Management" = "订阅管理";
+"Sort Order" = "排序方式";
+"Data" = "数据";
+"iCloud Sync" = "iCloud 同步";
+"Import/Export" = "导入/导出";
+"Clear Cache" = "清除缓存";
+"About" = "关于";
+"Rate" = "评分";
+"Feedback" = "反馈";
+"Version" = "版本";
+
+// Theme Options
+"Follow System" = "跟随系统";
+"Light" = "浅色";
+"Dark" = "深色";
+
+// Language Options
+"Auto" = "跟随系统";
+"Simplified Chinese" = "简体中文";
+"English" = "English";
+
+// Sort Options
+"Newest First" = "最新在前";
+"Oldest First" = "最早在前";
+"By Title" = "按标题";
+"Unread First" = "未读优先";
+
+// Messages
+"Clear Cache Confirmation" = "确定要清除所有缓存数据吗？这不会删除你的订阅。";
+"Cache Cleared" = "缓存已清除";
+"Export Success" = "导出成功";
+"Import Success" = "导入成功";
+"Export Failed" = "导出失败：%@";
+"Import Failed" = "导入失败：%@";
+"Feature in Development" = "功能开发中";
+"Network Error" = "网络错误";
+"Please check your network connection" = "请检查网络连接";
+"Refresh Failed" = "刷新失败";
+"Update Failed" = "更新失败";
+"Delete Failed" = "删除失败";
+"Save Failed" = "保存失败";
+"Load Failed" = "加载失败"; 

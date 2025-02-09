@@ -14,8 +14,8 @@ class AISettingsViewController: BaseViewController {
         
         var title: String {
             switch self {
-            case .provider: return LocalizedString("settings.ai.provider")
-            case .apiKeys: return LocalizedString("settings.ai.api_key")
+            case .provider: return L("settings.ai.provider")
+            case .apiKeys: return L("settings.ai.api_key")
             }
         }
     }
@@ -37,7 +37,7 @@ class AISettingsViewController: BaseViewController {
     }
     
     private func setupUI() {
-        title = LocalizedString("settings.ai")
+        title = L("settings.ai")
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -55,26 +55,26 @@ class AISettingsViewController: BaseViewController {
     
     private func showProviderPicker() {
         let alert = UIAlertController(
-            title: LocalizedString("settings.ai.provider"),
+            title: L("settings.ai.provider"),
             message: nil,
             preferredStyle: .actionSheet
         )
         
         AIService.AIProvider.allCases.forEach { provider in
-            alert.addAction(UIAlertAction(title: LocalizedString("settings.ai.\(provider.rawValue.lowercased())"), style: .default) { [weak self] _ in
+            alert.addAction(UIAlertAction(title: L("settings.ai.\(provider.rawValue.lowercased())"), style: .default) { [weak self] _ in
                 UserDefaults.standard.set(provider.rawValue, forKey: "DefaultAIProvider")
                 self?.tableView.reloadData()
             })
         }
         
-        alert.addAction(UIAlertAction(title: LocalizedString("cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L("cancel"), style: .cancel))
         present(alert, animated: true)
     }
     
     private func showAPIKeyInput(for provider: AIService.AIProvider) {
         let alert = UIAlertController(
-            title: "\(LocalizedString("settings.ai.\(provider.rawValue.lowercased())")) \(LocalizedString("settings.ai.api_key"))",
-            message: LocalizedString("settings.ai.api_key.message"),
+            title: "\(L("settings.ai.\(provider.rawValue.lowercased())")) \(L("settings.ai.api_key"))",
+            message: L("settings.ai.api_key.message"),
             preferredStyle: .alert
         )
         
@@ -86,14 +86,14 @@ class AISettingsViewController: BaseViewController {
             }
         }
         
-        alert.addAction(UIAlertAction(title: LocalizedString("ok"), style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: L("ok"), style: .default) { [weak self] _ in
             if let key = alert.textFields?.first?.text {
                 UserDefaults.standard.set(key, forKey: "\(provider.rawValue)Key")
                 self?.tableView.reloadData()
             }
         })
         
-        alert.addAction(UIAlertAction(title: LocalizedString("cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L("cancel"), style: .cancel))
         present(alert, animated: true)
     }
 }
@@ -117,29 +117,29 @@ extension AISettingsViewController: UITableViewDelegate, UITableViewDataSource {
         
         switch row {
         case .provider:
-            cell.textLabel?.text = LocalizedString("settings.ai.provider")
+            cell.textLabel?.text = L("settings.ai.provider")
             if let provider = UserDefaults.standard.string(forKey: "DefaultAIProvider") {
-                cell.detailTextLabel?.text = LocalizedString("settings.ai.\(provider.lowercased())")
+                cell.detailTextLabel?.text = L("settings.ai.\(provider.lowercased())")
             } else {
-                cell.detailTextLabel?.text = LocalizedString("settings.ai.\(AIService.AIProvider.default.rawValue.lowercased())")
+                cell.detailTextLabel?.text = L("settings.ai.\(AIService.AIProvider.default.rawValue.lowercased())")
             }
             cell.accessoryType = .disclosureIndicator
             
         case .openAIKey:
-            cell.textLabel?.text = "\(LocalizedString("settings.ai.openai")) \(LocalizedString("settings.ai.api_key"))"
+            cell.textLabel?.text = "\(L("settings.ai.openai")) \(L("settings.ai.api_key"))"
             if UserDefaults.standard.string(forKey: "OpenAIKey") != nil {
-                cell.detailTextLabel?.text = LocalizedString("settings.ai.api_key.set")
+                cell.detailTextLabel?.text = L("settings.ai.api_key.set")
             } else {
-                cell.detailTextLabel?.text = LocalizedString("settings.ai.api_key.not_set")
+                cell.detailTextLabel?.text = L("settings.ai.api_key.not_set")
             }
             cell.accessoryType = .disclosureIndicator
             
         case .deepSeekKey:
-            cell.textLabel?.text = "\(LocalizedString("settings.ai.deepseek")) \(LocalizedString("settings.ai.api_key"))"
+            cell.textLabel?.text = "\(L("settings.ai.deepseek")) \(L("settings.ai.api_key"))"
             if UserDefaults.standard.string(forKey: "DeepSeekKey") != nil {
-                cell.detailTextLabel?.text = LocalizedString("settings.ai.api_key.set")
+                cell.detailTextLabel?.text = L("settings.ai.api_key.set")
             } else {
-                cell.detailTextLabel?.text = LocalizedString("settings.ai.api_key.not_set")
+                cell.detailTextLabel?.text = L("settings.ai.api_key.not_set")
             }
             cell.accessoryType = .disclosureIndicator
         }

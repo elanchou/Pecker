@@ -3,22 +3,35 @@ import RealmSwift
 
 func formatDate(_ date: Date, needTime: Bool = true) -> String {
     let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "zh_CN")
-    
-    if Calendar.current.isDateInToday(date) {
+    let currentLanguage = LocalizationManager.shared.currentLanguage
+
+    // Set locale based on current language
+    switch currentLanguage {
+    case .english:
+        formatter.locale = Locale(identifier: "en_US")
+    case .simplifiedChinese:
+        formatter.locale = Locale(identifier: "zh_CN")
+    }
+
+    let calendar = Calendar.current
+
+    if calendar.isDateInToday(date) {
         formatter.dateFormat = "HH:mm"
-        return "Today " + (needTime ? formatter.string(from: date) : "")
-    } else if Calendar.current.isDateInYesterday(date) {
+        let timeString = needTime ? formatter.string(from: date) : ""
+        return currentLanguage == .english ? "Today \(timeString)" : "今天 \(timeString)"
+    } else if calendar.isDateInYesterday(date) {
         formatter.dateFormat = "HH:mm"
-        return "Yesterday " + (needTime ? formatter.string(from: date) : "")
-    } else if Calendar.current.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
+        let timeString = needTime ? formatter.string(from: date) : ""
+        return currentLanguage == .english ? "Yesterday \(timeString)" : "昨天 \(timeString)"
+    } else if calendar.isDate(date, equalTo: Date(), toGranularity: .weekOfYear) {
         formatter.dateFormat = needTime ? "EEEE HH:mm" : "EEEE"
         return formatter.string(from: date)
     } else {
-        formatter.dateFormat = needTime ? "MM月dd日 HH:mm" : "MM月dd日"
+        formatter.dateFormat = needTime ? "MMM dd HH:mm" : "MMM dd"
         return formatter.string(from: date)
     }
 }
+
 
 func groupContentsByDate(_ contents: [Content]) -> [(Date, [Content])] {
     let calendar = Calendar.current

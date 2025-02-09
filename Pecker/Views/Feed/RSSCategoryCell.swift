@@ -82,7 +82,7 @@ class RSSCategoryCell: UICollectionViewCell {
     // MARK: - Configuration
     func configure(with category: RSSDirectoryService.RSSCategory) {
         titleLabel.text = category.name
-        countLabel.text = "\(category.platforms.count) " + LocalizedString("rss.platforms")
+        countLabel.text = "\(category.platforms.count) " + L("rss.platforms")
         
         // 设置图标
         switch category.type {

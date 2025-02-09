@@ -46,7 +46,7 @@ class LocalizationManager {
     
     private init() {}
     
-    func localizedString(for key: String) -> String {
+    func LocalizedString(for key: String) -> String {
         let bundle = Bundle.main
         return NSLocalizedString(key, tableName: nil, bundle: bundle, value: "", comment: "")
     }
@@ -57,6 +57,6 @@ class LocalizationManager {
 }
 
 // 便捷访问方法
-func LocalizedString(_ key: String) -> String {
-    return LocalizationManager.shared.localizedString(for: key)
-} 
+func L(_ key: String) -> String {
+    return LocalizationManager.shared.LocalizedString(for: key)
+}

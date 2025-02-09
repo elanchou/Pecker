@@ -11,25 +11,26 @@ class SettingsViewController: BaseViewController {
     }()
     
     private var sections: [SettingsSection] = [
-        SettingsSection(title: "通用", items: [
-            SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: "主题", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "bell", iconColor: .systemRed, title: "通知", accessoryType: .toggle, isOn: SettingsManager.shared.areNotificationsEnabled),
-            SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: "自动刷新", accessoryType: .toggle, isOn: SettingsManager.shared.isAutoRefreshEnabled)
+        SettingsSection(title: L("General"), items: [
+            SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: L("Theme"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "globe", iconColor: .systemTeal, title: L("Language"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "bell", iconColor: .systemRed, title: L("Notifications"), accessoryType: .toggle, isOn: SettingsManager.shared.areNotificationsEnabled),
+            SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: L("Auto Refresh"), accessoryType: .toggle, isOn: SettingsManager.shared.isAutoRefreshEnabled)
         ]),
-        SettingsSection(title: "内容", items: [
-            SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: "阅读设置", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "square.stack.3d.up", iconColor: .systemOrange, title: "订阅源管理", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "arrow.up.arrow.down", iconColor: .systemPurple, title: "排序方式", accessoryType: .disclosureIndicator)
+        SettingsSection(title: L("Content"), items: [
+            SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: L("Reading Settings"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "square.stack.3d.up", iconColor: .systemOrange, title: L("Feed Management"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "arrow.up.arrow.down", iconColor: .systemPurple, title: L("Sort Order"), accessoryType: .disclosureIndicator)
         ]),
-        SettingsSection(title: "数据", items: [
-            SettingsItem(icon: "icloud", iconColor: .systemBlue, title: "iCloud 同步", accessoryType: .toggle, isOn: SettingsManager.shared.isICloudSyncEnabled),
-            SettingsItem(icon: "arrow.triangle.2.circlepath", iconColor: .systemGreen, title: "导入/导出", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "trash", iconColor: .systemRed, title: "清除缓存", accessoryType: .none)
+        SettingsSection(title: L("Data"), items: [
+            SettingsItem(icon: "icloud", iconColor: .systemBlue, title: L("iCloud Sync"), accessoryType: .toggle, isOn: SettingsManager.shared.isICloudSyncEnabled),
+            SettingsItem(icon: "arrow.triangle.2.circlepath", iconColor: .systemGreen, title: L("Import/Export"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "trash", iconColor: .systemRed, title: L("Clear Cache"), accessoryType: .none)
         ]),
-        SettingsSection(title: "关于", items: [
-            SettingsItem(icon: "star", iconColor: .systemYellow, title: "评分", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "envelope", iconColor: .systemBlue, title: "反馈", accessoryType: .disclosureIndicator),
-            SettingsItem(icon: "info.circle", iconColor: .systemGray, title: "版本", detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0", accessoryType: .none)
+        SettingsSection(title: L("About"), items: [
+            SettingsItem(icon: "star", iconColor: .systemYellow, title: L("Rate"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "envelope", iconColor: .systemBlue, title: L("Feedback"), accessoryType: .disclosureIndicator),
+            SettingsItem(icon: "info.circle", iconColor: .systemGray, title: L("Version"), detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0", accessoryType: .none)
         ])
     ]
     
@@ -42,7 +43,7 @@ class SettingsViewController: BaseViewController {
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "设置"
+        title = L("Settings")
         view.backgroundColor = .systemGroupedBackground
         
         tableView.delegate = self
@@ -125,22 +126,24 @@ extension SettingsViewController: UITableViewDelegate {
 extension SettingsViewController {
     private func handleSettingsTap(_ item: SettingsItem) {
         switch item.title {
-        case "主题":
+        case L("Theme"):
             showThemeSettings()
-        case "阅读设置":
+        case L("Language"):
+            showLanguageSettings()
+        case L("Reading Settings"):
             showReadingSettings()
-        case "订阅源管理":
+        case L("Feed Management"):
             let feedListVC = FeedListViewController()
             navigationController?.pushViewController(feedListVC, animated: true)
-        case "排序方式":
+        case L("Sort Order"):
             showSortOptions()
-        case "导入/导出":
+        case L("Import/Export"):
             showImportExportOptions()
-        case "清除缓存":
+        case L("Clear Cache"):
             showClearCacheAlert()
-        case "反馈":
+        case L("Feedback"):
             openFeedbackMail()
-        case "评分":
+        case L("Rate"):
             openAppStore()
         default:
             break
@@ -151,11 +154,11 @@ extension SettingsViewController {
         let settings = SettingsManager.shared
         
         switch item.title {
-        case "通知":
+        case L("Notifications"):
             settings.areNotificationsEnabled = isOn
-        case "自动刷新":
+        case L("Auto Refresh"):
             settings.isAutoRefreshEnabled = isOn
-        case "iCloud 同步":
+        case L("iCloud Sync"):
             settings.isICloudSyncEnabled = isOn
         default:
             break
@@ -163,12 +166,12 @@ extension SettingsViewController {
     }
     
     private func showThemeSettings() {
-        let alert = UIAlertController(title: "选择主题", message: nil, preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: L("Theme"), message: nil, preferredStyle: .actionSheet)
         
         let themes: [(String, SettingsManager.Theme)] = [
-            ("跟随系统", .system),
-            ("浅色", .light),
-            ("深色", .dark)
+            (L("Follow System"), .system),
+            (L("Light"), .light),
+            (L("Dark"), .dark)
         ]
         
         for (title, theme) in themes {
@@ -180,6 +183,65 @@ extension SettingsViewController {
         
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
         present(alert, animated: true)
+    }
+    
+    private func showLanguageSettings() {
+        let alert = UIAlertController(title: L("Language"), message: nil, preferredStyle: .actionSheet)
+        
+        let languages = [
+            ("auto", L("Auto")),
+            ("zh-Hans", L("Simplified Chinese")),
+            ("en", L("English"))
+        ]
+        
+        let currentLanguage = SettingsManager.shared.languageCode
+        
+        for (code, title) in languages {
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+                if code != currentLanguage {
+                    // 更新语言设置
+                    SettingsManager.shared.languageCode = code
+                    let language: Language = code.contains("zh") ? .simplifiedChinese : .english
+                    LocalizationManager.shared.setLanguage(language)
+                    
+                    // 重新加载界面
+                    self?.reloadInterface()
+                }
+            })
+        }
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func reloadInterface() {
+        // 重新加载所有文本
+        title = L("Settings")
+        sections = [
+            SettingsSection(title: L("General"), items: [
+                SettingsItem(icon: "paintbrush", iconColor: .systemIndigo, title: L("Theme"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "globe", iconColor: .systemTeal, title: L("Language"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "bell", iconColor: .systemRed, title: L("Notifications"), accessoryType: .toggle, isOn: SettingsManager.shared.areNotificationsEnabled),
+                SettingsItem(icon: "arrow.clockwise", iconColor: .systemBlue, title: L("Auto Refresh"), accessoryType: .toggle, isOn: SettingsManager.shared.isAutoRefreshEnabled)
+            ]),
+            SettingsSection(title: L("Content"), items: [
+                SettingsItem(icon: "text.justify", iconColor: .systemGreen, title: L("Reading Settings"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "square.stack.3d.up", iconColor: .systemOrange, title: L("Feed Management"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "arrow.up.arrow.down", iconColor: .systemPurple, title: L("Sort Order"), accessoryType: .disclosureIndicator)
+            ]),
+            SettingsSection(title: L("Data"), items: [
+                SettingsItem(icon: "icloud", iconColor: .systemBlue, title: L("iCloud Sync"), accessoryType: .toggle, isOn: SettingsManager.shared.isICloudSyncEnabled),
+                SettingsItem(icon: "arrow.triangle.2.circlepath", iconColor: .systemGreen, title: L("Import/Export"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "trash", iconColor: .systemRed, title: L("Clear Cache"), accessoryType: .none)
+            ]),
+            SettingsSection(title: L("About"), items: [
+                SettingsItem(icon: "star", iconColor: .systemYellow, title: L("Rate"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "envelope", iconColor: .systemBlue, title: L("Feedback"), accessoryType: .disclosureIndicator),
+                SettingsItem(icon: "info.circle", iconColor: .systemGray, title: L("Version"), detail: "1.0.0", accessoryType: .none)
+            ])
+        ]
+        
+        tableView.reloadData()
     }
     
     private func showReadingSettings() {
@@ -226,17 +288,17 @@ extension SettingsViewController {
     
     private func showClearCacheAlert() {
         let alert = UIAlertController(
-            title: "清除缓存",
-            message: "确定要清除所有缓存数据吗？这不会删除你的订阅源。",
+            title: L("Clear Cache"),
+            message: L("Clear Cache Confirmation"),
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "清除", style: .destructive) { [weak self] _ in
-            Task { [weak self] in
+        alert.addAction(UIAlertAction(title: L("Cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(title: L("Clear"), style: .destructive) { _ in
+            Task {
                 do {
                     try await SettingsManager.shared.clearCache()
-                    ToastView.success("缓存已清除")
+                    ToastView.success(L("Cache Cleared"))
                 } catch {
                     ToastView.failure(error.localizedDescription)
                 }

@@ -16,7 +16,7 @@ class RSSPlatformViewController: BaseViewController {
     
     private let subscribeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle(LocalizedString("rss.subscribe"), for: .normal)
+        button.setTitle(L("rss.subscribe"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.backgroundColor = .systemBlue
         button.tintColor = .white
@@ -82,11 +82,11 @@ class RSSPlatformViewController: BaseViewController {
         
         if !missingParams.isEmpty {
             let alert = UIAlertController(
-                title: LocalizedString("error"),
-                message: LocalizedString("rss.params.required"),
+                title: L("error"),
+                message: L("rss.params.required"),
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: LocalizedString("ok"), style: .default))
+            alert.addAction(UIAlertAction(title: L("ok"), style: .default))
             present(alert, animated: true)
             return
         }
@@ -106,22 +106,22 @@ class RSSPlatformViewController: BaseViewController {
                 
                 // 显示成功提示并返回
                 let alert = UIAlertController(
-                    title: LocalizedString("success"),
-                    message: LocalizedString("rss.add.success"),
+                    title: L("success"),
+                    message: L("rss.add.success"),
                     preferredStyle: .alert
                 )
-                alert.addAction(UIAlertAction(title: LocalizedString("ok"), style: .default) { [weak self] _ in
+                alert.addAction(UIAlertAction(title: L("ok"), style: .default) { [weak self] _ in
                     self?.navigationController?.popViewController(animated: true)
                 })
                 present(alert, animated: true)
                 
             } catch {
                 let alert = UIAlertController(
-                    title: LocalizedString("error"),
+                    title: L("error"),
                     message: error.localizedDescription,
                     preferredStyle: .alert
                 )
-                alert.addAction(UIAlertAction(title: LocalizedString("ok"), style: .default))
+                alert.addAction(UIAlertAction(title: L("ok"), style: .default))
                 present(alert, animated: true)
             }
         }
@@ -169,9 +169,9 @@ extension RSSPlatformViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 {
-            return LocalizedString("rss.feed.type")
+            return L("rss.feed.type")
         } else {
-            return LocalizedString("rss.params")
+            return L("rss.params")
         }
     }
     

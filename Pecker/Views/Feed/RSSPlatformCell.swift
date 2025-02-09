@@ -83,7 +83,7 @@ class RSSPlatformCell: UICollectionViewCell {
     // MARK: - Configuration
     func configure(with platform: RSSDirectoryService.RSSPlatform) {
         titleLabel.text = platform.name
-        countLabel.text = "\(platform.paths.count) " + LocalizedString("rss.feeds")
+        countLabel.text = "\(platform.paths.count) " + L("rss.feeds")
         
         // 设置图标
         if let image = UIImage(named: platform.icon) {

@@ -18,7 +18,7 @@ class AddFeedViewController: BaseViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "添加新的订阅源"
+        label.text = L("Add New Subscription")
         label.font = .systemFont(ofSize: 24, weight: .bold)
         label.textColor = .label
         label.textAlignment = .center
@@ -27,7 +27,7 @@ class AddFeedViewController: BaseViewController {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "输入网站的 RSS 订阅地址，或者从推荐列表中选择"
+        label.text = L("Add New Subscription Subtitle")
         label.font = .systemFont(ofSize: 16)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
@@ -44,7 +44,7 @@ class AddFeedViewController: BaseViewController {
     
     private let urlTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "输入 RSS 订阅源地址"
+        textField.placeholder = L("Feed URL")
         textField.font = .systemFont(ofSize: 17)
         textField.borderStyle = .none
         textField.clearButtonMode = .whileEditing
@@ -65,7 +65,7 @@ class AddFeedViewController: BaseViewController {
     
     private let addButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("添加订阅", for: .normal)
+        button.setTitle(L("Add Feed"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
@@ -88,7 +88,7 @@ class AddFeedViewController: BaseViewController {
     
     private let orLabel: UILabel = {
         let label = UILabel()
-        label.text = "或者"
+        label.text = L("Or")
         label.font = .systemFont(ofSize: 14)
         label.textColor = .tertiaryLabel
         label.textAlignment = .center
@@ -97,7 +97,7 @@ class AddFeedViewController: BaseViewController {
     
     private let browseButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("浏览推荐订阅源", for: .normal)
+        button.setTitle(L("To Discover"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.backgroundColor = .clear
         button.layer.cornerRadius = 12
@@ -125,11 +125,11 @@ class AddFeedViewController: BaseViewController {
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "添加订阅源"
+        title = L("Add Feed")
         view.backgroundColor = .systemGroupedBackground
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "取消",
+            title: L("Cancel"),
             style: .plain,
             target: self,
             action: #selector(dismissVC)

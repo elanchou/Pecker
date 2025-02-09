@@ -12,7 +12,7 @@ class RSSHeaderView: UICollectionReusableView {
     
     private let moreButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle(LocalizedString("more"), for: .normal)
+        button.setTitle(L("more"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         return button
     }()

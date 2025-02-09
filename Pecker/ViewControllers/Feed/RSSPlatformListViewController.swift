@@ -90,11 +90,11 @@ class RSSPlatformListViewController: BaseViewController {
     
     private func showError(_ error: Error) {
         let alert = UIAlertController(
-            title: LocalizedString("error"),
+            title: L("error"),
             message: error.localizedDescription,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: LocalizedString("ok"), style: .default))
+        alert.addAction(UIAlertAction(title: L("ok"), style: .default))
         present(alert, animated: true)
     }
 }

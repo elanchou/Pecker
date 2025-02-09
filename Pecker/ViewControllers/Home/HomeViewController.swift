@@ -100,7 +100,7 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     
     private let emptyTitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "还没有任何内容"
+        label.text = NSLocalizedString("No Content Available", comment: "Title for empty state when no content is available")
         label.font = .systemFont(ofSize: 20, weight: .medium)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
@@ -109,7 +109,7 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     
     private let emptyDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "点击下方按钮添加订阅源，开始阅读之旅"
+        label.text = NSLocalizedString("Tap the button below to add a feed and start your reading journey", comment: "Description for empty state when no content is available")
         label.font = .systemFont(ofSize: 15)
         label.textColor = .tertiaryLabel
         label.textAlignment = .center
@@ -119,7 +119,7 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     
     private let addFeedButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("添加订阅源", for: .normal)
+        button.setTitle(NSLocalizedString("Add Feed", comment: "Button title to add a new feed"), for: .normal)
         button.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = AppTheme.primary
@@ -161,7 +161,7 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "文章"
+        title = L("Home")
         
         // 配置分段控制器景
         let segmentBackground = UIView()
@@ -213,7 +213,7 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     }
     
     private func setupSegmentedView() {
-        segmentedDataSource.titles = ["按时间", "按订阅源", "收藏", "未读"]
+        segmentedDataSource.titles = [L("By Date"), L("By Source"), L("Favorites"), L("Unread")]
         segmentedDataSource.titleNormalColor = .secondaryLabel
         segmentedDataSource.titleSelectedColor = .label
         segmentedDataSource.titleNormalFont = .systemFont(ofSize: 15)
@@ -497,10 +497,12 @@ class HomeViewController: BaseViewController, UIPopoverPresentationControllerDel
     }
     
     private func showError(_ error: Error) {
-        let alert = UIAlertController(title: "错误",
-                                    message: error.localizedDescription,
-                                    preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        let alert = UIAlertController(
+            title: NSLocalizedString("Error", comment: "Title for error alert"),
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button title"), style: .default))
         present(alert, animated: true)
     }
     
@@ -722,7 +724,7 @@ extension HomeViewController: UICollectionViewDataSource {
                                                                    for: indexPath) as! SectionHeaderView
         
         let (title, contents) = sections[indexPath.section]
-        header.configure(title: title, count: contents.count, contents: contents)
+        header.configure(title: title, count: "\(contents.count) \(L("Feeds Count"))", contents: contents)
         header.delegate = self
         return header
     }

@@ -10,6 +10,7 @@ class SettingsManager {
     // MARK: - Keys
     private enum Keys {
         static let theme = "app_theme"
+        static let language = "app_language"
         static let autoRefresh = "auto_refresh"
         static let iCloudSync = "icloud_sync"
         static let fontSize = "font_size"
@@ -44,6 +45,19 @@ class SettingsManager {
         set {
             defaults.set(newValue.rawValue, forKey: Keys.theme)
             applyTheme(newValue)
+        }
+    }
+    
+    var languageCode: String {
+        get {
+            if let languageCode = defaults.string(forKey: Keys.language) {
+                return languageCode
+            }
+            return "en"
+        }
+        set {
+            defaults.set(newValue, forKey: Keys.language)
+            applyLanguageSettings()
         }
     }
     
@@ -115,6 +129,14 @@ class SettingsManager {
             windowScene.windows.forEach { window in
                 window.overrideUserInterfaceStyle = theme.uiInterfaceStyle
             }
+        }
+    }
+    
+    private func applyLanguageSettings() {
+        if let languagePath = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
+           let bundle = Bundle(path: languagePath) {
+            UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
+            UserDefaults.standard.synchronize()
         }
     }
     

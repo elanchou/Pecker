@@ -16,7 +16,7 @@ class RSSBrowseViewController: BaseViewController {
     // MARK: - UI Components
     private let searchController: UISearchController = {
         let controller = UISearchController(searchResultsController: nil)
-        controller.searchBar.placeholder = LocalizedString("rss.search.placeholder")
+        controller.searchBar.placeholder = L("rss.search.placeholder")
         controller.obscuresBackgroundDuringPresentation = false
         return controller
     }()
@@ -55,7 +55,7 @@ class RSSBrowseViewController: BaseViewController {
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = LocalizedString("rss.discover")
+        title = L("Discover")
         view.backgroundColor = .systemBackground
         
         navigationItem.searchController = searchController
@@ -284,11 +284,11 @@ class RSSBrowseViewController: BaseViewController {
     
     private func showError(_ error: Error) {
         let alert = UIAlertController(
-            title: LocalizedString("error"),
+            title: L("error"),
             message: error.localizedDescription,
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: LocalizedString("ok"), style: .default))
+        alert.addAction(UIAlertAction(title: L("ok"), style: .default))
         present(alert, animated: true)
     }
 }
@@ -307,12 +307,12 @@ extension RSSBrowseViewController {
         var title: String {
             switch self {
             case .banner: return ""
-            case .featured: return LocalizedString("rss.featured")
-            case .categories: return LocalizedString("rss.categories")
-            case .articles: return LocalizedString("rss.articles")
-            case .podcasts: return LocalizedString("rss.podcasts")
-            case .videos: return LocalizedString("rss.videos")
-            case .social: return LocalizedString("rss.social")
+            case .featured: return L("rss.featured")
+            case .categories: return L("rss.categories")
+            case .articles: return L("rss.articles")
+            case .podcasts: return L("rss.podcasts")
+            case .videos: return L("rss.videos")
+            case .social: return L("rss.social")
             }
         }
     }

@@ -82,7 +82,7 @@ class FeedListViewController: BaseViewController {
     
     // MARK: - UI Setup
     private func setupUI() {
-        title = "订阅源"
+        title = L("Feeds")
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "plus"),

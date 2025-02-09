@@ -73,9 +73,9 @@ class SectionHeaderView: UICollectionReusableView {
     }
     
     // MARK: - Configuration
-    func configure(title: String, count: Int, contents: [Content]) {
+    func configure(title: String, count: String, contents: [Content]) {
         titleLabel.text = title
-        countLabel.text = "\(count)篇"
+        countLabel.text = count
         self.contents = contents
         
         // 根据是否有标题调整布局
