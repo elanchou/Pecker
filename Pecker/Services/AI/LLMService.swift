@@ -58,6 +58,13 @@ class LLMService {
 
 extension LLMService {
     private func generate(message: String) async -> String? {
+        if currentThread == nil {
+            let newThread = Thread()
+            currentThread = newThread
+            modelContext?.insert(newThread)
+            try? modelContext?.save()
+        }
+        
         if let currentThread = currentThread {
             generatingThreadID = currentThread.id
             appManager.playHaptic()
@@ -68,12 +75,8 @@ extension LLMService {
                 generatingThreadID = nil
                 return  output
             }
-        } else {
-            let newThread = Thread()
-            currentThread = newThread
-            modelContext?.insert(newThread)
-            try? modelContext?.save()
         }
+        
         return nil
     }
 
