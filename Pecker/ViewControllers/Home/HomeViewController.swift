@@ -690,20 +690,24 @@ extension HomeViewController: UICollectionViewDataSource {
             cell.onLongPress = { [weak self] content in
                 // 自动发送总结请求
                 Task {
-                    let message = self?.aiService.generateSummary(for: .singleContent(content))
+                    guard let self = self else { return }
+                    let message = self.aiService.generateSummary(for: .singleContent(content))
                     AIAssistantManager.shared.startThinking()
-                    if let message = message {
-                        let text = try await self?.aiService.chat(message)
-                        AIAssistantManager.shared.addInsight(.init(
-                            type: .summary,
-                            title: content.title,
-                            description: text ?? "",
-                            action: { [weak self] in
-                                // 点击总结后的操作，可以跳转到详情页
-                                let detailVC = ArticleDetailViewController(articleId: content.id)
-                                self?.navigationController?.pushViewController(detailVC, animated: true)
-                            }
-                        ))
+//                    let text = try await self?.aiService.chat(message)
+                    let stream = self.aiService.chatAsync(message)
+                    let insight = AIInsight(
+                        type: .summary,
+                        title: content.title,
+                        description: "",
+                        action: { [weak self] in
+                            // 点击总结后的操作，可以跳转到详情页
+                            let detailVC = ArticleDetailViewController(articleId: content.id)
+                            self?.navigationController?.pushViewController(detailVC, animated: true)
+                        }
+                    )
+                    AIAssistantManager.shared.addInsight(insight)
+                    for await response in stream {
+                        insight.description = response
                     }
                     AIAssistantManager.shared.stopThinking()
                 }
@@ -943,9 +947,7 @@ extension HomeViewController: SectionHeaderViewDelegate {
             let message = aiService.generateSummary(for: .multipleContents(contents))
             AIAssistantManager.shared.startThinking()
             let text = try await aiService.chat(message)
-            AIAssistantManager.shared.addInsight(.init(type: .summary, title: "总结", description: text, action: {
-                
-            }))
+            AIAssistantManager.shared.addInsight(.init(type: .summary, title: "总结", description: text))
         }
     }
 }

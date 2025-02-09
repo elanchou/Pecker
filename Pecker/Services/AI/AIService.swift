@@ -92,6 +92,32 @@ class AIService {
         }
     }
     
+    func chatAsync(_ messages: [ChatMessage], provider: AIProvider? = nil) -> AsyncStream<String> {
+        let selectedProvider = provider ?? AIProvider.default
+
+        return AsyncStream { continuation in
+            Task {
+                if selectedProvider == .llm {
+                    guard let service = llmService else {
+                        continuation.finish()
+                        return
+                    }
+
+                    let stream = await service.chatAsync(messages)
+
+                    for await response in stream {
+                        continuation.yield(response)
+                    }
+
+                    continuation.finish()
+                } else {
+                    continuation.finish()
+                }
+            }
+        }
+    }
+
+    
     func generateSummary(for content: ContentType) -> [ChatMessage] {
         let language = LocalizationManager.shared.currentLanguage == .english ? "英文": "中文"
         let systemMessage = ChatMessage(
@@ -147,12 +173,15 @@ class AIService {
     }
     
     enum AIError: LocalizedError {
+        case unSupportStream
         case noAPIKey
         
         var errorDescription: String? {
             switch self {
             case .noAPIKey:
                 return "未设置 API Key，请在设置中配置"
+            case .unSupportStream:
+                return "不支持流式输出"
             }
         }
     }

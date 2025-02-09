@@ -10,6 +10,7 @@ import MLXLLM
 import MLXLMCommon
 import MLXRandom
 import SwiftUI
+import Combine
 
 enum LLMEvaluatorError: Error {
     case modelNotFound(String)
@@ -18,15 +19,22 @@ enum LLMEvaluatorError: Error {
 @Observable
 @MainActor
 class LLMEvaluator {
+    var output = "" {
+        didSet {
+            if self.onStream != nil {
+                self.onStream?(self.output)
+            }
+        }
+    }
     var running = false
     var cancelled = false
-    var output = ""
     var modelInfo = ""
     var stat = ""
     var progress = 0.0
     var thinkingTime: TimeInterval?
     var collapsed: Bool = false
     var isThinking: Bool = false
+    var onStream: ((String) -> Void)?
 
     var elapsedTime: TimeInterval? {
         if let startTime {

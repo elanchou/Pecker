@@ -310,6 +310,8 @@ class AIAssistantView: UIView {
         insightTableView.backgroundColor = .clear
         insightTableView.isScrollEnabled = true
         insightTableView.showsVerticalScrollIndicator = false
+        insightTableView.estimatedRowHeight = 100
+        insightTableView.rowHeight = UITableView.automaticDimension
     }
     
     // MARK: - Gesture Handling
@@ -561,11 +563,18 @@ extension AIAssistantView: UITableViewDelegate {
 }
 
 // MARK: - Models
-struct AIInsight {
+class AIInsight: ObservableObject {
     let type: InsightType
     let title: String
-    let description: String
     let action: (() -> Void)?
+    @Published var description: String {
+        didSet {
+            if let onStream = self.onStream {
+                onStream(description)
+            }
+        }
+    }
+    var onStream: ((String) -> Void)?
     
     enum InsightType {
         case reading
@@ -594,14 +603,19 @@ struct AIInsight {
             }
         }
     }
+    
+    init(type: InsightType, title: String, description: String, action: (() -> Void)? = nil) {
+        self.type = type
+        self.title = title
+        self.action = action
+        self.description = description
+    }
 }
 
 // MARK: - AIInsightCell
 class AIInsightCell: UITableViewCell {
     // MARK: - Properties
     private var fullText: String = ""
-    private var currentTypingIndex: Int = 0
-    private var typingTimer: Timer?
     
     // MARK: - UI Elements
     private let headerView: UIView = {
@@ -621,8 +635,8 @@ class AIInsightCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .bold)
         label.textColor = .label
-        label.numberOfLines = 1 // 限制为单行
-        label.lineBreakMode = .byTruncatingTail // 添加省略号
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
     
@@ -663,111 +677,95 @@ class AIInsightCell: UITableViewCell {
             make.height.equalTo(44)
         }
         
-        // 修改图标尺寸和位置
         iconView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(12)
             make.centerY.equalToSuperview()
-            make.size.equalTo(20) // 减小图标尺寸
+            make.size.equalTo(20)
         }
         
-        // 优化标题布局
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalTo(iconView.snp.trailing).offset(8) // 减小间距
+            make.leading.equalTo(iconView.snp.trailing).offset(8)
             make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(timestampLabel.snp.leading).offset(-8) // 确保不会与时间戳重叠
+            make.trailing.lessThanOrEqualTo(timestampLabel.snp.leading).offset(-8)
         }
         
         timestampLabel.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-12)
             make.centerY.equalToSuperview()
-            make.width.greaterThanOrEqualTo(45) // 保证时间戳有足够空间
+            make.width.greaterThanOrEqualTo(45)
         }
         
-        // 调整文本视图布局
         markdownTextView.snp.makeConstraints { make in
             make.top.equalTo(headerView.snp.bottom).offset(8)
-            make.leading.equalTo(iconView) // 与图标对齐
+            make.leading.equalTo(iconView)
             make.trailing.equalToSuperview().offset(-12)
             make.bottom.equalToSuperview().offset(-12)
         }
     }
     
-    // 修改配置方法
     func configure(with insight: AIInsight) {
         iconView.image = UIImage(systemName: insight.type.icon)?.withRenderingMode(.alwaysTemplate)
         iconView.tintColor = insight.type.color
         titleLabel.text = insight.title
         
-        // 格式化时间
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         timestampLabel.text = formatter.string(from: Date())
         
-        // 保存完整文本
         fullText = insight.description
-        // 清空文本
-        markdownTextView.attributedText = nil
-        // 开始打字动画
-        startTypingAnimation()
-    }
-    
-    // 修改打字动画以支持 Markdown
-    private func startTypingAnimation() {
-        currentTypingIndex = 0
-        typingTimer?.invalidate()
+        updateMarkdownText(fullText)
         
-        typingTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
+        // 设置流式输出回调
+        insight.onStream = { [weak self] output in
+            self?.fullText = output
+            self?.updateMarkdownText(output)
+            
+            // 触感反馈
+            if output.count % 10 == 0 {
+//                let generator = UIImpactFeedbackGenerator(style: .soft)
+//                generator.impactOccurred(intensity: 0.3)
             }
             
-            if self.currentTypingIndex < self.fullText.count {
-                let index = self.fullText.index(self.fullText.startIndex, offsetBy: self.currentTypingIndex)
-                let currentText = String(self.fullText[...index])
-                
-                // 修复参数顺序
-                if let attributedString = try? AttributedString(markdown: currentText, options: .init(
-                    allowsExtendedAttributes: true,
-                    interpretedSyntax: .inlineOnlyPreservingWhitespace,
-                    failurePolicy: .returnPartiallyParsedIfPossible
-                )) {
-                    let mutableAttrString = NSMutableAttributedString(attributedString)
-                    
-                    // 设置基本字体和颜色
-                    let range = NSRange(location: 0, length: mutableAttrString.length)
-                    mutableAttrString.addAttributes([
-                        .font: UIFont.systemFont(ofSize: 17, weight: .regular),
-                        .foregroundColor: UIColor.label,
-                        .paragraphStyle: {
-                            let style = NSMutableParagraphStyle()
-                            style.lineSpacing = 6 // 增加行间距
-                            style.paragraphSpacing = 12 // 增加段落间距
-                            return style
-                        }()
-                    ], range: range)
-                    
-                    self.markdownTextView.attributedText = mutableAttrString
-                }
-                
-                self.currentTypingIndex += 1
-                
-                // 触感反馈
-                if self.currentTypingIndex % 10 == 0 {
-                    let generator = UIImpactFeedbackGenerator(style: .soft)
-                    generator.impactOccurred(intensity: 0.3)
-                }
-                
-                // 标点符号延迟
-                if [",", ".", "，", "。", "!", "?", "！", "？"].contains(String(self.fullText[index])) {
-                    timer.fireDate = Date().addingTimeInterval(0.2)
-                }
-            } else {
-                timer.invalidate()
-                self.typingTimer = nil
-                
+            // 如果是最后一个字符，给出完成反馈
+            if output == insight.description {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
+            }
+        }
+    }
+    
+    private func updateMarkdownText(_ text: String) {
+        if let attributedString = try? AttributedString(markdown: text, options: .init(
+            allowsExtendedAttributes: true,
+            interpretedSyntax: .inlineOnlyPreservingWhitespace,
+            failurePolicy: .returnPartiallyParsedIfPossible
+        )) {
+            let mutableAttrString = NSMutableAttributedString(attributedString)
+            
+            let range = NSRange(location: 0, length: mutableAttrString.length)
+            mutableAttrString.addAttributes([
+                .font: UIFont.systemFont(ofSize: 17, weight: .regular),
+                .foregroundColor: UIColor.label,
+                .paragraphStyle: {
+                    let style = NSMutableParagraphStyle()
+                    style.lineSpacing = 6
+                    style.paragraphSpacing = 12
+                    return style
+                }()
+            ], range: range)
+            
+            markdownTextView.attributedText = mutableAttrString
+            
+            // 触发布局更新
+            markdownTextView.invalidateIntrinsicContentSize()
+            
+            // 找到 cell 所在的 tableView 并更新高度
+            if let tableView = self.superview as? UITableView ?? self.superview?.superview as? UITableView,
+               let indexPath = tableView.indexPath(for: self) {
+                UIView.performWithoutAnimation {
+                    tableView.beginUpdates()
+                    tableView.endUpdates()
+                }
             }
         }
     }
@@ -783,17 +781,11 @@ class AIInsightCell: UITableViewCell {
     }
     
     private func configureBackground() {
-        // 移除默认背景
         self.backgroundView = nil
         self.backgroundColor = .clear
-        
-        // 确保内容视图背景透明
         contentView.backgroundColor = .clear
-        
-        // 移除选中状态背景
         self.selectedBackgroundView = nil
         
-        // 移除系统背景视图
         if let backgroundView = subviews.first(where: { String(describing: type(of: $0)).contains("BackgroundView") }) {
             backgroundView.removeFromSuperview()
         }
@@ -801,7 +793,6 @@ class AIInsightCell: UITableViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        // 确保在��局更新时也移除系统背景
         if let backgroundView = subviews.first(where: { String(describing: type(of: $0)).contains("BackgroundView") }) {
             backgroundView.removeFromSuperview()
         }

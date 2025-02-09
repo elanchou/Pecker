@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import Combine
 
 class LLMService {
     private let appManager: AppManager
@@ -54,6 +55,24 @@ class LLMService {
             throw AIError.invalidResponse
         }
     }
+    
+    @MainActor
+    func chatAsync(_ messages: [AIService.ChatMessage]) -> AsyncStream<String> {
+        return AsyncStream { continuation in
+            // 监听 llm.output，每次更新就 yield
+            self.llm.onStream = { output in
+                continuation.yield(output)
+            }
+            
+            // 启动生成过程
+            Task {
+                let content = messages.last?.content ?? ""
+                _ = await self.generate(message: content)
+                continuation.finish()
+            }
+        }
+    }
+
 }
 
 extension LLMService {
@@ -73,10 +92,9 @@ extension LLMService {
                 let output = await llm.generate(modelName: modelName, thread: currentThread, systemPrompt: appManager.systemPrompt)
                 await sendMessage(Message(role: .assistant, content: output, thread: currentThread, generatingTime: llm.thinkingTime))
                 generatingThreadID = nil
-                return  output
+                return output
             }
         }
-        
         return nil
     }
 
