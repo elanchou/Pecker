@@ -256,6 +256,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用您的图像用于识别";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "需要使用您的声音用于识别";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要使用您的照片用于识别";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "需要使用您的语音识别用于识别";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -266,7 +267,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.elanchou.pecker.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -298,6 +299,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用您的图像用于识别";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "需要使用您的声音用于识别";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要使用您的照片用于识别";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "需要使用您的语音识别用于识别";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -308,7 +310,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.elanchou.pecker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
