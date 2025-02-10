@@ -589,7 +589,7 @@ class AIInsight: ObservableObject {
             case .reading: return .systemBlue
             case .listening: return .systemGreen
             case .recommendation: return .systemYellow
-            case .summary: return .systemPurple
+            case .summary: return AppTheme.light
             case .analysis: return .systemOrange
             }
         }
@@ -629,9 +629,9 @@ class AIInsightCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.font = .systemFont(ofSize: 18, weight: .bold)
         label.textColor = .label
-        label.numberOfLines = 1
+        label.numberOfLines = 0
         label.lineBreakMode = .byTruncatingTail
         return label
     }()
@@ -670,25 +670,25 @@ class AIInsightCell: UITableViewCell {
 
         headerView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
-            make.height.equalTo(44)
+        }
+        
+        timestampLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.centerX.equalToSuperview()
+            make.width.greaterThanOrEqualTo(45)
         }
 
         iconView.snp.makeConstraints { make in
+            make.top.equalTo(timestampLabel.snp.bottom).offset(8)
             make.leading.equalToSuperview().offset(12)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(20)
+            make.size.equalTo(25)
         }
 
         titleLabel.snp.makeConstraints { make in
             make.leading.equalTo(iconView.snp.trailing).offset(8)
-            make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(timestampLabel.snp.leading).offset(-8)
-        }
-
-        timestampLabel.snp.makeConstraints { make in
+            make.top.equalTo(iconView.snp.top).offset(-2)
             make.trailing.equalToSuperview().offset(-12)
-            make.centerY.equalToSuperview()
-            make.width.greaterThanOrEqualTo(45)
+            make.bottom.equalToSuperview().offset(-12)
         }
 
         markdownTextView.snp.makeConstraints { make in
@@ -762,7 +762,7 @@ class AIInsightCell: UITableViewCell {
             paragraphStyle.paragraphSpacing = 8
 
             mutableAttributedString.addAttributes([
-                .font: UIFont.systemFont(ofSize: 16, weight: .regular),
+                .font: UIFont.systemFont(ofSize: 17, weight: .regular),
                 .foregroundColor: UIColor.label,
                 .paragraphStyle: paragraphStyle
             ], range: range)
