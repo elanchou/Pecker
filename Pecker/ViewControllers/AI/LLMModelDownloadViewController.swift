@@ -11,8 +11,8 @@ import SwiftUI
 
 class LLMModelDownloadViewController: UIViewController {
     
-    private var appManager = AppManager()
-    private var llm = LLMEvaluator()
+    private var appManager = AppManager.shared
+    private var llm = LLMEvaluator.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()

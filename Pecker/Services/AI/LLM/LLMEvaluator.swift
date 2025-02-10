@@ -19,6 +19,9 @@ enum LLMEvaluatorError: Error {
 @Observable
 @MainActor
 class LLMEvaluator {
+    
+    static let shared = LLMEvaluator()
+    
     var output = "" {
         didSet {
             if self.onStream != nil {

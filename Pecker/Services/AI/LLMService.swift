@@ -40,8 +40,8 @@ class LLMService {
     
     @MainActor
     init() {
-        self.appManager = AppManager()
-        self.llm = LLMEvaluator()
+        self.appManager = AppManager.shared
+        self.llm = LLMEvaluator.shared
         if let container = try? ModelContainer(for: Message.self) {
             self.modelContext = ModelContext(container)
         }

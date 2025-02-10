@@ -693,7 +693,6 @@ extension HomeViewController: UICollectionViewDataSource {
                     guard let self = self else { return }
                     let message = self.aiService.generateSummary(for: .singleContent(content))
                     AIAssistantManager.shared.startThinking()
-//                    let text = try await self?.aiService.chat(message)
                     let stream = self.aiService.chatAsync(message)
                     let insight = AIInsight(
                         type: .summary,

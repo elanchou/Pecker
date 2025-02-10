@@ -1,6 +1,7 @@
 import UIKit
 import SnapKit
 import Lottie
+import Down
 
 class AIAssistantView: UIView {
     // MARK: - Properties
@@ -310,7 +311,8 @@ class AIAssistantView: UIView {
         insightTableView.backgroundColor = .clear
         insightTableView.isScrollEnabled = true
         insightTableView.showsVerticalScrollIndicator = false
-        insightTableView.estimatedRowHeight = 100
+        insightTableView.estimatedRowHeight = 200
+        insightTableView.showsVerticalScrollIndicator = false
         insightTableView.rowHeight = UITableView.automaticDimension
     }
     
@@ -547,18 +549,7 @@ extension AIAssistantView: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        let insight = insights[indexPath.row]
-        
-        // 计算文本高度
-        let titleHeight: CGFloat = 24 // 固定标题高度
-        
-        let descriptionHeight = insight.description.height(
-            withConstrainedWidth: tableView.bounds.width - 76, // 考虑增加的边距
-            font: .systemFont(ofSize: 16)
-        )
-        
-        // 返回总高度（上下边距 + 标题高度 + 间距 + 描述文本高度）
-        return 16 + titleHeight + 12 + descriptionHeight + 16
+        return UITableView.automaticDimension
     }
 }
 
@@ -612,25 +603,30 @@ class AIInsight: ObservableObject {
     }
 }
 
-// MARK: - AIInsightCell
+// MARK: - AIInsightCell t sr
 class AIInsightCell: UITableViewCell {
     // MARK: - Properties
     private var fullText: String = ""
-    
+    private var updateTimer: Timer?
+    private var pendingText: String?
+    private weak var insight: AIInsight?
+    private var currentAttributedString = NSMutableAttributedString() // 保存当前的 attributed string
+    private let down = Down(markdownString: "") // 初始化一个 Down 实例
+
     // MARK: - UI Elements
     private let headerView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
         return view
     }()
-    
+
     private let iconView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.tintColor = .systemPurple
         return imageView
     }()
-    
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .bold)
@@ -639,7 +635,7 @@ class AIInsightCell: UITableViewCell {
         label.lineBreakMode = .byTruncatingTail
         return label
     }()
-    
+
     private let markdownTextView: UITextView = {
         let textView = UITextView()
         textView.backgroundColor = .clear
@@ -653,48 +649,48 @@ class AIInsightCell: UITableViewCell {
         ]
         return textView
     }()
-    
+
     private let timestampLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13)
         label.textColor = .tertiaryLabel
         return label
     }()
-    
+
     // MARK: Setup UI
     private func setupUI() {
         backgroundColor = .clear
         selectionStyle = .none
-        
+
         contentView.addSubview(headerView)
         headerView.addSubview(iconView)
         headerView.addSubview(titleLabel)
         headerView.addSubview(timestampLabel)
         contentView.addSubview(markdownTextView)
-        
+
         headerView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
             make.height.equalTo(44)
         }
-        
+
         iconView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(12)
             make.centerY.equalToSuperview()
             make.size.equalTo(20)
         }
-        
+
         titleLabel.snp.makeConstraints { make in
             make.leading.equalTo(iconView.snp.trailing).offset(8)
             make.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(timestampLabel.snp.leading).offset(-8)
         }
-        
+
         timestampLabel.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-12)
             make.centerY.equalToSuperview()
             make.width.greaterThanOrEqualTo(45)
         }
-        
+
         markdownTextView.snp.makeConstraints { make in
             make.top.equalTo(headerView.snp.bottom).offset(8)
             make.leading.equalTo(iconView)
@@ -702,91 +698,107 @@ class AIInsightCell: UITableViewCell {
             make.bottom.equalToSuperview().offset(-12)
         }
     }
-    
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        updateTimer?.invalidate()
+        updateTimer = nil
+        pendingText = nil
+        markdownTextView.attributedText = nil
+        currentAttributedString = NSMutableAttributedString() // 重置 attributed string
+        insight?.onStream = nil  // 重要：防止持有 insight
+        insight = nil
+    }
+
     func configure(with insight: AIInsight) {
+        self.insight = insight
         iconView.image = UIImage(systemName: insight.type.icon)?.withRenderingMode(.alwaysTemplate)
         iconView.tintColor = insight.type.color
         titleLabel.text = insight.title
-        
+
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         timestampLabel.text = formatter.string(from: Date())
-        
+
         fullText = insight.description
-        updateMarkdownText(fullText)
-        
-        // 设置流式输出回调
+        appendMarkdownText(fullText) //初始时也调用append
+
         insight.onStream = { [weak self] output in
-            self?.fullText = output
-            self?.updateMarkdownText(output)
-            
-            // 触感反馈
-            if output.count % 10 == 0 {
-                let generator = UIImpactFeedbackGenerator(style: .soft)
-                generator.impactOccurred(intensity: 0.3)
-            }
-        }
-    }
-    
-    private func updateMarkdownText(_ text: String) {
-        if let attributedString = try? AttributedString(markdown: text, options: .init(
-            allowsExtendedAttributes: true,
-            interpretedSyntax: .inlineOnlyPreservingWhitespace,
-            failurePolicy: .returnPartiallyParsedIfPossible
-        )) {
-            let mutableAttrString = NSMutableAttributedString(attributedString)
-            
-            let range = NSRange(location: 0, length: mutableAttrString.length)
-            mutableAttrString.addAttributes([
-                .font: UIFont.systemFont(ofSize: 17, weight: .regular),
-                .foregroundColor: UIColor.label,
-                .paragraphStyle: {
-                    let style = NSMutableParagraphStyle()
-                    style.lineSpacing = 6
-                    style.paragraphSpacing = 12
-                    return style
-                }()
-            ], range: range)
-            
-            markdownTextView.attributedText = mutableAttrString
-            
-            // 触发布局更新
-            markdownTextView.invalidateIntrinsicContentSize()
-            
-            // 找到 cell 所在的 tableView 并更新高度
-            if let tableView = self.superview as? UITableView ?? self.superview?.superview as? UITableView,
-               let indexPath = tableView.indexPath(for: self) {
-                UIView.performWithoutAnimation {
-                    tableView.beginUpdates()
-                    tableView.endUpdates()
+            guard let self = self else { return }
+            self.pendingText = output
+            if self.updateTimer == nil {
+                self.updateTimer = Timer.scheduledTimer(withTimeInterval: 0.06, repeats: false) { _ in
+                    if let text = self.pendingText {
+                        self.appendMarkdownText(text) // 使用 appendMarkdownText
+                    }
+                    self.updateTimer = nil
+                    self.pendingText = nil
+                    let generator = UIImpactFeedbackGenerator(style: .soft)
+                    generator.impactOccurred(intensity: 0.3)
                 }
             }
         }
     }
     
+
+    private func appendMarkdownText(_ text: String) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+
+            // Create a NEW Down instance with the new text
+            let down = Down(markdownString: text)
+
+            // Use Down to parse the Markdown text.  No styler needed.
+            guard let newAttributedString = try? down.toAttributedString() else {
+                print("Down parsing failed for: \(text)") // 调试输出
+                return
+            }
+
+            let mutableAttributedString = NSMutableAttributedString(attributedString: newAttributedString)
+            // 设置字体和颜色等属性（如果 Down 没有设置）
+            let range = NSRange(location: 0, length: mutableAttributedString.length)
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineSpacing = 4
+            paragraphStyle.paragraphSpacing = 8
+
+            mutableAttributedString.addAttributes([
+                .font: UIFont.systemFont(ofSize: 16, weight: .regular),
+                .foregroundColor: UIColor.label,
+                .paragraphStyle: paragraphStyle
+            ], range: range)
+
+            DispatchQueue.main.async {
+                UIView.performWithoutAnimation {
+                    if let tableView = self.superview as? UITableView ?? self.superview?.superview as? UITableView {
+                        tableView.beginUpdates()
+                        self.markdownTextView.attributedText = mutableAttributedString
+                        self.markdownTextView.invalidateIntrinsicContentSize()
+                        self.markdownTextView.setNeedsLayout()
+                        self.markdownTextView.layoutIfNeeded()
+                        tableView.endUpdates()
+                    }
+                }
+            }
+        }
+    }
+    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
         configureBackground()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func configureBackground() {
         self.backgroundView = nil
         self.backgroundColor = .clear
         contentView.backgroundColor = .clear
         self.selectedBackgroundView = nil
-        
-        if let backgroundView = subviews.first(where: { String(describing: type(of: $0)).contains("BackgroundView") }) {
-            backgroundView.removeFromSuperview()
-        }
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
+
         if let backgroundView = subviews.first(where: { String(describing: type(of: $0)).contains("BackgroundView") }) {
             backgroundView.removeFromSuperview()
         }
