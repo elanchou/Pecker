@@ -18,4 +18,17 @@ extension String {
         )
         return ceil(boundingBox.height)
     }
+    
+    func splitWithGrowingChunks(_ chunkSize: Int) -> [String] {
+        guard chunkSize > 0, !self.isEmpty else { return [] }
+        
+        var chunks: [String] = []
+        
+        for i in stride(from: chunkSize, through: count, by: chunkSize) {
+            let endIndex = index(startIndex, offsetBy: i, limitedBy: endIndex) ?? endIndex
+            chunks.append(String(self[startIndex..<endIndex]))
+        }
+        
+        return chunks
+    }
 }

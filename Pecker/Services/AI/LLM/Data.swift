@@ -72,8 +72,8 @@ class AppManager: ObservableObject {
     func playHaptic() {
         if shouldPlayHaptics {
             #if os(iOS)
-            let impact = UIImpactFeedbackGenerator(style: .soft)
-            impact.impactOccurred()
+//            let impact = UIImpactFeedbackGenerator(style: .soft)
+//            impact.impactOccurred()
             #endif
         }
     }

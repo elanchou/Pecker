@@ -7,7 +7,7 @@ class MainTabBarController: UITabBarController {
         case home
         case feedList
 //        case podcast
-        case rss
+//        case rss
         case settings
     }
     
@@ -67,18 +67,18 @@ class MainTabBarController: UITabBarController {
 //                )
 //                viewController = BaseNavigationController(rootViewController: podcastVC)
 //                
-            case .rss:
-                let rssVC = RSSBrowseViewController()
-                rssVC.tabBarItem = UITabBarItem(
-                    title: nil,
-                    image: UIImage(systemName: "newspaper")?
-                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
-                        .withRenderingMode(.alwaysTemplate),
-                    selectedImage: UIImage(systemName: "newspaper.fill")?
-                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
-                        .withRenderingMode(.alwaysTemplate)
-                )
-                viewController = BaseNavigationController(rootViewController: rssVC)
+//            case .rss:
+//                let rssVC = RSSBrowseViewController()
+//                rssVC.tabBarItem = UITabBarItem(
+//                    title: nil,
+//                    image: UIImage(systemName: "newspaper")?
+//                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+//                        .withRenderingMode(.alwaysTemplate),
+//                    selectedImage: UIImage(systemName: "newspaper.fill")?
+//                        .withConfiguration(UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+//                        .withRenderingMode(.alwaysTemplate)
+//                )
+//                viewController = BaseNavigationController(rootViewController: rssVC)
                 
             case .settings:
                 let settingsVC = SettingsViewController()

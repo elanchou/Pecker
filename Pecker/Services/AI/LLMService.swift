@@ -86,7 +86,6 @@ extension LLMService {
         
         if let currentThread = currentThread {
             generatingThreadID = currentThread.id
-            appManager.playHaptic()
             sendMessage(Message(role: .user, content: message, thread: currentThread))
             if let modelName = appManager.currentModelName {
                 let output = await llm.generate(modelName: modelName, thread: currentThread, systemPrompt: appManager.systemPrompt)
@@ -99,7 +98,6 @@ extension LLMService {
     }
 
     private func sendMessage(_ message: Message) {
-        appManager.playHaptic()
         modelContext?.insert(message)
         try? modelContext?.save()
     }

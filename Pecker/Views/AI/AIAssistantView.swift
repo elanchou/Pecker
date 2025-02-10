@@ -722,14 +722,8 @@ class AIInsightCell: UITableViewCell {
             
             // 触感反馈
             if output.count % 10 == 0 {
-//                let generator = UIImpactFeedbackGenerator(style: .soft)
-//                generator.impactOccurred(intensity: 0.3)
-            }
-            
-            // 如果是最后一个字符，给出完成反馈
-            if output == insight.description {
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
+                let generator = UIImpactFeedbackGenerator(style: .soft)
+                generator.impactOccurred(intensity: 0.3)
             }
         }
     }

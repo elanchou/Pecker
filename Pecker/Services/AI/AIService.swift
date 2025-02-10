@@ -56,7 +56,7 @@ class AIService {
                let value = AIProvider(rawValue: provider) {
                 return value
             }
-            return .llm
+            return .volc
         }
     }
     
@@ -73,7 +73,6 @@ class AIService {
                 throw AIError.noAPIKey
             }
             return try await service.chat(messages)
-            
         case .deepSeek:
             guard let service = deepSeekService else {
                 throw AIError.noAPIKey
@@ -97,26 +96,37 @@ class AIService {
 
         return AsyncStream { continuation in
             Task {
-                if selectedProvider == .llm {
+                switch selectedProvider {
+                case .volc:
+                    guard let service = volcService else {
+                        continuation.finish()
+                        return
+                    }
+                    let response = try await service.chat(messages)
+                    
+                    // 这里模拟流式输出
+                    for chunk in response.splitWithGrowingChunks(1) {
+                        continuation.yield(chunk)
+                        try await Task.sleep(nanoseconds: 100_000_000)
+                    }
+                    continuation.finish()
+                case.llm:
                     guard let service = llmService else {
                         continuation.finish()
                         return
                     }
-
                     let stream = await service.chatAsync(messages)
 
                     for await response in stream {
                         continuation.yield(response)
                     }
-
                     continuation.finish()
-                } else {
+                default:
                     continuation.finish()
                 }
             }
         }
     }
-
     
     func generateSummary(for content: ContentType) -> [ChatMessage] {
         let language = LocalizationManager.shared.currentLanguage == .english ? "英文": "中文"
