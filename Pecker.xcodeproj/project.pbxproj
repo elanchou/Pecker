@@ -13,6 +13,19 @@
 		EE4A16B22D58F419001ADC2B /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B12D58F419001ADC2B /* MLXMNIST */; };
 		EE4A16B42D58F419001ADC2B /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B32D58F419001ADC2B /* MLXVLM */; };
 		EE4A16B62D58F419001ADC2B /* StableDiffusion in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B52D58F419001ADC2B /* StableDiffusion */; };
+		EE4A17042D5B1202001ADC2B /* FeedKit in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A17032D5B1202001ADC2B /* FeedKit */; };
+		EE4A17072D5B1248001ADC2B /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A17062D5B1248001ADC2B /* SwiftSoup */; };
+		EE4A170A2D5B1270001ADC2B /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A17092D5B1270001ADC2B /* Kingfisher */; };
+		EE4A170D2D5B1332001ADC2B /* JXSegmentedView in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A170C2D5B1332001ADC2B /* JXSegmentedView */; };
+		EED1C3AB2D5B14DC006CF14D /* SwiftDate in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C3AA2D5B14DC006CF14D /* SwiftDate */; };
+		EED1C3B32D5B1533006CF14D /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C3B22D5B1533006CF14D /* SwiftyJSON */; };
+		EED1C3B62D5B1550006CF14D /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C3B52D5B1550006CF14D /* SwiftUIX */; };
+		EED1C3BE2D5B166C006CF14D /* Down in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C3BD2D5B166C006CF14D /* Down */; };
+		EED1C4BC2D5B170C006CF14D /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C4BB2D5B170C006CF14D /* Lottie */; };
+		EED1C4BF2D5B1720006CF14D /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C4BE2D5B1720006CF14D /* SnapKit */; };
+		EED1C5C02D5B187F006CF14D /* AEXML in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C5BF2D5B187F006CF14D /* AEXML */; };
+		EED1C5C32D5B1916006CF14D /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EED1C5C22D5B1916006CF14D /* RealmSwift */; };
+		EED1C5C42D5B1924006CF14D /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = EED1C5C22D5B1916006CF14D /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,6 +45,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				EED1C5C42D5B1924006CF14D /* RealmSwift in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -39,9 +53,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		2E9C4BD9AF038E6BCE6FAAB2 /* Pods-Pecker.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Pecker.debug.xcconfig"; path = "Target Support Files/Pods-Pecker/Pods-Pecker.debug.xcconfig"; sourceTree = "<group>"; };
 		6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Pecker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A460761F813BB71A51CBE090 /* Pods-Pecker.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Pecker.release.xcconfig"; path = "Target Support Files/Pods-Pecker/Pods-Pecker.release.xcconfig"; sourceTree = "<group>"; };
 		EE0249C62CFCA1AD00CA6901 /* Pecker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pecker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -72,33 +84,35 @@
 			buildActionMask = 2147483647;
 			files = (
 				EE4A16B42D58F419001ADC2B /* MLXVLM in Frameworks */,
+				EED1C4BF2D5B1720006CF14D /* SnapKit in Frameworks */,
 				EE4A16B62D58F419001ADC2B /* StableDiffusion in Frameworks */,
 				EE4A16B22D58F419001ADC2B /* MLXMNIST in Frameworks */,
+				EE4A170A2D5B1270001ADC2B /* Kingfisher in Frameworks */,
 				EE4A16AE2D58F419001ADC2B /* MLXLLM in Frameworks */,
 				EE4A16B02D58F419001ADC2B /* MLXLMCommon in Frameworks */,
+				EED1C4BC2D5B170C006CF14D /* Lottie in Frameworks */,
+				EE4A17072D5B1248001ADC2B /* SwiftSoup in Frameworks */,
 				3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */,
+				EED1C3BE2D5B166C006CF14D /* Down in Frameworks */,
+				EED1C5C02D5B187F006CF14D /* AEXML in Frameworks */,
+				EED1C5C32D5B1916006CF14D /* RealmSwift in Frameworks */,
+				EED1C3B32D5B1533006CF14D /* SwiftyJSON in Frameworks */,
+				EE4A170D2D5B1332001ADC2B /* JXSegmentedView in Frameworks */,
+				EE4A17042D5B1202001ADC2B /* FeedKit in Frameworks */,
+				EED1C3B62D5B1550006CF14D /* SwiftUIX in Frameworks */,
+				EED1C3AB2D5B14DC006CF14D /* SwiftDate in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		454ED695674616730D80EE04 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				2E9C4BD9AF038E6BCE6FAAB2 /* Pods-Pecker.debug.xcconfig */,
-				A460761F813BB71A51CBE090 /* Pods-Pecker.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		EE0249BD2CFCA1AD00CA6901 = {
 			isa = PBXGroup;
 			children = (
 				EE0249C82CFCA1AD00CA6901 /* Pecker */,
 				EEB088E72CFE25C3006DC4E9 /* Frameworks */,
 				EE0249C72CFCA1AD00CA6901 /* Products */,
-				454ED695674616730D80EE04 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -147,6 +161,18 @@
 				EE4A16B12D58F419001ADC2B /* MLXMNIST */,
 				EE4A16B32D58F419001ADC2B /* MLXVLM */,
 				EE4A16B52D58F419001ADC2B /* StableDiffusion */,
+				EE4A17032D5B1202001ADC2B /* FeedKit */,
+				EE4A17062D5B1248001ADC2B /* SwiftSoup */,
+				EE4A17092D5B1270001ADC2B /* Kingfisher */,
+				EE4A170C2D5B1332001ADC2B /* JXSegmentedView */,
+				EED1C3AA2D5B14DC006CF14D /* SwiftDate */,
+				EED1C3B22D5B1533006CF14D /* SwiftyJSON */,
+				EED1C3B52D5B1550006CF14D /* SwiftUIX */,
+				EED1C3BD2D5B166C006CF14D /* Down */,
+				EED1C4BB2D5B170C006CF14D /* Lottie */,
+				EED1C4BE2D5B1720006CF14D /* SnapKit */,
+				EED1C5BF2D5B187F006CF14D /* AEXML */,
+				EED1C5C22D5B1916006CF14D /* RealmSwift */,
 			);
 			productName = Pecker;
 			productReference = EE0249C62CFCA1AD00CA6901 /* Pecker.app */;
@@ -180,6 +206,18 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
+				EE4A17022D5B1202001ADC2B /* XCRemoteSwiftPackageReference "FeedKit" */,
+				EE4A17052D5B1248001ADC2B /* XCRemoteSwiftPackageReference "SwiftSoup" */,
+				EE4A17082D5B1270001ADC2B /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				EE4A170B2D5B1332001ADC2B /* XCRemoteSwiftPackageReference "JXSegmentedView" */,
+				EED1C3A92D5B14DC006CF14D /* XCRemoteSwiftPackageReference "SwiftDate" */,
+				EED1C3B12D5B1533006CF14D /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
+				EED1C3B42D5B1550006CF14D /* XCRemoteSwiftPackageReference "SwiftUIX" */,
+				EED1C3BC2D5B166C006CF14D /* XCRemoteSwiftPackageReference "Down" */,
+				EED1C4BA2D5B170C006CF14D /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				EED1C4BD2D5B1720006CF14D /* XCRemoteSwiftPackageReference "SnapKit" */,
+				EED1C5BE2D5B187F006CF14D /* XCRemoteSwiftPackageReference "AEXML" */,
+				EED1C5C12D5B1916006CF14D /* XCRemoteSwiftPackageReference "realm-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EE0249C72CFCA1AD00CA6901 /* Products */;
@@ -256,7 +294,6 @@
 /* Begin XCBuildConfiguration section */
 		EE0249DA2CFCA1AF00CA6901 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2E9C4BD9AF038E6BCE6FAAB2 /* Pods-Pecker.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -299,7 +336,6 @@
 		};
 		EE0249DB2CFCA1AF00CA6901 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A460761F813BB71A51CBE090 /* Pods-Pecker.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -492,6 +528,102 @@
 				minimumVersion = 2.21.2;
 			};
 		};
+		EE4A17022D5B1202001ADC2B /* XCRemoteSwiftPackageReference "FeedKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nmdias/FeedKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.2;
+			};
+		};
+		EE4A17052D5B1248001ADC2B /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.7;
+			};
+		};
+		EE4A17082D5B1270001ADC2B /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.2.0;
+			};
+		};
+		EE4A170B2D5B1332001ADC2B /* XCRemoteSwiftPackageReference "JXSegmentedView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pujiaxin33/JXSegmentedView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.1;
+			};
+		};
+		EED1C3A92D5B14DC006CF14D /* XCRemoteSwiftPackageReference "SwiftDate" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/malcommac/SwiftDate.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
+		EED1C3B12D5B1533006CF14D /* XCRemoteSwiftPackageReference "SwiftyJSON" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftyJSON/SwiftyJSON.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.2;
+			};
+		};
+		EED1C3B42D5B1550006CF14D /* XCRemoteSwiftPackageReference "SwiftUIX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftUIX/SwiftUIX.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.3;
+			};
+		};
+		EED1C3BC2D5B166C006CF14D /* XCRemoteSwiftPackageReference "Down" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/iwasrobbed/Down.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.11.0;
+			};
+		};
+		EED1C4BA2D5B170C006CF14D /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.1;
+			};
+		};
+		EED1C4BD2D5B1720006CF14D /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
+		EED1C5BE2D5B187F006CF14D /* XCRemoteSwiftPackageReference "AEXML" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tadija/AEXML.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.7.0;
+			};
+		};
+		EED1C5C12D5B1916006CF14D /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 20.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -519,6 +651,66 @@
 			isa = XCSwiftPackageProductDependency;
 			package = EE4A16AC2D58F419001ADC2B /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
 			productName = StableDiffusion;
+		};
+		EE4A17032D5B1202001ADC2B /* FeedKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A17022D5B1202001ADC2B /* XCRemoteSwiftPackageReference "FeedKit" */;
+			productName = FeedKit;
+		};
+		EE4A17062D5B1248001ADC2B /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A17052D5B1248001ADC2B /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
+		};
+		EE4A17092D5B1270001ADC2B /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A17082D5B1270001ADC2B /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		EE4A170C2D5B1332001ADC2B /* JXSegmentedView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4A170B2D5B1332001ADC2B /* XCRemoteSwiftPackageReference "JXSegmentedView" */;
+			productName = JXSegmentedView;
+		};
+		EED1C3AA2D5B14DC006CF14D /* SwiftDate */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C3A92D5B14DC006CF14D /* XCRemoteSwiftPackageReference "SwiftDate" */;
+			productName = SwiftDate;
+		};
+		EED1C3B22D5B1533006CF14D /* SwiftyJSON */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C3B12D5B1533006CF14D /* XCRemoteSwiftPackageReference "SwiftyJSON" */;
+			productName = SwiftyJSON;
+		};
+		EED1C3B52D5B1550006CF14D /* SwiftUIX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C3B42D5B1550006CF14D /* XCRemoteSwiftPackageReference "SwiftUIX" */;
+			productName = SwiftUIX;
+		};
+		EED1C3BD2D5B166C006CF14D /* Down */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C3BC2D5B166C006CF14D /* XCRemoteSwiftPackageReference "Down" */;
+			productName = Down;
+		};
+		EED1C4BB2D5B170C006CF14D /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C4BA2D5B170C006CF14D /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		EED1C4BE2D5B1720006CF14D /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C4BD2D5B1720006CF14D /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		EED1C5BF2D5B187F006CF14D /* AEXML */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C5BE2D5B187F006CF14D /* XCRemoteSwiftPackageReference "AEXML" */;
+			productName = AEXML;
+		};
+		EED1C5C22D5B1916006CF14D /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EED1C5C12D5B1916006CF14D /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
