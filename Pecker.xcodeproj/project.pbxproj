@@ -139,12 +139,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = EE0249D92CFCA1AF00CA6901 /* Build configuration list for PBXNativeTarget "Pecker" */;
 			buildPhases = (
-				9AC2EC0C0442EBB0F2817C2A /* [CP] Check Pods Manifest.lock */,
 				EE0249C22CFCA1AD00CA6901 /* Sources */,
 				EE0249C32CFCA1AD00CA6901 /* Frameworks */,
 				EE0249C42CFCA1AD00CA6901 /* Resources */,
 				EEB088EB2CFE25C3006DC4E9 /* Embed Frameworks */,
-				BE67641F09EEBAFEB8539F6F /* [CP] Embed Pods Frameworks */,
 				EE65971F2D05DDD2000732E0 /* Embed Watch Content */,
 			);
 			buildRules = (
@@ -238,48 +236,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		9AC2EC0C0442EBB0F2817C2A /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Pecker-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		BE67641F09EEBAFEB8539F6F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Pecker/Pods-Pecker-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Pecker/Pods-Pecker-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Pecker/Pods-Pecker-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		EE0249C22CFCA1AD00CA6901 /* Sources */ = {
