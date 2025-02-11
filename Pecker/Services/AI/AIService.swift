@@ -105,7 +105,7 @@ class AIService {
                     let response = try await service.chat(messages)
                     
                     // 这里模拟流式输出
-                    for chunk in response.splitWithGrowingChunks(1) {
+                    for chunk in response.splitWithGrowingChunks() {
                         continuation.yield(chunk)
                         try await Task.sleep(nanoseconds: 100_000_000)
                     }
