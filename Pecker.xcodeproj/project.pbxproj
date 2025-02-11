@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */; };
 		EE4A16AE2D58F419001ADC2B /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16AD2D58F419001ADC2B /* MLXLLM */; };
 		EE4A16B02D58F419001ADC2B /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16AF2D58F419001ADC2B /* MLXLMCommon */; };
 		EE4A16B22D58F419001ADC2B /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = EE4A16B12D58F419001ADC2B /* MLXMNIST */; };
@@ -53,7 +52,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Pecker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE0249C62CFCA1AD00CA6901 /* Pecker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pecker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -92,7 +90,6 @@
 				EE4A16B02D58F419001ADC2B /* MLXLMCommon in Frameworks */,
 				EED1C4BC2D5B170C006CF14D /* Lottie in Frameworks */,
 				EE4A17072D5B1248001ADC2B /* SwiftSoup in Frameworks */,
-				3E73A6DD69471EDD7CA4B3E6 /* Pods_Pecker.framework in Frameworks */,
 				EED1C3BE2D5B166C006CF14D /* Down in Frameworks */,
 				EED1C5C02D5B187F006CF14D /* AEXML in Frameworks */,
 				EED1C5C32D5B1916006CF14D /* RealmSwift in Frameworks */,
@@ -127,7 +124,6 @@
 		EEB088E72CFE25C3006DC4E9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6FB51BB03928AF363AAB6030 /* Pods_Pecker.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
